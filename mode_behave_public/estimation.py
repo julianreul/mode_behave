@@ -16,7 +16,7 @@ from operator import mod
 
 import pandas as pd
 import numpy as np
-import GPUtil
+#import GPUtil
 from numba import guvectorize, vectorize, njit, cuda, prange
 from scipy.optimize import minimize
 from scipy import stats
@@ -1511,8 +1511,8 @@ class Estimation:
         
         iter_outer = 0
         
-        if gpu == True:
-            GPUtil.showUtilization()
+        #if gpu == True:
+        #    GPUtil.showUtilization()
         
         start = time.time()
         

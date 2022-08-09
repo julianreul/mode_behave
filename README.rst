@@ -21,7 +21,10 @@ Installation
 ============
 1. Download or clone the repository to a local folder.
 #. Open (Anaconda) Prompt
-#. Activate an environment
+#. Create a new environment from reference_environment.yml file (same location as setup.py file)::
+
+      conda env create -f reference_environment.yml
+
 #. cd to the directory, where you stored the repository and where the setup.py file is located
 #. In this folder run::
     
