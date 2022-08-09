@@ -7,12 +7,10 @@ tags:
 authors:
   - name: Julian Paul Reul
     orcid: 0000-0002-2786-0233
-    equal-contrib: false
-    corresponding: true # (This is how to denote the corresponding author)
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    corresponding: true
+    affiliation: "1, 2"
   - name: Thomas Grube
     orcid: 0000-0002-0605-8356
-    equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 1
   - name: Jochen Linßen
     orcid: 0000-0003-2805-2307
@@ -28,11 +26,6 @@ affiliations:
 
 date: 09 August 2022
 bibliography: paper.bib
-
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
 # Summary
@@ -80,8 +73,24 @@ with nonparametric design, for any student with an interest in choice modeling.
 
 # Acknowledgements
 
+The contributions to this paper are listed according to CRediT-taxonomy.
+
+Julian Reul: Methodology, software, validation, formal analysis, data curation, 
+writing – original draft.
+
+Dr. Thomas Grube: Conceptualization, writing – review and editing, supervision, 
+project administration, funding acquisition.
+ 
+Prof. Dr. Jochen Linßen: Conceptualization, writing – review and editing, 
+supervision, project administration, funding acquisition.
+
+Prof. Dr. Detlef Stolten: Conceptualization, supervision, 
+project administration, funding acquisition.
+
 The authors declare that they have no known competing financial interests or 
 personal relationships that could have appeared to influence the work reported 
 in this paper.
+
+Funding: This work was supported by the Helmholtz Association of German Research Centers.
 
 # References
