@@ -13,6 +13,8 @@ the coefficients of a multinomial logit model.
 import time
 import random
 from operator import mod
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import pandas as pd
 import numpy as np
@@ -365,7 +367,7 @@ class Estimation:
         space_method = kwargs.get('space_method', 'mirror')
         blind_exploration = kwargs.get('blind_exploration', 0)
         t_stats_out = kwargs.get('t_stats_out', True)
-        bits_64 = kwargs.get('bits_64', False)
+        self.bits_64 = kwargs.get('bits_64', False)
         print('_______________________')
         print('Cluster-GPU can only handle float32, NOT float64!')
         print('_______________________')
@@ -401,10 +403,7 @@ class Estimation:
         #points per coefficient (ppc)
         no_random = self.no_constant_random + self.no_variable_random*self.count_c
         ppc = int(self.max_space**(1/(no_random)))
-        if ppc < 5:
-            raise ValueError('Too less parameter points per class. - Reduce complexity!')
-        else:
-            print('Number of estimated points per class: ', str(ppc))
+        print('Number of estimated points per class: ', str(ppc))
         
         #Define space-boundaries from initial point.
         if space_method == 'abs_value':
@@ -445,7 +444,7 @@ class Estimation:
             raise ValueError('Unknown value for keyword-argument -space_method-')
         
         #specify parameter space
-        if bits_64:
+        if self.bits_64:
             self.space = np.zeros((no_random, ppc), 'float64')
         else:
             self.space = np.zeros((no_random, ppc), 'float32')
@@ -538,7 +537,7 @@ class Estimation:
             for i, param in enumerate(self.param['variable']['random']):
                 data[3][i][c] = self.data[param + '_' + str(c)].values
                 
-        if bits_64 == False:
+        if self.bits_64 == False:
             data = data.astype('float32')
             av = av.astype('int32')
             choice = choice.astype('int32')
@@ -589,7 +588,7 @@ class Estimation:
                         ] * data[3][a][c][l]
                 return res_temp   
             
-            if bits_64:
+            if self.bits_64:
 
                 @guvectorize(
                     ['float64[:], int64[:, :], int64[:, :], int64[:], float64[:, :, :, :], float64[:]'], 
@@ -726,7 +725,7 @@ class Estimation:
                                 
                 return res_temp   
             
-            if bits_64:
+            if self.bits_64:
                 @guvectorize(
                     ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:, :]'], 
                     '(m,p),(n,l),(i,j,n,l)->(m,l)', 
@@ -819,7 +818,7 @@ class Estimation:
                                 logit_probs_[m][l] = 0
                                         
         if gpu:
-            if bits_64:
+            if self.bits_64:
                 @guvectorize(['float64[:], float64[:], float64[:]'], '(),(l)->(l)', target='cuda')
                 def get_pp_top_gpu(shares, logit_probs, pp_top): 
                     """
@@ -976,7 +975,7 @@ class Estimation:
                     expect[0] = expect_tmp   
                                 
         else:
-            if bits_64:
+            if self.bits_64:
                 @guvectorize(
                     ['float64[:], float64[:, :], float64[:], float64[:]'], 
                     '(m),(m,l)->(),(m)', 
@@ -1105,7 +1104,7 @@ class Estimation:
         
         print('Estimate shares.')      
         
-        if bits_64:
+        if self.bits_64:
             @guvectorize(
                 ['float64[:, :], int32[:], float64[:, :]'], 
                 '(r,m),(n)->(n,r)', 
@@ -1252,7 +1251,7 @@ class Estimation:
         # as if all points were initialized from the start.
                     
         #step 1.0: initialization
-        if bits_64:
+        if self.bits_64:
             SHARES = pd.Series(dtype='float32')
             PROBS_values = np.array([], dtype='float32')
         else:
@@ -1269,7 +1268,7 @@ class Estimation:
         PROB_EXPLORED_ref = 0
         PROB_UNKNOWN = 1
         
-        if bits_64:
+        if self.bits_64:
             @vectorize(["float64(float64, float64)"], nopython=True, target="parallel")
             def get_norm(x, sigma):
                 """
@@ -1453,7 +1452,7 @@ class Estimation:
                 scale_shares = size_shares / size_shares_plus_proximity
             
                 #get maximum euclidean within proximity of point_temp
-                if bits_64:
+                if self.bits_64:
                     acc = np.array([0], dtype='float64')
                 else:
                     acc = np.array([0], dtype='float32')
@@ -1461,7 +1460,7 @@ class Estimation:
                 euclidean_max = get_euclidean_vector(acc, points_proximity[-1], points_proximity[0])[0]
                 
                 sigma_ = euclidean_max/2
-                if bits_64:
+                if self.bits_64:
                     zero = np.array([0], dtype='float64')
                 else:
                     zero = np.array([0], dtype='float32')
@@ -1469,7 +1468,7 @@ class Estimation:
                 scale_norm = 1 / prob_d_zero
                 
                 #get_euclidean distances for all points in proximity
-                if bits_64:
+                if self.bits_64:
                     acc = np.array([0]*len(points_proximity), dtype='float64')
                 else:
                     acc = np.array([0]*len(points_proximity), dtype='float32')
@@ -1485,7 +1484,7 @@ class Estimation:
                 SHARES = SHARES*scale_shares
                 #Append SHARES in proximity, which are out of SHARES
                 SHARE_prox_unknown_temp = 1/size_shares_plus_proximity
-                if bits_64:
+                if self.bits_64:
                     SHARES_prox_unknown = pd.Series(
                         [SHARE_prox_unknown_temp]*count_unknown, 
                         index=draws_proximity[draws_not_in_SHARES], 
@@ -1551,14 +1550,14 @@ class Estimation:
             #   Step 3.2: Recalculate SHARES & POINTS
             scale_shares_explored = len(SHARES) / len(draws)
             drawn_shares_explored = SHARES.loc[draws_explored].values*scale_shares_explored
-            if bits_64:
+            if self.bits_64:
                 drawn_shares_unknown = np.array([1/len(draws)]*len(draws_unknown), dtype='float64')
             else:
                 drawn_shares_unknown = np.array([1/len(draws)]*len(draws_unknown), dtype='float32')
             
             drawn_shares = np.append(drawn_shares_unknown, drawn_shares_explored)
             drawn_shares = drawn_shares / np.sum(drawn_shares)
-            if bits_64:
+            if self.bits_64:
                 drawn_shares = drawn_shares.astype('float64')
             else:
                 drawn_shares = drawn_shares.astype('float32')
@@ -1650,7 +1649,7 @@ class Estimation:
             drawn_shares = drawn_shares * scale_draws
                                             
             #   step 5.3: Merge SHARES and drawn_shares
-            if bits_64:
+            if self.bits_64:
                 SHARES_TO_MERGE = pd.Series(drawn_shares, index = draws, dtype='float64')
             else:
                 SHARES_TO_MERGE = pd.Series(drawn_shares, index = draws, dtype='float32')
@@ -1705,7 +1704,7 @@ class Estimation:
                 PROB_EXPLORED_ref = (len(SHARES)+len(EXCLUDED)) / (self.size_space)
                 #use PROB_EXPLORED for calculation, since this 
                 #step 6.0: Update PROBS. - Adjust PROBS from SHARES.
-                if bits_64:
+                if self.bits_64:
                     PROBS_values = np.array(SHARES.values, dtype='float64')
                 else:
                     PROBS_values = np.array(SHARES.values, dtype='float32')

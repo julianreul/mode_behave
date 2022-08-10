@@ -373,38 +373,73 @@ class PostAnalysis:
         None.
         """
         
-        @guvectorize(
-            ['float32[:, :], int64[:], float32[:, :]'], '(r,m),(n)->(n,r)', 
-            nopython=True, target="parallel"
-            )
-        def get_points_from_draws_vector(space, draws, drawn_points): 
-            """
-            
-
-            Parameters
-            ----------
-            space : TYPE
-                DESCRIPTION.
-            draws : TYPE
-                DESCRIPTION.
-            drawn_points : TYPE
-                DESCRIPTION.
-
-            Returns
-            -------
-            None.
-
-            """
-            no_random = space.shape[0]
-            ppc = space.shape[1]
-            #convention: Count indices, starting from last column.
-            for d in prange(len(draws)):
-                rest = draws[d]
-                for i in prange(no_random):
-                    exp_temp = no_random-(i+1)
-                    index_temp = floor(rest/pow(ppc, exp_temp))
-                    drawn_points[d][i] = space[i][index_temp]
-                    rest = mod(rest, pow(ppc, exp_temp))
+        if self.bits_64:
+            @guvectorize(
+                ['float64[:, :], int64[:], float64[:, :]'], '(r,m),(n)->(n,r)', 
+                nopython=True, target="parallel"
+                )
+            def get_points_from_draws_vector(space, draws, drawn_points): 
+                """
+                
+    
+                Parameters
+                ----------
+                space : TYPE
+                    DESCRIPTION.
+                draws : TYPE
+                    DESCRIPTION.
+                drawn_points : TYPE
+                    DESCRIPTION.
+    
+                Returns
+                -------
+                None.
+    
+                """
+                no_random = space.shape[0]
+                ppc = space.shape[1]
+                #convention: Count indices, starting from last column.
+                for d in prange(len(draws)):
+                    rest = draws[d]
+                    for i in prange(no_random):
+                        exp_temp = no_random-(i+1)
+                        index_temp = floor(rest/pow(ppc, exp_temp))
+                        drawn_points[d][i] = space[i][index_temp]
+                        rest = mod(rest, pow(ppc, exp_temp))
+                        
+        else:
+            @guvectorize(
+                ['float32[:, :], int64[:], float32[:, :]'], '(r,m),(n)->(n,r)', 
+                nopython=True, target="parallel"
+                )
+            def get_points_from_draws_vector(space, draws, drawn_points): 
+                """
+                
+    
+                Parameters
+                ----------
+                space : TYPE
+                    DESCRIPTION.
+                draws : TYPE
+                    DESCRIPTION.
+                drawn_points : TYPE
+                    DESCRIPTION.
+    
+                Returns
+                -------
+                None.
+    
+                """
+                no_random = space.shape[0]
+                ppc = space.shape[1]
+                #convention: Count indices, starting from last column.
+                for d in prange(len(draws)):
+                    rest = draws[d]
+                    for i in prange(no_random):
+                        exp_temp = no_random-(i+1)
+                        index_temp = floor(rest/pow(ppc, exp_temp))
+                        drawn_points[d][i] = space[i][index_temp]
+                        rest = mod(rest, pow(ppc, exp_temp))
         
         points_temp = get_points_from_draws_vector(self.space, index)
         

@@ -12,6 +12,8 @@ import numpy as np
 
 import mode_behave_public as mb
 
+#%% OPTION 1.1: COMPLEX MODEL - 20 ATTRIBUTES
+
 #define model parameters
 param_random = 'RELATIVER_KAUFPREIS'
 
@@ -45,7 +47,7 @@ model = mb.Core(param=param_cars,
                 alt=4, 
                 )
 
-#%%OPTION ONE: ESTIMATION OF PARAMETERS
+#%%OPTION 1.2: ESTIMATION OF PARAMETERS FOR COMPLEX MODEL
 
 #estimate MXL model
 start = time.time()
@@ -60,8 +62,8 @@ res = model.estimate_mixed_logit(
     PROBS_min = 0.95,
     draws_per_iter = 500,
     updated_shares = 15,
-    gpu=True,
-    bits_64=False
+    gpu=False,
+    bits_64=True
     )
 end = time.time()
 delta = int(end-start)
@@ -70,17 +72,83 @@ print('Estimation of logit model took: ', str(delta), ' seconds.')
 #store t-statistic
 t_stats = model.t_stats
 
-#%%OPTION TWO: LOAD PRE-ESTIMATED PARAMETERS
+#%%OPTION 1.3 FOR POST-PROCESSING: LOAD PRE-ESTIMATED PARAMETERS
 
-with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + ".pickle", 'rb') as handle:
+with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + "_complex.pickle", 'rb') as handle:
     model.initial_point = pickle.load(handle)  
 
-with open(model.PATH_ModelParam + "points_" + str(param_random) + ".pickle", 'rb') as handle:
+with open(model.PATH_ModelParam + "points_" + str(param_random) + "_complex.pickle", 'rb') as handle:
     model.points = pickle.load(handle)  
 
-with open(model.PATH_ModelParam + "shares_" + str(param_random) + ".pickle", 'rb') as handle:
+with open(model.PATH_ModelParam + "shares_" + str(param_random) + "_complex.pickle", 'rb') as handle:
     model.shares = pickle.load(handle)  
 
+
+#%% OPTION 2.1: SIMPLE MODEL - 3 ATTRIBUTES
+
+#define model parameters
+param_random = 'RELATIVER_KAUFPREIS'
+
+param_ranking = ['RELATIVER_KAUFPREIS', 'REICHWEITE_DURCH100', 'LADE_TANK_ZEIT']
+
+param_ranking.remove(param_random)
+
+param_cars = {'constant': 
+                  {
+                   'fixed':[],
+                   'random':[]
+                   },
+              'variable':
+                  {
+                   'fixed': [],
+                   'random':[]
+                   }
+              }
+
+param_cars['variable']['fixed'] = param_ranking
+param_cars['variable']['random'] = [param_random]    
+    
+#Initialize model
+model = mb.Core(param=param_cars, 
+                data_name = 'example_data', 
+                max_space=81, 
+                alt=4, 
+                )
+
+#%%OPTION 2.2: ESTIMATION OF PARAMETERS FOR SIMPLE MODEL
+
+#estimate MXL model
+start = time.time()
+res = model.estimate_mixed_logit(
+    min_iter=5, 
+    max_iter=20,
+    opt_search=True,
+    space_method = 'std_value',
+    blind_exploration = 0,
+    scale_space = 1,
+    SHARES_max = 1000,
+    PROBS_min = 0.95,
+    draws_per_iter = 500,
+    updated_shares = 15,
+    gpu=False,
+    bits_64=True
+    )
+end = time.time()
+delta = int(end-start)
+print('Estimation of logit model took: ', str(delta), ' seconds.')
+
+#store t-statistic
+t_stats = model.t_stats
+
+#%%OPTION 2.3 FOR POST-PROCESSING: LOAD PRE-ESTIMATED PARAMETERS FOR SIMPLE MODEL
+with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+    model.initial_point = pickle.load(handle)  
+
+with open(model.PATH_ModelParam + "points_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+    model.points = pickle.load(handle)  
+
+with open(model.PATH_ModelParam + "shares_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+    model.shares = pickle.load(handle)  
 
 #%%Post-processing
 # Visualization of MXL-results and indication of clustering-results. 
