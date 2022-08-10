@@ -42,7 +42,7 @@ param_cars['variable']['random'] = [param_random]
     
 #Initialize model
 model = mb.Core(param=param_cars, 
-                data_name = 'example_data', 
+                data_name='example_data', 
                 max_space=1e7, 
                 alt=4, 
                 )
@@ -110,7 +110,7 @@ param_cars['variable']['random'] = [param_random]
     
 #Initialize model
 model = mb.Core(param=param_cars, 
-                data_name = 'example_data', 
+                data_name='example_data', 
                 max_space=81, 
                 alt=4, 
                 )
@@ -154,7 +154,7 @@ with open(model.PATH_ModelParam + "shares_" + str(param_random) + "_simple.pickl
 # Visualization of MXL-results and indication of clustering-results. 
 # Play around with bw_adjust to adapt curve-smoothing.
 model.visualize_space(
-    k=4, 
+    k=2, 
     scale_individual=True, 
     cluster_method='kmeans', 
     points_group=np.array([model.initial_point]),
@@ -163,6 +163,6 @@ model.visualize_space(
 #%%
 # Forecast of cluster centers on the base data
 model.forecast(choice_values = np.array([0,1,2,3]), 
-            k_cluster=4,
+            k_cluster=2,
             cluster_method='kmeans',
             )
