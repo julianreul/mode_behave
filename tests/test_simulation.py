@@ -42,8 +42,8 @@ class TestCarOwnership(unittest.TestCase):
             [0.500314856405928,
              0.43400343757783405,
              0.06463228081919556,
-             0.0010494251970423272]),
-            atol=0.01
+             0.0010494251970423272],
+            atol=0.01)
             )      
         
     def test_simulate_mode_choice(self): 
@@ -74,8 +74,8 @@ class TestCarOwnership(unittest.TestCase):
              0.1287949180524477,
              0.017423477365014716,
              0.008488917395244943,
-             1.3461420811290233e-05]),
-            atol=0.01
+             1.3461420811290233e-05],
+            atol=0.01)
             )    
                          
 if __name__ == '__main__':

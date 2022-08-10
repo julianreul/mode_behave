@@ -128,14 +128,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             else:
                 #default
                 self.initial_point_cars = config.initial_point_cars
-                
-            if len(self.initial_point_car_type_ext) and self.dc_type == 'MNL':
-                #external parameters
-                self.initial_point_car_type = self.initial_point_car_type_ext
-            else:
-                #default
-                self.initial_point_car_type = config.initial_point_car_type
-                
+                                
             if len(self.initial_point_mode_ext) and self.dc_type == 'MNL':
                 #external parameters
                 self.initial_point_mode = self.initial_point_mode_ext
