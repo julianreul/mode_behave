@@ -51,7 +51,7 @@ class PostAnalysis:
             is indicates on the respective axes and is very important for 
             quantitative and qualitative interpretations. Defaults to False.
             
-        kwargs points_group : array
+        kwargs external_points : array
             This array holds further parameter points in the parameter space,
             which should be visualized as reference points. E.g.: The initial
             point, as being calculated by the multinomial logit model.
@@ -130,19 +130,19 @@ class PostAnalysis:
             points_scaled = points_t.T
         
         #   Import points of socio-economic groups
-        points_group = kwargs.get('points_group', np.array([]))
+        external_points = kwargs.get('external_points', np.array([]))
         k_cluster = kwargs.get('k', 3)
-        if points_group.size:
+        if external_points.size:
             #get random points.
-            points_group_random = np.zeros(shape=(points_group.shape[0], number_random), dtype='float64')
-            for group in range(points_group.shape[0]):
+            external_points_random = np.zeros(shape=(external_points.shape[0], number_random), dtype='float64')
+            for group in range(external_points.shape[0]):
                 if self.param_transform:
                     #convert external point.
-                    points_group[group] = self.transform_initial_point(self.param_init, self.param_transform, point=points_group[group])
+                    external_points[group] = self.transform_initial_point(self.param_init, self.param_transform, point=external_points[group])
                 
                 for c in range(len(names_constant_random)):
                     index_temp = self.count_c-1 + len(names_constant_fixed) + c
-                    points_group_random[group][c] = points_group[group][index_temp]
+                    external_points_random[group][c] = external_points[group][index_temp]
                 for i in range(self.count_c):
                     for v in range(len(names_variable_random)):
                         index_temp = (
@@ -150,31 +150,31 @@ class PostAnalysis:
                                     (len(names_variable_fixed) + len(names_variable_random))*i +
                                     len(names_variable_fixed) + v
                                     )
-                        points_group_random[group][len(names_constant_random) + len(names_variable_random)*i + v] = points_group[group][index_temp] 
+                        external_points_random[group][len(names_constant_random) + len(names_variable_random)*i + v] = external_points[group][index_temp] 
                       
             # Get cluster centers
-            k_group = points_group_random.shape[0]
-            res_clustering = self.cluster_space(method_temp, k_cluster)#, points_affinity=points_group_random)
+            k_group = external_points_random.shape[0]
+            res_clustering = self.cluster_space(method_temp, k_cluster)
                         
             #scale these random points.
             if scale_individual:
-                points_group_random_t = points_group_random.T
+                external_points_random_t = external_points_random.T
                 for i in range(number_random):
-                    points_group_random_t[i] = points_group_random_t[i] / scale_log[i]
-                points_group_random = points_group_random_t.T
+                    external_points_random_t[i] = external_points_random_t[i] / scale_log[i]
+                external_points_random = external_points_random_t.T
             else:
-                points_group_random = points_group_random / scale
+                external_points_random = external_points_random / scale
                                    
             #convert points to dict-format
             count_random_variable = 0   
             vlines_loc_group = {}
-            points_group_random_t = points_group_random.T
+            external_points_random_t = external_points_random.T
             for i in range(len(self.param['constant']['random'])):
-                vlines_loc_group[names_constant_random[i]] = points_group_random_t[count_random_variable]
+                vlines_loc_group[names_constant_random[i]] = external_points_random_t[count_random_variable]
                 count_random_variable += 1
             for c in range(self.count_c):                        
                 for i in range(len(self.param['variable']['random'])):
-                    vlines_loc_group[names_variable_random[i] + '_' + str(c)] = points_group_random_t[count_random_variable]
+                    vlines_loc_group[names_variable_random[i] + '_' + str(c)] = external_points_random_t[count_random_variable]
                     count_random_variable += 1
             
         else:
@@ -361,16 +361,21 @@ class PostAnalysis:
         
     def get_points(self, index):
         """
-        
+        This methods draws explicit points for respective estimated shares 
+        from the multidimensional space array, by indicating the index of
+        the points within the space array.
         
         Parameters
         ----------
-        index : TYPE
-            DESCRIPTION.
+        index : array
+            The index of specific points of the parameter space within
+            the multidimensional space array.
 
         Returns
         -------
-        None.
+        point : array
+            An array of explicitly drawn points.
+        
         """
         
         if self.bits_64:
@@ -380,20 +385,23 @@ class PostAnalysis:
                 )
             def get_points_from_draws_vector(space, draws, drawn_points): 
                 """
-                
-    
+                This methods draws explicit points for respective estimated shares 
+                from the multidimensional space array, by indicating the index of
+                the points within the space array.
+                    
                 Parameters
                 ----------
-                space : TYPE
-                    DESCRIPTION.
-                draws : TYPE
-                    DESCRIPTION.
-                drawn_points : TYPE
-                    DESCRIPTION.
+                space : array
+                    Multidimensional array, which describes the complete
+                    parameter space.
+                draws : array
+                    An array which holds the index of the points, which shall 
+                    be explicitly drawn from space.
     
                 Returns
                 -------
-                None.
+                drawn_points : array
+                    Array with explicitly drawn points from the parameter space.
     
                 """
                 no_random = space.shape[0]
@@ -414,20 +422,23 @@ class PostAnalysis:
                 )
             def get_points_from_draws_vector(space, draws, drawn_points): 
                 """
-                
-    
+                This methods draws explicit points for respective estimated shares 
+                from the multidimensional space array, by indicating the index of
+                the points within the space array.
+                    
                 Parameters
                 ----------
-                space : TYPE
-                    DESCRIPTION.
-                draws : TYPE
-                    DESCRIPTION.
-                drawn_points : TYPE
-                    DESCRIPTION.
+                space : array
+                    Multidimensional array, which describes the complete
+                    parameter space.
+                draws : array
+                    An array which holds the index of the points, which shall 
+                    be explicitly drawn from space.
     
                 Returns
                 -------
-                None.
+                drawn_points : array
+                    Array with explicitly drawn points from the parameter space.
     
                 """
                 no_random = space.shape[0]
@@ -448,20 +459,25 @@ class PostAnalysis:
     
     def transform_initial_point(self, param, param_t, **kwargs):
         """
+        This method transforms the order of parameters within an
+        initial point array to fit an alternative attribute specification.
+        Therefore, the same attributes must have be considered during the 
+        estimation of the MNL model, however a different order of attributes 
+        could have been defined.
+        
         Parameters
         ----------
-        param : TYPE
-            DESCRIPTION.
-        param_t : TYPE
-            DESCRIPTION.
-        kwargs point : TYPE
-            DESCRIPTION.
-        
+        param : array
+            Original definition of parameters/attributes.
+        param_t : array
+            Desired definition of parameters/attributes.
+        kwargs point : array
+            An exogenously defined initial_point.
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        array
+            Re-ordered initial_point.
         """
         
         point = kwargs.get('point', self.initial_point)
@@ -627,26 +643,32 @@ class PostAnalysis:
     
     def cluster_space(self, method, k, **kwargs):
         """
+        This method analyses the estimated points and shares within the 
+        parameter space and clustes them into latent classes,
+        i.e. consumer groups.
+        
         Parameters
         ----------
-        method : TYPE
-            DESCRIPTION.
-        k : TYPE
-            DESCRIPTION.
-        kwargs tol : TYPE
-            DESCRIPTION.
-        kwargs points_affinity : TYPE
-            DESCRIPTION.
-        kwargs points : TYPE
-            DESCRIPTION.
-        kwargs shares : TYPE
-            DESCRIPTION.
+        method : string
+            Clustering method.
+        k : int
+            Number of clusters.
+        kwargs tol : float
+            Tolerance. Defaults to 10e-7.
+        kwargs points_affinity : boolean
+            If True, an affinity index is calculated and returned. 
+            Defaults to False.
+        kwargs points : array
+            Exogenously defined set of points to be analyzed.
+        kwargs shares : array
+            Exogenously defined set of shares to be analyzed.
             
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        list
+            Returns a set of cluster results: 
+            cluster_centers, labels, inertia, affinity_points
         """
         tol_temp = kwargs.get('tol', 10e-7)
         
@@ -796,7 +818,130 @@ class PostAnalysis:
         else:
             raise ValueError('No such method defined.')
             
-    def simulate_latent_class(self, latent_points, latent_shares, choice_values, **kwargs):
+    def simulate_logit(self, **kwargs):
+        """
+        This method simulates a multinomial logit model, based on the naming-
+        conventions of the mixed logit model. 
+
+        Parameters
+        ----------
+        kwargs param_transform : TYPE
+            DESCRIPTION
+        kwargs sense : dictionary
+            The dictionary "sense" holds the attribute names for which sensitivities
+            shall be simulated as keys. The values are the arrays or lists
+            which indicate the relative change of the attribute value
+            for each choice option.
+            
+        Returns
+        -------
+        float
+            Return the mean value for the simulated latent class model.
+
+        """
+        
+        param_transform = kwargs.get("param_transform", False)
+        count_c = self.count_c
+        sense = kwargs.get("sense", {})
+        
+        try:
+            no_constant_fixed = len(param_transform['constant']['fixed'])
+            no_constant_random = len(param_transform['constant']['random'])
+            no_variable_fixed = len(param_transform['variable']['fixed'])
+            no_variable_random = len(param_transform['variable']['random'])
+        except:
+            no_constant_fixed = len(self.param['constant']['fixed'])
+            no_constant_random = len(self.param['constant']['random'])
+            no_variable_fixed = len(self.param['variable']['fixed'])
+            no_variable_random = len(self.param['variable']['random'])
+                    
+        if param_transform:
+            initial_point = self.transform_initial_point(param=self.param, param_t=self.param_transform)
+        else:
+            initial_point = self.initial_point
+                
+        dim_aggr_alt_max = max(
+            len(self.param['constant']['fixed']),
+            len(self.param['constant']['random']),
+            len(self.param['variable']['fixed']),
+            len(self.param['variable']['random']),
+            )
+            
+        data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
+        for c in range(self.count_c):
+            for i, param in enumerate(self.param['constant']['fixed']):
+                if param in sense.keys():
+                    data[0][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[0][i][c] = self.data[param + '_' + str(c)].values
+                    
+            for i, param in enumerate(self.param['constant']['random']):                
+                if param in sense.keys():
+                    data[1][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[1][i][c] = self.data[param + '_' + str(c)].values
+                
+            for i, param in enumerate(self.param['variable']['fixed']):
+                if param in sense.keys():
+                    data[2][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[2][i][c] = self.data[param + '_' + str(c)].values
+                    
+            for i, param in enumerate(self.param['variable']['random']):
+                if param in sense.keys():
+                    data[3][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[3][i][c] = self.data[param + '_' + str(c)].values
+                
+        def get_utility_vector(c, data):
+            if c == 0:
+                res_temp = initial_point[c-1]
+            else:
+                res_temp = 0
+                        
+            for a in range(no_constant_fixed):
+                res_temp += initial_point[(count_c-1) + a] * data[0][a][c]
+            for a in range(no_constant_random):
+                res_temp += initial_point[
+                    (count_c-1) + 
+                    no_constant_fixed + 
+                    a
+                    ] * data[1][a][c]
+            for a in range(no_variable_fixed):
+                res_temp += initial_point[
+                    (count_c-1) + no_constant_fixed + no_constant_random + 
+                    (no_variable_fixed + no_variable_random)*c + a
+                    ] * data[2][a][c]
+            for a in range(no_variable_random):
+                res_temp += initial_point[
+                    (count_c-1) + 
+                    no_constant_fixed + 
+                    no_constant_random + 
+                    (no_variable_fixed + no_variable_random)*c + 
+                    no_variable_fixed + a
+                    ] * data[3][a][c]
+                
+            return res_temp   
+        
+        def calculate_logit_shares(av, data):
+                
+            logit_probs = np.zeros(shape=count_c)
+            
+            #calculate bottom
+            bottom = np.zeros(shape=av.shape[1])
+            for c in range(count_c):   
+                bottom += av[c] * np.exp(get_utility_vector(c, data))  
+            for c in range(count_c):   
+                top = av[c] * np.exp(get_utility_vector(c, data))
+                logit_probs[c] = np.mean(top/bottom)
+                
+            return logit_probs
+
+        res = calculate_logit_shares(self.av, data)
+            
+        return res
+                    
+    def simulate_latent_class(self, latent_points, latent_shares, **kwargs):
         """
         This method simulates a latent class model, based on the naming-
         conventions of the mixed logit model. The different latent classes
@@ -812,12 +957,13 @@ class PostAnalysis:
             The random points within each class.
         latent_shares : 1D numpy array.
             The share of each class.
-        choice_values : TYPE
-            The numeric values of the choice alternatives.
         kwargs param_transform : TYPE
             DESCRIPTION
-        kwargs weighted : TYPE
-            DESCRIPTION
+        kwargs sense : dictionary
+            The dictionary "sense" holds the attribute names for which sensitivities
+            shall be simulated as keys. The values are the arrays or lists
+            which indicate the relative change of the attribute value
+            for each choice option.
 
         Returns
         -------
@@ -827,8 +973,8 @@ class PostAnalysis:
         """
         
         param_transform = kwargs.get("param_transform", False)
-        weighted = kwargs.get("weighted", False)
         count_c = self.count_c
+        sense = kwargs.get("sense", {})
         
         try:
             no_constant_fixed = len(param_transform['constant']['fixed'])
@@ -850,10 +996,7 @@ class PostAnalysis:
             initial_point = self.transform_initial_point(param=self.param, param_t=self.param_transform)
         else:
             initial_point = self.initial_point
-        
-        choice_zero_bool = self.choice_zero
-        choice_zero = (choice_zero_bool==0)*1
-        
+                
         dim_aggr_alt_max = max(
             len(self.param['constant']['fixed']),
             len(self.param['constant']['random']),
@@ -864,37 +1007,35 @@ class PostAnalysis:
         data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
         for c in range(self.count_c):
             for i, param in enumerate(self.param['constant']['fixed']):
-                data[0][i][c] = self.data[param + '_' + str(c)].values
-            for i, param in enumerate(self.param['constant']['random']):
-                data[1][i][c] = self.data[param + '_' + str(c)].values
+                if param in sense.keys():
+                    data[0][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[0][i][c] = self.data[param + '_' + str(c)].values
+                    
+            for i, param in enumerate(self.param['constant']['random']):                
+                if param in sense.keys():
+                    data[1][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[1][i][c] = self.data[param + '_' + str(c)].values
+                
             for i, param in enumerate(self.param['variable']['fixed']):
-                data[2][i][c] = self.data[param + '_' + str(c)].values
+                if param in sense.keys():
+                    data[2][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[2][i][c] = self.data[param + '_' + str(c)].values
+                    
             for i, param in enumerate(self.param['variable']['random']):
-                data[3][i][c] = self.data[param + '_' + str(c)].values
+                if param in sense.keys():
+                    data[3][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                else:
+                    data[3][i][c] = self.data[param + '_' + str(c)].values
         
         @njit
         def get_utility_vector(c, point, l, data):
-            """
-            
-
-            Parameters
-            ----------
-            c : TYPE
-                DESCRIPTION.
-            point : TYPE
-                DESCRIPTION.
-            l : TYPE
-                DESCRIPTION.
-            data : TYPE
-                DESCRIPTION.
-
-            Returns
-            -------
-            res_temp : TYPE
-                DESCRIPTION.
-
-            """
-            res_temp = initial_point[c-1]*choice_zero[l]
+            if c == 0:
+                res_temp = initial_point[c-1]
+            else:
+                res_temp = 0
             
             for a in range(no_constant_fixed):
                 res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
@@ -916,27 +1057,6 @@ class PostAnalysis:
             nopython=True, target="parallel"
             )
         def calculate_logit_vector(points, av, data, logit_probs_):
-            """
-
-        
-            Parameters
-            ----------
-            points : TYPE
-                DESCRIPTION.
-            av : TYPE
-                DESCRIPTION.
-            data : TYPE
-                DESCRIPTION.
-            logit_probs_ : TYPE
-                DESCRIPTION.
-
-            Returns
-            -------
-            res_mean : TYPE
-                DESCRIPTION.
-        
-            """    
-            #logit_probs_ = np.zeros(shape = (points.shape[0], av.shape[1], av.shape[0]))
             
             for m in prange(points.shape[0]):  
                 point = points[m]
@@ -950,87 +1070,15 @@ class PostAnalysis:
                     for c in prange(count_c):   
                         top = av[c][l] * exp(get_utility_vector(c, point, l, data))
                         logit_probs_[m][l][c] = top/bottom  
-            
-            #return logit_probs_
-        
+                    
         logit_probs = calculate_logit_vector(latent_points, self.av, data)
         res = np.zeros(shape=logit_probs[0].shape)
         for latent_class in range(logit_probs.shape[0]):
             res += logit_probs[latent_class]*latent_shares[latent_class]
+                    
+        return np.mean(res, axis=0)
             
-        if weighted:
-            res_mean = np.mean(self.data['weight']*np.nansum(np.multiply(res, choice_values), axis=1))
-        else:
-            res_mean = np.mean(np.nansum(np.multiply(res, choice_values), axis=1))
-        self.check_res = res    
-        
-        return res_mean
-    
-    def forecast_points(self, latent_points_array, choice_values, **kwargs):
-        """
-        This method creates a horizontal bar plot, vidualizing the means
-        of different input points (for a MNL model).
-
-        Parameters
-        ----------
-        latent_points_array : 2D numpy array.
-            The first dimension differnetiates the different set of points,
-            corresponding to different model. The second dimension contains
-            the random points in the following format: 
-                - parameters of random attributes for choice 0
-                - parameters of random attributes for choice 1
-                - parameters of random attributes for choice n
-        choice_values : TYPE
-            Numeric values of choice alternatives.
-        kwargs param_transform : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
-        """        
-        param_transform = kwargs.get("param_transform", False)
-        
-        #initialize arrays
-        mean_array = []
-        label_array = []
-        
-        #append mean of observed data
-        mean_obs = np.sum(
-            [np.sum(self.data['choice_' + str(i)])*choice_values[i] for i in range(len(choice_values))]
-            ) / len(self.data)
-        mean_array.append(mean_obs)
-        label_array.append('Status Quo')
-        #append simulated means for each point.
-        for i in range(latent_points_array.shape[0]):
-            #uses method -simulate_latent_class()- to simulate
-            #single points, by setting parameter -latent_shares- to 1.
-            mean_array.append(self.simulate_latent_class(
-                np.array([latent_points_array[i]]), 
-                np.array([1]), 
-                choice_values, 
-                param_transform=param_transform
-                ))
-            label_array.append('Scenario ' + str(i))
-
-        #reverse arrays
-        mean_array.reverse()
-        label_array.reverse()
-
-        fig, ax = plt.subplots()
-        
-        number_bars = latent_points_array.shape[0] + 1
-        pal = sns.cubehelix_palette(n_colors=number_bars, start=2.35, rot=-.1,dark=0,light=0.75)
-        ax.barh(y=range(1,number_bars+1), width=mean_array, height=0.8, 
-                left=None, color=pal, align='center',
-                tick_label = label_array
-                )
-        
-        ax.set_title('Scenario Means', fontsize=14, weight='bold')
-        ax.set_xlabel('Mean')
-        
-    def forecast(self, choice_values, **kwargs):        
+    def forecast(self, method, **kwargs):        
         """
         This method creates a barplot of the mean values of different latent
         class and MNL models. The MNL models are based upon clustering results
@@ -1043,20 +1091,27 @@ class PostAnalysis:
 
         Parameters
         ----------
-        choice_values : numpy array
-            Numeric values of choice alternatives..
-        kwargs points_group : TYPE
+        method : str
+            Method indicates the model type, which to use for forecasting. 
+            Options are: "MNL" (Multinomial Logit), "MXL" (Mixed Logit), 
+            "LC" (Latent Class). Defaults to "MNL".
+        kwargs sense_scenarios : dictionary
+            The dictionary "sense_scenarios" is two dimensional.
+            The first dimension indicated the scenario name, while the
+            second dimension holds the scenario parameters according
+            to the definition of "sense". "sense" itself is a dictionary.
+            The dictionary "sense" holds the attribute names for which sensitivities
+            shall be simulated as keys. The values are the arrays or lists
+            which indicate the relative change of the attribute value
+            for each choice option.
+
+        kwargs external_points : TYPE
             DESCRIPTION.
         kwargs k_cluster : TYPE
             DESCRIPTION.
-        kwargs user_forecast : TYPE
-            DESCRIPTION.
-        kwargs output_clustering : TYPE
-            DESCRIPTION.
         kwargs cluster_method : TYPE
             DESCRIPTION.
-        kwargs weighted : TYPE
-            DESCRIPTION.
+        kwargs save_fig_path : str
 
         Raises
         ------
@@ -1081,282 +1136,210 @@ class PostAnalysis:
             len(self.param['variable']['random'])*self.count_c
             )
         
-        #   keyword arguments
-        points_group = kwargs.get('points_group', False)
-        k_cluster = kwargs.get('k_cluster', 3)
-        user_forecast = kwargs.get('user_forecast', False)
-        output_clustering = kwargs.get('output_clustering', False)
-        method_temp = kwargs.get('cluster_method', 'kmeans')
-        weighted = kwargs.get('weighted', False)
-        
-        #   step 1: Scale parameters
-        try:
-            points = np.nan_to_num(self.points)
-        except:
-            points = np.nan_to_num(self.get_points(np.array(self.shares.index, dtype='int64')))
-            
-        #   get only points, above share-treshold.
-        shares = self.shares        
-        points_scaled = points
-        
-        #   Import points of socio-economic groups
-        try:
-            points_group.size
-            
-            #get random points.
-            points_group_random = np.zeros(shape=(points_group.shape[0], number_random), dtype='float32')
-
-            for group in range(points_group.shape[0]):
-                if self.param_transform:
-                    #convert external point.
-                    points_group[group] = self.transform_initial_point(
-                        self.param_init, self.param_transform, point=points_group[group]
-                        )
-                                
-                for c in range(len(names_constant_random)):
-                    index_temp = self.count_c-1 + len(names_constant_fixed) + c
-                    points_group_random[group][c] = points_group[group][index_temp]
-                for v in range(len(names_variable_random)):
-                    for i in range(self.count_c):
-                        index_temp = (
-                                    self.count_c-1 + len(names_constant_fixed) + len(names_constant_random) + 
-                                    (len(names_variable_fixed) + len(names_variable_random))*i +
-                                    len(names_variable_fixed) + v
-                                    )
-                        points_group_random[group][
-                            len(names_constant_random) + len(names_variable_random)*i + v
-                            ] = points_group[group][index_temp] 
-                                      
-            ext_points = True
-        except:
-            print('No external reference points given.')
-            ext_points = False
-            
-        # Get cluster centers
-        if ext_points:
-            res_clustering = self.cluster_space(method_temp, k_cluster, points_affinity=points_group_random)
-            affinity_all = res_clustering[4]
-            affinity_percent_all = []
-            for a in range(affinity_all.shape[0]):
-                affinity = affinity_all[a]
-                a_solve = np.zeros(shape=(len(affinity), len(affinity)))
-                a_solve[0] = [1]*len(affinity)
-                for i in range(1,len(affinity)):
-                    ratio_temp = affinity[i] / affinity[0]
-                    a_solve[i][0] = 1
-                    a_solve[i][i] = -ratio_temp
-                b_solve = np.zeros(shape=len(affinity))
-                b_solve[0] = 1
-                affinity_solve = np.linalg.solve(a_solve,b_solve)
-                affinity_percent = np.round(affinity_solve*100).astype('int')
-                if np.allclose(np.dot(a_solve, affinity_solve), b_solve):
-                    affinity_percent_all = affinity_percent_all + [affinity_percent]
-                else:
-                    raise ValueError('Affinity-calculation failed.')
-        else:
-            res_clustering = self.cluster_space(method_temp, k_cluster, points=points_scaled, shares=shares)
-        cluster_center = res_clustering[0]
-        
-        cluster_labels_pd = pd.DataFrame(columns=['labels', 'weights'])
-        cluster_labels_pd['labels'] = res_clustering[1]
-        #assign weights
-        if method_temp in ('agglo', 'meanshift'):
-            index_clustered = res_clustering[2]
-            cluster_labels_pd = cluster_labels_pd.reset_index(drop=True)
-            cluster_labels_pd['weights'] = self.shares.values[index_clustered]
-        else:
-            cluster_labels_pd['weights'] = self.shares.values
-            
-        if method_temp in ('meanshift', 'dbscan'):
-            k_cluster = res_clustering[0].shape[0]
-            
-        cluster_sizes_rel = np.array(
-            [cluster_labels_pd.loc[cluster_labels_pd['labels'] == i, 'weights'].sum() for i in range(k_cluster)]
-            )
-        
-        #sort cluster_center and cluster_sizes_rel
-        cluster_sizes_rel_pd = pd.Series(cluster_sizes_rel)
-        cluster_sizes_rel_pd = cluster_sizes_rel_pd.sort_values(ascending=False)
-        cluster_sizes_rel = cluster_sizes_rel_pd.values
-        cluster_sizes_rel_pd = cluster_sizes_rel_pd.reset_index()
-        #reshuffle cluster_center
-        self.check_cluster_reorder = cluster_sizes_rel_pd
-        cluster_center = cluster_center[cluster_sizes_rel_pd['index'].values,]
-        
-        cluster_sizes_rel_percent = np.round(cluster_sizes_rel*100).astype('int')
-                
-        #Plot data of mean results in table
-        mean_array = []
-        name_array = []
-                
-        #append values for cluster
-        for k in range(k_cluster):
-            mean_array.append(
-                self.simulate_latent_class(
-                    np.array([cluster_center[k]]), 
-                    np.array([1]), 
-                    choice_values, 
-                    weighted=weighted
-                    )
-                )
-            name_array += ['C' + str(k+1)]
-            
-        if ext_points:
-            #append values for groups
-            k_group = points_group_random.shape[0]
-            for g in range(k_group):
-                mean_array.append(
-                    self.simulate_latent_class(
-                        np.array([points_group_random[g]]), np.array([1]), 
-                        choice_values, 
-                        weighted=weighted
-                        )
-                    )
-                cluster_affinity = ''
-                group_size = 0
-                for i in range(k_cluster):
-                    cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
-                    group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_rel_percent[i]/100)
-                group_size_percent = round(group_size*100)
-                name_array += ['Logit']
-        else:
-            k_group = 0
-            
-        #append values for latent class model
-        mean_array.append(self.simulate_latent_class(cluster_center, cluster_sizes_rel, choice_values, weighted=weighted))
-        cluster_sizes_str = ''
-        for i in range(k_cluster):
-            cluster_sizes_str += 'C' + str(i+1) + ' - ' + str(cluster_sizes_rel_percent[i]) + '%\n'
-        name_array += ['Latent Class']
-        
-        #append values for mean of observations
-        mean_obs = np.sum([np.sum(self.data['choice_' + str(i)])*choice_values[i] for i in range(len(choice_values))]) / len(self.data)
-        mean_array.append(mean_obs)
-        name_array += ['Base Data']
-        
-        type_array = ['Cluster']*k_cluster + ['Group']*k_group + ['Latent Class', 'Status Quo']
-        data_to_plot = pd.DataFrame(columns=['mean', 'type'])
-        data_to_plot['mean'] = mean_array
-        data_to_plot['name'] = name_array
-        data_to_plot['type'] = type_array
-        data_to_plot = data_to_plot.sort_values(by=['type', 'name'], ascending=[True, False])
-        print(data_to_plot)
-        print('Cluster Sizes [%]: ', str(cluster_sizes_rel_percent))
-        
-        sns.set_theme(style="whitegrid")
-        
-        fig0, ax0 = plt.subplots()        
-                        
-        number_bars = len(data_to_plot)
-        
-        pal_group = sns.cubehelix_palette(n_colors=k_group, start=0, rot=-.1,dark=0.3,light=0.65,hue=1)
-        pal_cluster_long = sns.color_palette("YlOrBr",n_colors=k_cluster*2)
-        pal_cluster = pal_cluster_long[(k_cluster-1):-1]
-        #reverse color palette
-        pal_cluster.reverse()
-            
-        #pal_group = sns.cubehelix_palette(n_colors=k_group, start=0.9, rot=-.1,dark=0.3,light=0.65,hue=1)
-        color_status_quo = (0.22960162557619404, 0.4881216497508878, 0.39206865738222524)
-        color_latent_class = (0.3103785468486441, 0.5792394507778018, 0.4673588205746596)
-        pal_all = []
-        for k in range(k_cluster):
-            pal_all.append(pal_cluster[k])
-        for g in range(k_group):
-            pal_all.append(pal_group[g])
-            
-        pal_all.append(color_latent_class)
-        pal_all.append(color_status_quo)
-        
-        ax0.barh(y=range(1,number_bars+1), width=data_to_plot['mean'].values, height=0.8, 
-                left=None, color=pal_all, align='center',
-                tick_label = data_to_plot['name'].values
-                )
-            
-        ax0.set_title('Simulation', fontsize=14, weight='bold')
-        ax0.set_xlabel('Simulated values for each cluster, the latent class model and the base data.')
-        
-        ax0.plot()
-        plt.show()
-        
         save_fig_path = kwargs.get('save_fig_path', False)
-        name_scenario = kwargs.get('name_scenario', False)
         
-        if save_fig_path:
-            if name_scenario:
-                fig0.savefig(save_fig_path + 'simulation_status_quo_' + name_scenario, dpi=300, bbox_inches='tight')
-            else:
-                fig0.savefig(save_fig_path + 'simulation_status_quo', dpi=300, bbox_inches='tight')
-                    
-        if user_forecast:
-
-            #get information from the user on cluster-shares for forecasting. 
-            cluster_sizes_forecast = np.array([])
-            check_sum = 0
-            while check_sum == 0:
-                for i in range(k_cluster):
-                    check_entry = 0
-                    while check_entry == 0:
-                        on_display = 'Enter future share (int-%) for cluster ' + str(i+1) + ': '
-                        size_temp = input(on_display)
-                        size_temp = int(size_temp) / 100
-                        if size_temp < 0 or size_temp > 1:
-                            print('Invalid value. Please re-enter value.')
-                        else:
-                            check_entry = 1
-                            
-                    cluster_sizes_forecast = np.append(cluster_sizes_forecast, size_temp)
-                    if i == (k_cluster-1):
-                        if np.sum(cluster_sizes_forecast) != 1:
-                            print('Cluster shares do not sum to one. Please re-enter values.')
-                        else:
-                            check_sum = 1
-                            
-            cluster_sizes_forecast_percent = np.round(cluster_sizes_forecast*100).astype('int')
+        sense_scenarios = kwargs.get("sense_scenarios", False)
+        
+        #Dictionary to store simulation results
+        res_simu = {}
+        
+        if method == "MNL":
+            res_simu['MNL'] = self.simulate_logit()
             
-            #plot forecasted shares
-            mean_array[k_cluster+k_group] = self.simulate_latent_class(
-                cluster_center, cluster_sizes_forecast, choice_values, weighted=weighted
+            if sense_scenarios:
+                for sense_name in sense_scenarios.keys():
+                    res_simu[sense_name] = self.simulate_logit(
+                        sense=sense_scenarios[sense_name]
+                        )
+                
+        
+        elif method == "LC":
+            #   keyword arguments
+            external_points = kwargs.get('external_points', False)
+            k_cluster = kwargs.get('k_cluster', 3)
+            method_temp = kwargs.get('cluster_method', 'kmeans')
+            
+            #   step 1: Scale parameters
+            try:
+                points = np.nan_to_num(self.points)
+            except:
+                points = np.nan_to_num(self.get_points(np.array(self.shares.index, dtype='int64')))
+            
+            #   get only points, above share-treshold.
+            shares = self.shares        
+            points_scaled = points
+        
+            #   Import points of socio-economic groups
+            try:
+                external_points.size
+                
+                #get random points.
+                external_points_random = np.zeros(shape=(external_points.shape[0], number_random), dtype='float32')
+    
+                for group in range(external_points.shape[0]):
+                    if self.param_transform:
+                        #convert external point.
+                        external_points[group] = self.transform_initial_point(
+                            self.param_init, self.param_transform, point=external_points[group]
+                            )
+                                    
+                    for c in range(len(names_constant_random)):
+                        index_temp = self.count_c-1 + len(names_constant_fixed) + c
+                        external_points_random[group][c] = external_points[group][index_temp]
+                    for v in range(len(names_variable_random)):
+                        for i in range(self.count_c):
+                            index_temp = (
+                                        self.count_c-1 + len(names_constant_fixed) + len(names_constant_random) + 
+                                        (len(names_variable_fixed) + len(names_variable_random))*i +
+                                        len(names_variable_fixed) + v
+                                        )
+                            external_points_random[group][
+                                len(names_constant_random) + len(names_variable_random)*i + v
+                                ] = external_points[group][index_temp] 
+                                          
+                ext_points = True
+            except:
+                print('No external reference points given.')
+                ext_points = False
+            
+            # Get cluster centers
+            if ext_points:
+                res_clustering = self.cluster_space(method_temp, k_cluster, points_affinity=external_points_random)
+                affinity_all = res_clustering[4]
+                affinity_percent_all = []
+                for a in range(affinity_all.shape[0]):
+                    affinity = affinity_all[a]
+                    a_solve = np.zeros(shape=(len(affinity), len(affinity)))
+                    a_solve[0] = [1]*len(affinity)
+                    for i in range(1,len(affinity)):
+                        ratio_temp = affinity[i] / affinity[0]
+                        a_solve[i][0] = 1
+                        a_solve[i][i] = -ratio_temp
+                    b_solve = np.zeros(shape=len(affinity))
+                    b_solve[0] = 1
+                    affinity_solve = np.linalg.solve(a_solve,b_solve)
+                    affinity_percent = np.round(affinity_solve*100).astype('int')
+                    if np.allclose(np.dot(a_solve, affinity_solve), b_solve):
+                        affinity_percent_all = affinity_percent_all + [affinity_percent]
+                    else:
+                        raise ValueError('Affinity-calculation failed.')
+            else:
+                res_clustering = self.cluster_space(method_temp, k_cluster, points=points_scaled, shares=shares)
+            cluster_center = res_clustering[0]
+            
+            cluster_labels_pd = pd.DataFrame(columns=['labels', 'weights'])
+            cluster_labels_pd['labels'] = res_clustering[1]
+            #assign weights
+            if method_temp in ('agglo', 'meanshift'):
+                index_clustered = res_clustering[2]
+                cluster_labels_pd = cluster_labels_pd.reset_index(drop=True)
+                cluster_labels_pd['weights'] = self.shares.values[index_clustered]
+            else:
+                cluster_labels_pd['weights'] = self.shares.values
+            
+            if method_temp in ('meanshift', 'dbscan'):
+                k_cluster = res_clustering[0].shape[0]
+                
+            cluster_sizes_rel = np.array(
+                [cluster_labels_pd.loc[cluster_labels_pd['labels'] == i, 'weights'].sum() for i in range(k_cluster)]
                 )
+            
+            #sort cluster_center and cluster_sizes_rel
+            cluster_sizes_rel_pd = pd.Series(cluster_sizes_rel)
+            cluster_sizes_rel_pd = cluster_sizes_rel_pd.sort_values(ascending=False)
+            cluster_sizes_rel = cluster_sizes_rel_pd.values
+            cluster_sizes_rel_pd = cluster_sizes_rel_pd.reset_index()
+            #reshuffle cluster_center
+            self.check_cluster_reorder = cluster_sizes_rel_pd
+            cluster_center = cluster_center[cluster_sizes_rel_pd['index'].values,]
+            
+            cluster_sizes_rel_percent = np.round(cluster_sizes_rel*100).astype('int')
+            
+            #SIMULATION OF LATENT CLASSES AND EXTERNAL POINTS
+            
+            #MNL simulation for individual clusters.
+            for k in range(k_cluster):
+                res_simu['C' + str(k+1)] = self.simulate_latent_class(
+                        np.array([cluster_center[k]]), 
+                        np.array([1]), 
+                        )
+                if sense_scenarios:
+                    for sense_name in sense_scenarios.keys():
+                        res_simu['C' + str(k+1) + '_' + sense_name] = self.simulate_latent_class(
+                                np.array([cluster_center[k]]), 
+                                np.array([1]), 
+                                sense=sense_scenarios[sense_name]
+                                )
+                                    
+            #Simulation of externally given points.
+            if ext_points:
+                k_group = external_points_random.shape[0]
+                for g in range(k_group):
+                    res_simu['External ' + str(g)] = self.simulate_latent_class(
+                            np.array([external_points_random[g]]), np.array([1]), 
+                            )
+                        
+                    if sense_scenarios:
+                        for sense_name in sense_scenarios.keys():
+                            res_simu['External ' + str(g) + '_' + sense_name] = self.simulate_latent_class(
+                                    np.array([external_points_random[g]]), 
+                                    np.array([1]), 
+                                    sense=sense_scenarios[sense_name]
+                                    )
+                                                
+                    cluster_affinity = ''
+                    group_size = 0
+                    for i in range(k_cluster):
+                        cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
+                        group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_rel_percent[i]/100)
+                    group_size_percent = round(group_size*100)
+            else:
+                k_group = 0    
+                
+            #Simulation of latent class model, based on cluster analysis.
+            res_simu['Latent Class'] = self.simulate_latent_class(
+                cluster_center, cluster_sizes_rel
+                )
+            
+            if sense_scenarios:
+                for sense_name in sense_scenarios.keys():
+                    res_simu['Latent Class' + '_' + sense_name] = self.simulate_latent_class(
+                        cluster_center, 
+                        cluster_sizes_rel,
+                        sense=sense_scenarios[sense_name]
+                        )
+                                   
             cluster_sizes_str = ''
             for i in range(k_cluster):
-                cluster_sizes_str += 'C' + str(i+1) + ': ' + str(cluster_sizes_forecast_percent[i]) + '%\n'
-            name_array[k_cluster+k_group] = 'Latent Class' + '\n' + cluster_sizes_str
-                   
-            for g in range(k_group):
-                cluster_affinity = ''
-                group_size = 0
-                for i in range(k_cluster):
-                    cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
-                    group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_forecast_percent[i]/100)
-                group_size_percent = round(group_size*100)
-                name_array[k_cluster+g] = (
-                    'G' + str(g+1) + '\n' + 'cluster affinity:' + 
-                    '\n' + cluster_affinity + '\n' + 'group size' + 
-                    '\n' + str(group_size_percent) + '%'
-                    )
+                cluster_sizes_str += 'C' + str(i+1) + ' - ' + str(cluster_sizes_rel_percent[i]) + '%\n'
             
-            data_to_plot = pd.DataFrame(columns=['mean', 'type'])
-            data_to_plot['mean'] = mean_array
-            data_to_plot['name'] = name_array
-            data_to_plot['type'] = type_array
-            data_to_plot = data_to_plot.sort_values(by=['type', 'name'], ascending=[True, False])
-            print(data_to_plot)
-            
-            fig1, ax1 = plt.subplots()        
-                        
-            ax1.barh(y=range(1,number_bars+1), width=data_to_plot['mean'].values, height=0.8, 
-                    left=None, color=pal_all, align='center',
-                    tick_label = data_to_plot['name'].values
-                    )            
-             
-            ax1.set_title('Simulation', fontsize=14, weight='bold')
-            ax1.set_xlabel('Simulated values for each cluster, the latent class model and the base data.')
-            
-            ax1.plot()
-            plt.show()
-            
-            if save_fig_path:
-                fig1.savefig(save_fig_path + 'simulation_forecast', dpi=300, bbox_inches='tight')
+        elif method == "MXL":
+            raise ValueError("Chosen method is not yet implemented.")
+        else:
+            raise ValueError("Chosen method is not available.")
+               
+        ### GENERAL CODE FOR VISUALIZATION STARTS BELOW ###
+        
+        #Observations in base data
+        res_simu['Base Data'] = [np.sum(self.data['choice_' + str(i)]) / len(self.data) for i in range(self.count_c)]
+        
+        
+        #Barplot
+        self.check_res_simu = res_simu
+        res_simu_pd = pd.DataFrame(res_simu)
+        simu_names = res_simu_pd.columns.values
+        res_simu_pd["Choice Option"] = res_simu_pd.index
+        
+        res_simu_pd_long = pd.melt(res_simu_pd, id_vars='Choice Option', value_vars=simu_names)
+        res_simu_pd_long = res_simu_pd_long.rename(columns={"value":"Choice probability", "variable":"Scenario"})
+        
+        sns.set_theme(style="whitegrid")
                 
-        if output_clustering:
-            return res_clustering, data_to_plot
+        ax = sns.barplot(x="Choice Option", y="Choice probability", hue="Scenario", data=res_simu_pd_long)
+        
+        #plt.legend(bbox_to_anchor=(1.05, 1))
+        
+        if save_fig_path:
+            fig = ax.get_figure()
+            fig.savefig(save_fig_path + 'forecast.png', dpi=300, bbox_inches='tight')
+                

@@ -161,8 +161,19 @@ model.visualize_space(
     bw_adjust=0.03
     )
 #%%
+# Comment on forecasting: The forecasting is performed on training data 
+# for simplicity. Please adjust the data (self.data) for further/own 
+# forecasting practices by reloading a diverging subset of the base data.
+
 # Forecast of cluster centers on the base data
-model.forecast(choice_values = np.array([0,1,2,3]), 
+model.forecast(method='LC', 
             k_cluster=2,
             cluster_method='kmeans',
+            )
+#%%
+# Forecast of MNL model with parameter variation.
+# In this example, the relative purchase price of vehicle technologies is 
+# adjusted: ICEV +10%, PHEV +10%, BEV -50%, FCEV -50%
+model.forecast(method='MNL', 
+            sense_scenarios={"Cheap_EV": {"RELATIVER_KAUFPREIS": [1.1, 1.1, 0.5, 0.5]}}
             )
