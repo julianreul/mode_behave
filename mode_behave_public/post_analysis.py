@@ -1259,7 +1259,7 @@ class PostAnalysis:
             
             #MNL simulation for individual clusters.
             for k in range(k_cluster):
-                res_simu['C' + str(k+1)] = self.simulate_latent_class(
+                res_simu['C' + str(k+1) + ' (' + str(cluster_sizes_rel_percent[k]) + "%)"] = self.simulate_latent_class(
                         np.array([cluster_center[k]]), 
                         np.array([1]), 
                         )
