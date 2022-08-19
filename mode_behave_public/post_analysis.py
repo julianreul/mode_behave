@@ -843,7 +843,8 @@ class PostAnalysis:
         param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
         sense = kwargs.get("sense", {})
-        
+        external_point = kwargs.get("external_point", False)
+
         try:
             no_constant_fixed = len(param_transform['constant']['fixed'])
             no_constant_random = len(param_transform['constant']['random'])
@@ -855,10 +856,24 @@ class PostAnalysis:
             no_variable_fixed = len(self.param['variable']['fixed'])
             no_variable_random = len(self.param['variable']['random'])
                     
-        if param_transform:
-            initial_point = self.transform_initial_point(param=self.param, param_t=self.param_transform)
+        
+        if external_point:
+            if param_transform:
+                initial_point = self.transform_initial_point(
+                    param=self.param, 
+                    param_t=self.param_transform,
+                    point=external_point
+                    )
+            else:
+                initial_point = external_point
         else:
-            initial_point = self.initial_point
+            if param_transform:
+                initial_point = self.transform_initial_point(
+                    param=self.param, 
+                    param_t=self.param_transform
+                    )
+            else:
+                initial_point = self.initial_point
                 
         dim_aggr_alt_max = max(
             len(self.param['constant']['fixed']),
@@ -1137,7 +1152,7 @@ class PostAnalysis:
             )
         
         save_fig_path = kwargs.get('save_fig_path', False)
-        
+        external_points = kwargs.get('external_points', False)
         sense_scenarios = kwargs.get("sense_scenarios", False)
         
         #Dictionary to store simulation results
@@ -1151,11 +1166,23 @@ class PostAnalysis:
                     res_simu[sense_name] = self.simulate_logit(
                         sense=sense_scenarios[sense_name]
                         )
+                    
+            if external_points:
+                #iterate over external points.
+                for ep in range(external_points.shape[0]):
+                    res_simu['External ' + str(ep)] = self.simulate_logit(
+                        external_point = external_points[ep]
+                        )
                 
+                    if sense_scenarios:
+                        for sense_name in sense_scenarios.keys():
+                            res_simu['External ' + str(ep) + ' - ' + sense_name] = self.simulate_logit(
+                                external_point = external_points[ep],
+                                sense=sense_scenarios[sense_name]
+                                )
         
         elif method == "LC":
             #   keyword arguments
-            external_points = kwargs.get('external_points', False)
             k_cluster = kwargs.get('k_cluster', 3)
             method_temp = kwargs.get('cluster_method', 'kmeans')
             
@@ -1265,7 +1292,7 @@ class PostAnalysis:
                         )
                 if sense_scenarios:
                     for sense_name in sense_scenarios.keys():
-                        res_simu['C' + str(k+1) + '_' + sense_name] = self.simulate_latent_class(
+                        res_simu['C' + str(k+1) + ' - ' + sense_name] = self.simulate_latent_class(
                                 np.array([cluster_center[k]]), 
                                 np.array([1]), 
                                 sense=sense_scenarios[sense_name]
@@ -1281,18 +1308,24 @@ class PostAnalysis:
                         
                     if sense_scenarios:
                         for sense_name in sense_scenarios.keys():
-                            res_simu['External ' + str(g) + '_' + sense_name] = self.simulate_latent_class(
+                            res_simu['External ' + str(g) + ' - ' + sense_name] = self.simulate_latent_class(
                                     np.array([external_points_random[g]]), 
                                     np.array([1]), 
                                     sense=sense_scenarios[sense_name]
                                     )
-                                                
-                    cluster_affinity = ''
-                    group_size = 0
-                    for i in range(k_cluster):
-                        cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
-                        group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_rel_percent[i]/100)
-                    group_size_percent = round(group_size*100)
+                          
+                    # The code below takes the affinity of external points to cluster
+                    # points as a reference value to state the number of points, 
+                    # which would belong to the external points, if they were
+                    # cluster centers themselves. (group_size_percent)
+                    
+                    #cluster_affinity = ''
+                    #group_size = 0
+                    #for i in range(k_cluster):
+                    #    cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
+                    #    group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_rel_percent[i]/100)
+                    #group_size_percent = round(group_size*100)
+                    
             else:
                 k_group = 0    
                 
@@ -1303,7 +1336,7 @@ class PostAnalysis:
             
             if sense_scenarios:
                 for sense_name in sense_scenarios.keys():
-                    res_simu['Latent Class' + '_' + sense_name] = self.simulate_latent_class(
+                    res_simu['Latent Class' + ' - ' + sense_name] = self.simulate_latent_class(
                         cluster_center, 
                         cluster_sizes_rel,
                         sense=sense_scenarios[sense_name]
@@ -1334,10 +1367,18 @@ class PostAnalysis:
         res_simu_pd_long = res_simu_pd_long.rename(columns={"value":"Choice probability", "variable":"Scenario"})
         
         sns.set_theme(style="whitegrid")
-                
-        ax = sns.barplot(x="Choice Option", y="Choice probability", hue="Scenario", data=res_simu_pd_long)
         
-        #plt.legend(bbox_to_anchor=(1.05, 1))
+        n_colors_temp = (len(res_simu)-1)*2
+        custom_palette = sns.cubehelix_palette(n_colors=n_colors_temp, start=.5, rot=-.5)
+        custom_palette[len(res_simu)-1] = (0.6, 0.6, 0.6) #add grey for the last bar
+        
+        ax = sns.barplot(
+            x="Choice Option", y="Choice probability", 
+            hue="Scenario", data=res_simu_pd_long, 
+            palette=custom_palette
+            )
+        
+        plt.legend(loc='upper right', bbox_to_anchor=(1.35, 1))
         
         if save_fig_path:
             fig = ax.get_figure()

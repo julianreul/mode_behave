@@ -47,7 +47,7 @@ model = mb.Core(param=param_cars,
                 alt=4, 
                 )
 
-#%%OPTION 1.2: ESTIMATION OF PARAMETERS FOR COMPLEX MODEL
+#%%OPTION 1.2: ESTIMATION OF PARAMETERS FOR COMPLEX MODEL - Takes ca. 4 huors.
 
 #estimate MXL model
 start = time.time()
@@ -115,7 +115,7 @@ model = mb.Core(param=param_cars,
                 alt=4, 
                 )
 
-#%%OPTION 2.2: ESTIMATION OF PARAMETERS FOR SIMPLE MODEL
+#%%OPTION 2.2: ESTIMATION OF PARAMETERS FOR SIMPLE MODEL. - Takes ca. 5-10 min.
 
 #estimate MXL model
 start = time.time()
