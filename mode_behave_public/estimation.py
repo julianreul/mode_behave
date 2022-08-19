@@ -463,7 +463,7 @@ class Estimation:
                 lower_bound = mean_coefficient - offset*scale_space
                 upper_bound = mean_coefficient + offset*scale_space
             spread = upper_bound-lower_bound
-            range_coefficients = np.arange(lower_bound, upper_bound, spread/ppc)
+            range_coefficients = np.linspace(lower_bound, upper_bound, ppc)
             for i in range(ppc):
                 self.space[a][i] = range_coefficients[i]
         for c in range(self.count_c):
@@ -500,13 +500,11 @@ class Estimation:
                 if spread == 0:
                     range_coefficients = [mean_coefficient]*ppc
                 else:
-                    range_coefficients = np.arange(lower_bound, upper_bound+spread/(ppc-1), spread/(ppc-1))
-                    if len(range_coefficients) != ppc:
-                        print("LB", lower_bound)
-                        print("UB", upper_bound)
-                        print("step_size", spread/(ppc-1))
-                        
-                        raise ValueError("Check specification of ppc")
+                    range_coefficients = np.linspace(lower_bound, upper_bound, ppc)
+                    
+                if len(range_coefficients) != ppc:
+                    raise ValueError("Check specification of ppc")
+                    
                 for i in range(ppc):
                     self.space[
                         self.no_constant_random + self.no_variable_random*c + a
