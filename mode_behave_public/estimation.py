@@ -226,7 +226,10 @@ class Estimation:
                     Utility of a choice option.
 
                 """
-                res_temp = initial_point[c-1]*choice_zero[l]
+                if c == 0:
+                    res_temp = 0
+                else:
+                    res_temp = initial_point[c-1]*choice_zero[l]
                 
                 for a in range(no_constant_fixed):
                     res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
@@ -574,7 +577,10 @@ class Estimation:
                     Utility array.
 
                 """
-                res_temp = initial_point[c-1]*choice_zero[l]
+                if c == 0:
+                    res_temp = 0
+                else:
+                    res_temp = initial_point[c-1]*choice_zero[l]
                 for a in range(no_constant_fixed):
                     res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
                 for a in range(no_constant_random):
@@ -711,7 +717,10 @@ class Estimation:
                     Utility of a choice option.
 
                 """
-                res_temp = initial_point[c-1]*choice_zero[l]
+                if c == 0:
+                    res_temp = 0
+                else:
+                    res_temp = initial_point[c-1]*choice_zero[l]
                 
                 for a in range(no_constant_fixed):
                     res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
