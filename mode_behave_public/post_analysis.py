@@ -27,6 +27,118 @@ class PostAnalysis:
     def _init_(self):
         pass          
 
+    def loglike_MNL(self):
+        """
+        This method calculates the multinomial logit probability for a given
+        set of coefficients and all choices in the sample of the dataset.
+
+        Parameters
+        ----------
+        A "point" with all coefficients of MLN-attributes.
+
+        Returns
+        -------
+        Probability of MNL model at a specified point.
+
+        """
+        top = np.array([self.av[c] * self.choice[c] * np.exp(
+            self.get_utility(c)) for c in range(self.count_c)]
+            )
+        top_sum = np.sum(top, axis=0)
+        self.check_top = top_sum
+        bottom = np.array(
+            [self.av[c] * np.exp(self.get_utility(c)) for c in range(self.count_c)]
+            )
+        bottom_sum = np.sum(bottom, axis=0)
+        self.check_bottom = bottom_sum
+        log_res = np.log(top_sum/bottom_sum)
+        res = np.nansum(log_res)
+        number_nan = np.sum(np.isnan(log_res))
+        
+        return res, number_nan
+    
+    def get_utility(self, c):
+        """
+        Calculation of the utility-function for all observations within 
+        a given data-sample with respect to the persons choice c.
+
+        Parameters
+        ----------
+        c : int
+            c is the choice.
+        point : list
+            point specifies the random parameters within the parameter space.
+
+        Returns
+        -------
+        list
+            Returns the utility for each observation.
+
+        """
+        return(
+            self.initial_point[c-1]*(self.choice_zero==0) +
+            np.sum(
+                [self.initial_point[(self.count_c-1) + a] * 
+                 self.data[self.param['constant']['fixed'][a] + '_' + str(c)] 
+                 for a in range(self.no_constant_fixed)], axis=0
+                ) +
+            np.sum(
+                [
+                    self.initial_point[
+                        (self.count_c-1) + 
+                        self.no_constant_fixed + a
+                        ] * 
+                    self.data[self.param['constant']['random'][a] + '_' + str(c)] 
+                    for a in range(self.no_constant_random)
+                    ], axis=0
+                ) +
+            np.sum(
+                [
+                    self.initial_point[
+                        (self.count_c-1) + 
+                        self.no_constant_fixed + 
+                        self.no_constant_random + 
+                        (self.no_variable_fixed + 
+                         self.no_variable_random)*c + a
+                                       ] * 
+                    self.data[
+                        self.param['variable']['fixed'][a] + '_' + str(c)
+                        ] for a in range(self.no_variable_fixed)
+                 ], axis=0
+                ) +
+            np.sum(
+                [
+                    self.initial_point[
+                        (self.count_c-1) + 
+                        self.no_constant_fixed + 
+                        self.no_constant_random + 
+                        (self.no_variable_fixed + self.no_variable_random)*c + 
+                        self.no_variable_fixed + a
+                        ] * self.data[
+                            self.param['variable']['random'][a] + '_' + str(c)
+                            ] for a in range(self.no_variable_random)
+                 ], axis=0
+                )
+            )
+    
+    def loglike_MXL(self, **kwargs):
+        """
+        For reference on log-likelihood calculation see:
+            Ch. 5.5 (pp. 118) in "Discrete Choice Analysis", by Ben-Akiva (1985)
+        
+        Returns
+        -------
+        Float64
+            Returns the log-likelihood (LL) of the estimated mixed logit model.
+            The following should hold for model validity:
+                LL_mixed_logit > LL_initial_point (multinomial logit)
+                
+        """
+        points_in = kwargs.get('points_in', self.points)
+        
+        ML_log = np.log(self.simulate_mixed_logit(points_in=points_in))
+        return np.sum(ML_log[np.isfinite(ML_log)])
+    
     def visualize_space(self, **kwargs):
         """
         This method visualizes the distribution of preferences across the 
@@ -595,19 +707,6 @@ class PostAnalysis:
         return initial_point_t
     
     def weighted_cov(self, X, Y):
-        """
-        Parameters
-        ----------
-        X : TYPE
-            DESCRIPTION.
-        Y : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        TYPE
-            DESCRIPTION.
-        """
         
         average_x = np.average(X, weights=self.shares)
         average_y = np.average(Y, weights=self.shares)
@@ -615,22 +714,7 @@ class PostAnalysis:
         return np.average((X-average_x)*(Y-average_y), weights=self.shares)
     
     def weighted_corr(self, random_param_a, random_param_b):
-        """
         
-
-        Parameters
-        ----------
-        random_param_a : TYPE
-            DESCRIPTION.
-        random_param_b : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        TYPE
-            DESCRIPTION.
-
-        """
         X = self.points.T[random_param_a]
         Y = self.points.T[random_param_b]
         cov_xy = self.weighted_cov(X,Y)
@@ -956,6 +1040,140 @@ class PostAnalysis:
             
         return res
                     
+    def simulate_mixed_logit(self, **kwargs):
+        """
+        Calculation of probabilities of mixed logit model for all
+        observations within a given base-sample.
+        Requires prior call of estimate_mixed_logit().
+
+        Returns
+        -------
+        PandasSeries
+            Returns a pandas series with model probabilities for each 
+            observation.
+
+        """
+        
+        mixing_distribution = kwargs.get("mixing_distribution", "discrete")
+        sense = kwargs.get("sense", {})
+        
+        if mixing_distribution == "discrete":       
+            initial_point = self.initial_point
+            no_constant_fixed = self.no_constant_fixed
+            no_constant_random = self.no_constant_random
+            no_variable_fixed = self.no_variable_fixed
+            no_variable_random = self.no_variable_random
+            count_c = self.count_c
+            
+            dim_aggr_alt_max = max(
+                len(self.param['constant']['fixed']),
+                len(self.param['constant']['random']),
+                len(self.param['variable']['fixed']),
+                len(self.param['variable']['random']),
+                )
+                
+            data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
+            for c in range(self.count_c):
+                for i, param in enumerate(self.param['constant']['fixed']):
+                    if param in sense.keys():
+                        data[0][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                    else:
+                        data[0][i][c] = self.data[param + '_' + str(c)].values
+                        
+                for i, param in enumerate(self.param['constant']['random']):                
+                    if param in sense.keys():
+                        data[1][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                    else:
+                        data[1][i][c] = self.data[param + '_' + str(c)].values
+                    
+                for i, param in enumerate(self.param['variable']['fixed']):
+                    if param in sense.keys():
+                        data[2][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                    else:
+                        data[2][i][c] = self.data[param + '_' + str(c)].values
+                        
+                for i, param in enumerate(self.param['variable']['random']):
+                    if param in sense.keys():
+                        data[3][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
+                    else:
+                        data[3][i][c] = self.data[param + '_' + str(c)].values
+                        
+            @njit
+            def get_utility_vector(c, point, l, data):
+                """
+                Calculates the utility of a choice option.
+
+                Parameters
+                ----------
+                c : int
+                    Choice option.
+                point : array
+                    Multi-dimensional point in the parameter space.
+                l : array
+                    DESCRIPTION.
+                data : array
+                    Base data.
+
+                Returns
+                -------
+                res_temp : float
+                    Utility of a choice option.
+
+                """
+                if c == 0:
+                    res_temp = 0
+                else:
+                    res_temp = initial_point[c-1]
+                
+                for a in range(no_constant_fixed):
+                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
+                for a in range(no_constant_random):
+                    res_temp += point[a] * data[1][a][c][l]
+                for a in range(no_variable_fixed):
+                    res_temp += initial_point[
+                        (count_c-1) + 
+                        no_constant_fixed + 
+                        no_constant_random + 
+                        (no_variable_fixed + no_variable_random)*c + a
+                        ] * data[2][a][c][l]
+                for a in range(no_variable_random):
+                    res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][l]
+                    
+                return res_temp   
+        
+            @guvectorize(
+                ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:, :, :]'], 
+                '(m,p),(n,l),(i,j,n,l)->(m,l,n)', 
+                nopython=True, target="parallel"
+                )
+            def calculate_logit_vector(points, av, data, logit_probs_):
+                
+                for m in prange(points.shape[0]):  
+                    point = points[m]
+                    
+                    #iterate over length of data array (len(av))
+                    for l in prange(av.shape[1]):
+                        #calculate bottom
+                        bottom = 0
+                        for c in prange(count_c):   
+                            bottom += av[c][l] * exp(get_utility_vector(c, point, l, data))  
+                        for c in prange(count_c):   
+                            top = av[c][l] * exp(get_utility_vector(c, point, l, data))
+                            logit_probs_[m][l][c] = top/bottom  
+                        
+            logit_probs_matrix = calculate_logit_vector(self.points, self.av, data)
+            #multiply logit probs per point with share of the point
+            logit_probs_matrix_shares = np.multiply(self.shares.values,logit_probs_matrix.T)
+            #sum along all considered points of the parameter space
+            logit_probs_summed = np.sum(logit_probs_matrix_shares, axis=2)
+            #get mean of all probabilities
+            res = np.mean(logit_probs_summed, axis=1)            
+                        
+        else:
+            raise ValueError("Not yet implemented.")
+            
+        return res    
+        
     def simulate_latent_class(self, latent_points, latent_shares, **kwargs):
         """
         This method simulates a latent class model, based on the naming-
@@ -1119,26 +1337,26 @@ class PostAnalysis:
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
-
-        kwargs external_points : TYPE
-            DESCRIPTION.
-        kwargs k_cluster : TYPE
-            DESCRIPTION.
-        kwargs cluster_method : TYPE
-            DESCRIPTION.
+        kwargs external_points : array
+            This array is two-dimensional and holds one or more alternative
+            specifications of "initial_point" for the simulation of 
+            multinomial logit.
+        kwargs k_cluster : int
+            Number is cluster centers to be considered, when method = "LC"
+        kwargs cluster_method : str
+            The clustering method. Defaults to "kmeans."
         kwargs save_fig_path : str
+            If given, the visualizations are stored in this directory.
 
         Raises
         ------
         ValueError
-            DESCRIPTION.
+            Is being raised, if an unknown method is indicated.
 
         Returns
         -------
-        res_clustering : TYPE
-            DESCRIPTION
-        data_to_plot : TYPE
-            DESCRIPTION
+        None
+        
         """
         #PREPARE DATA
         #   Get row names (random variables)
@@ -1347,7 +1565,28 @@ class PostAnalysis:
                 cluster_sizes_str += 'C' + str(i+1) + ' - ' + str(cluster_sizes_rel_percent[i]) + '%\n'
             
         elif method == "MXL":
-            raise ValueError("Chosen method is not yet implemented.")
+            res_simu['MXL'] = self.simulate_mixed_logit()
+            
+            if sense_scenarios:
+                for sense_name in sense_scenarios.keys():
+                    res_simu[sense_name] = self.simulate_mixed_logit(
+                        sense=sense_scenarios[sense_name]
+                        )
+                    
+            if external_points:
+                #iterate over external points.
+                for ep in range(external_points.shape[0]):
+                    res_simu['External ' + str(ep)] = self.simulate_logit(
+                        external_point = external_points[ep]
+                        )
+                
+                    if sense_scenarios:
+                        for sense_name in sense_scenarios.keys():
+                            res_simu['External ' + str(ep) + ' - ' + sense_name] = self.simulate_logit(
+                                external_point = external_points[ep],
+                                sense=sense_scenarios[sense_name]
+                                )
+            
         else:
             raise ValueError("Chosen method is not available.")
                
@@ -1355,7 +1594,6 @@ class PostAnalysis:
         
         #Observations in base data
         res_simu['Base Data'] = [np.sum(self.data['choice_' + str(i)]) / len(self.data) for i in range(self.count_c)]
-        
         
         #Barplot
         self.check_res_simu = res_simu
