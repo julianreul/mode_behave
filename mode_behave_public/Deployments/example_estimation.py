@@ -157,7 +157,7 @@ model.visualize_space(
     k=2, 
     scale_individual=True, 
     cluster_method='kmeans', 
-    points_group=np.array([model.initial_point]),
+    external_points=np.array([model.initial_point]),
     bw_adjust=0.03
     )
 #%%
