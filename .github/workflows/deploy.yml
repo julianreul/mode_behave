@@ -21,3 +21,16 @@ jobs:
           # PDF. Note, this should be the same directory as the input
           # paper.md
           path: paper.pdf
+          
+  test_estimation: 
+    runs_on: ubuntu-latest
+    container: continuumio/miniconda3:latest
+    name: Testing estimation.py
+    needs: [paper]
+    steps:
+      - run: conda env create -f reference_environment.yml
+      - run: source activate env_mode_behave
+      - run: pip install -e .
+      - run: cd ./tests
+      - run: python test_estimation.py TestEstimation.test_estimate_logit
+      - run: python test_estimation.py TestEstimation.test_estimate_mixed_logit_cpu

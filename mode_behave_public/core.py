@@ -164,6 +164,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             self.param_transform = kwargs.get("param_transform", False)
             self.PATH_InputData = PATH_MODULE + sep + 'InputData' + sep
             self.PATH_ModelParam = PATH_MODULE + sep + 'ModelParam' + sep
+            self.PATH_Visualize = PATH_MODULE + sep + 'Visualizations' + sep
             
             #random or fixed within parameter space of Mixed Logit
             self.param = kwargs.get('param', False)

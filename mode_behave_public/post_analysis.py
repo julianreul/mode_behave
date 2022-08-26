@@ -459,14 +459,13 @@ class PostAnalysis:
         #add legends
         plt.gca().add_artist(legend1)        
                 
-        save_fig_path = kwargs.get('save_fig_path', False)
+        save_fig_path = kwargs.get('save_fig_path', self.PATH_Visualize)
         name_scenario = kwargs.get('name_scenario', False)
         
-        if save_fig_path:
-            if name_scenario:
-                fig.savefig(save_fig_path + 'preference_distribution_' + name_scenario, dpi=300, bbox_inches='tight')
-            else:
-                fig.savefig(save_fig_path + 'preference_distribution', dpi=300, bbox_inches='tight')
+        if name_scenario:
+            fig.savefig(save_fig_path + 'preference_distribution_' + name_scenario, dpi=300, bbox_inches='tight')
+        else:
+            fig.savefig(save_fig_path + 'preference_distribution', dpi=300, bbox_inches='tight')
             
         if return_res:
             return res_clustering    
