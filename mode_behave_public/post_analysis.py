@@ -191,7 +191,7 @@ class PostAnalysis:
             Clustering results are returned, if keyword return_res == True.
 
         """
-                
+                   
         sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
              
         return_res = kwargs.get('return_res', False)
@@ -204,6 +204,7 @@ class PostAnalysis:
         names_variable_fixed = self.param['variable']['fixed']        
         names_variable_random = self.param['variable']['random']
         number_random = len(self.param['constant']['random']) + len(self.param['variable']['random'])*self.count_c
+        number_variable_random = len(self.param['variable']['random'])
         
         #   step 1: Scale parameters
         try:
@@ -354,11 +355,11 @@ class PostAnalysis:
         df['g'] = attributes_temp
         df = df.sort_values(by='g')
         weights_ = shares.values
-        for w in range(self.count_c-1):
+        for w in range(number_random-1):
+        #for w in range(self.count_c-1):
             weights_ = np.append(weights_, shares.values)
         df['weights'] = weights_
         
-        self.check_df = df
 
         # Initialize color palettes
         pal = sns.cubehelix_palette(n_colors=1, start=2.35, rot=-.1,dark=0.4,light=0.75)
@@ -367,20 +368,22 @@ class PostAnalysis:
         pal_cluster = pal_cluster_long[(k_cluster-1):-1]
         
         #create kde-plots. 
-        fig, ax = plt.subplots(self.count_c, 1, sharex=True)
+        fig, ax = plt.subplots(number_random, 1, sharex=True, figsize=(6, number_random))
         for c in range(self.count_c):
-            for attr_ in self.param['variable']['random']:
+            for a_count, attr_ in enumerate(self.param['variable']['random']):
                 x_temp = df.loc[df['g'] == attr_ + '_' + str(c)].groupby(['x']).sum().index.values
                 weights_temp = df.loc[df['g'] == attr_ + '_' + str(c)].groupby(['x']).sum()['weights']
+                vis_col = c*number_variable_random+a_count
+                print(vis_col)
                 sns.kdeplot(x=x_temp,
                    bw_adjust=bw_adjust_temp, cut=0, weights=weights_temp, color=pal[0],
-                   fill=True, linewidth=1.5, ax=ax[c])
+                   fill=True, linewidth=1.5, ax=ax[vis_col])
         
         # Set the subplots to overlap
         fig.subplots_adjust(hspace=.4)
         
         # Remove axes details that don't play well with overlap
-        fig.suptitle('Distribution of Preferences', fontsize=14, fontweight="bold", y=1)
+        fig.suptitle('Distribution of Preferences', fontsize=14, fontweight="bold", y=0.95)
         plt.setp(ax, 
                  xticks=[-0.8, 0, 0.8], 
                  xticklabels=['Max. Negative Impact', 'No Impact', 'Max. Positive Impact'], 
@@ -461,15 +464,15 @@ class PostAnalysis:
                 
         save_fig_path = kwargs.get('save_fig_path', self.PATH_Visualize)
         name_scenario = kwargs.get('name_scenario', False)
-        
+                
         if name_scenario:
-            fig.savefig(save_fig_path + 'preference_distribution_' + name_scenario, dpi=300, bbox_inches='tight')
+            fig.savefig(save_fig_path + 'preference_distribution_' + name_scenario + ".png", dpi=300, bbox_inches='tight')
         else:
-            fig.savefig(save_fig_path + 'preference_distribution', dpi=300, bbox_inches='tight')
+            fig.savefig(save_fig_path + 'preference_distribution.png', dpi=300, bbox_inches='tight')
             
         if return_res:
             return res_clustering    
-        
+                
     def get_points(self, index):
         """
         This methods draws explicit points for respective estimated shares 
