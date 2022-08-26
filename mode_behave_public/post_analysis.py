@@ -1368,7 +1368,7 @@ class PostAnalysis:
             len(self.param['variable']['random'])*self.count_c
             )
         
-        save_fig_path = kwargs.get('save_fig_path', False)
+        save_fig_path = kwargs.get('save_fig_path', self.PATH_Visualize)
         external_points = kwargs.get('external_points', False)
         sense_scenarios = kwargs.get("sense_scenarios", False)
         
