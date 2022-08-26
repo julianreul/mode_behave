@@ -23,7 +23,7 @@ jobs:
           path: paper.pdf
           
   test_estimation: 
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     container: continuumio/miniconda3:latest
     name: Testing estimation.py
     needs: [paper]
