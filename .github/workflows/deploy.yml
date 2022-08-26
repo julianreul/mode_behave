@@ -28,6 +28,7 @@ jobs:
     name: Testing estimation.py
     needs: [paper]
     steps:
+      - run: cd ../../$GITHUB_ACTION_PATH
       - run: conda env create -f reference_environment.yml
       - run: source activate env_mode_behave
       - run: pip install -e .
