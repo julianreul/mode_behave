@@ -1383,7 +1383,7 @@ class PostAnalysis:
             This array is two-dimensional and holds one or more alternative
             specifications of "initial_point" for the simulation of 
             multinomial logit.
-        kwargs k_cluster : int
+        kwargs k : int
             Number is cluster centers to be considered, when method = "LC"
         kwargs cluster_method : str
             The clustering method. Defaults to "kmeans."
@@ -1448,7 +1448,7 @@ class PostAnalysis:
         
         elif method == "LC":
             #   keyword arguments
-            k_cluster = kwargs.get('k_cluster', 3)
+            k = kwargs.get('k', 3)
             method_temp = kwargs.get('cluster_method', 'kmeans')
             
             #   step 1: Scale parameters
@@ -1496,7 +1496,7 @@ class PostAnalysis:
             
             # Get cluster centers
             if ext_points:
-                res_clustering = self.cluster_space(method_temp, k_cluster, points_affinity=external_points_random)
+                res_clustering = self.cluster_space(method_temp, k, points_affinity=external_points_random)
                 affinity_all = res_clustering[4]
                 affinity_percent_all = []
                 for a in range(affinity_all.shape[0]):
@@ -1516,7 +1516,7 @@ class PostAnalysis:
                     else:
                         raise ValueError('Affinity-calculation failed.')
             else:
-                res_clustering = self.cluster_space(method_temp, k_cluster, points=points_scaled, shares=shares)
+                res_clustering = self.cluster_space(method_temp, k, points=points_scaled, shares=shares)
             cluster_center = res_clustering[0]
             
             cluster_labels_pd = pd.DataFrame(columns=['labels', 'weights'])
@@ -1530,10 +1530,10 @@ class PostAnalysis:
                 cluster_labels_pd['weights'] = self.shares.values
             
             if method_temp in ('meanshift', 'dbscan'):
-                k_cluster = res_clustering[0].shape[0]
+                k = res_clustering[0].shape[0]
                 
             cluster_sizes_rel = np.array(
-                [cluster_labels_pd.loc[cluster_labels_pd['labels'] == i, 'weights'].sum() for i in range(k_cluster)]
+                [cluster_labels_pd.loc[cluster_labels_pd['labels'] == i, 'weights'].sum() for i in range(k)]
                 )
             
             #sort cluster_center and cluster_sizes_rel
@@ -1550,7 +1550,7 @@ class PostAnalysis:
             #SIMULATION OF LATENT CLASSES AND EXTERNAL POINTS
             
             #MNL simulation for individual clusters.
-            for k in range(k_cluster):
+            for k in range(k):
                 res_simu['C' + str(k+1) + ' (' + str(cluster_sizes_rel_percent[k]) + "%)"] = self.simulate_latent_class(
                         np.array([cluster_center[k]]), 
                         np.array([1]), 
@@ -1586,7 +1586,7 @@ class PostAnalysis:
                     
                     #cluster_affinity = ''
                     #group_size = 0
-                    #for i in range(k_cluster):
+                    #for i in range(k):
                     #    cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
                     #    group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_rel_percent[i]/100)
                     #group_size_percent = round(group_size*100)
@@ -1608,7 +1608,7 @@ class PostAnalysis:
                         )
                                    
             cluster_sizes_str = ''
-            for i in range(k_cluster):
+            for i in range(k):
                 cluster_sizes_str += 'C' + str(i+1) + ' - ' + str(cluster_sizes_rel_percent[i]) + '%\n'
             
         elif method == "MXL":
