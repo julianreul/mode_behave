@@ -136,8 +136,22 @@ class PostAnalysis:
         """
         points_in = kwargs.get('points_in', self.points)
         
-        ML_log = np.log(self.simulate_mixed_logit(points_in=points_in))
-        return np.sum(ML_log[np.isfinite(ML_log)])
+        # calculates the logit probabilities 
+        # for each data point and each choice option
+        logit_vector = self.simulate_mixed_logit(
+            points_in=points_in, 
+            vector_output=True
+            )
+        
+        # calculates the logit probability for the chosen choice option
+        logit_vector_choice = np.sum(logit_vector*self.choice, axis=0)
+        
+        # get the log of each logit probability
+        logit_vector_choice_log = np.log(logit_vector_choice)
+        
+        # return the sum of the log-probabilities. Ignore nan-values
+        
+        return np.nansum(logit_vector_choice_log)
     
     def visualize_space(self, **kwargs):
         """
@@ -185,6 +199,11 @@ class PostAnalysis:
             displayed curve, but may conceal certain findings in the distribution.
             Defaults to 0.03.
 
+        kwargs names_choice_options : dict
+            If given, this shall be a dictionary, which holds the 
+            names of the choice options as values and the numerical
+            indication of the choice option (0,1,2,...) as keys.
+
         Returns
         -------
         res_clustering : List
@@ -196,6 +215,7 @@ class PostAnalysis:
              
         return_res = kwargs.get('return_res', False)
         method_temp = kwargs.get('cluster_method', 'kmeans')
+        names_choice_options = kwargs.get("names_choice_options", {})
         
         #PREPARE DATA
         #   step 0: Get row names (random variables)
@@ -287,7 +307,12 @@ class PostAnalysis:
                 count_random_variable += 1
             for c in range(self.count_c):                        
                 for i in range(len(self.param['variable']['random'])):
-                    vlines_loc_group[names_variable_random[i] + '_' + str(c)] = external_points_random_t[count_random_variable]
+                    if c in list(names_choice_options):
+                        name_co = names_choice_options[c]
+                    else:
+                        name_co = str(c)
+                    
+                    vlines_loc_group[names_variable_random[i] + '_' + name_co] = external_points_random_t[count_random_variable]
                     count_random_variable += 1
             
         else:
@@ -346,12 +371,18 @@ class PostAnalysis:
             attributes_temp += [names_constant_random[i]]*len(shares.values)
         for c in range(self.count_c):
             for i in range(len(self.param['variable']['random'])):
+                if c in list(names_choice_options):
+                    name_co = names_choice_options[c]
+                else:
+                    name_co = str(c)
+                
                 if scale_individual:
-                    text_scale[names_variable_random[i] + '_' + str(c)] = scale_log[count_random_variable]
-                vlines_loc[names_variable_random[i] + '_' + str(c)] = cluster_center[count_random_variable]
-                vlines_len[names_variable_random[i] + '_' + str(c)] = cluster_sizes_rel
+                    text_scale[names_variable_random[i] + '_' + name_co] = scale_log[count_random_variable]
+                    
+                vlines_loc[names_variable_random[i] + '_' + name_co] = cluster_center[count_random_variable]
+                vlines_len[names_variable_random[i] + '_' + name_co] = cluster_sizes_rel
                 count_random_variable += 1
-                attributes_temp += [names_variable_random[i] + '_' + str(c)]*len(shares.values)
+                attributes_temp += [names_variable_random[i] + '_' + name_co]*len(shares.values)
         df['g'] = attributes_temp
         df = df.sort_values(by='g')
         weights_ = shares.values
@@ -371,8 +402,12 @@ class PostAnalysis:
         fig, ax = plt.subplots(number_random, 1, sharex=True, figsize=(6, number_random))
         for c in range(self.count_c):
             for a_count, attr_ in enumerate(self.param['variable']['random']):
-                x_temp = df.loc[df['g'] == attr_ + '_' + str(c)].groupby(['x']).sum().index.values
-                weights_temp = df.loc[df['g'] == attr_ + '_' + str(c)].groupby(['x']).sum()['weights']
+                if c in list(names_choice_options):
+                    name_co = names_choice_options[c]
+                else:
+                    name_co = str(c)
+                x_temp = df.loc[df['g'] == attr_ + '_' + name_co].groupby(['x']).sum().index.values
+                weights_temp = df.loc[df['g'] == attr_ + '_' + name_co].groupby(['x']).sum()['weights']
                 vis_col = c*number_variable_random+a_count
                 print(vis_col)
                 sns.kdeplot(x=x_temp,
@@ -395,28 +430,21 @@ class PostAnalysis:
             label_modulus = axis_no % len(self.param['variable']['random'])
             label_temp = self.param['variable']['random'][label_modulus]
             count_temp = int(axis_no / len(self.param['variable']['random']))
-            col_name = label_temp + '_' + str(count_temp)
+            if count_temp in list(names_choice_options):
+                col_name = label_temp + '_' + names_choice_options[count_temp]
+            else:
+                col_name = label_temp + '_' + str(count_temp)
             axis.set_ylabel("")
             axis.set_ylim(bottom=0)
-            self.check_ax = axis
             bbox_temp = axis.dataLim.get_points()
             y_max_temp = bbox_temp[1][1]
-            y_label = y_max_temp*1.12
-            if np.isfinite(y_label):            
-                axis.text(x=-0.95, y=y_label,s=col_name, 
-                          horizontalalignment='left',
-                          verticalalignment='bottom',
-                          weight='bold')
-            else:
-                axis.text(x=-0.95, y=0.058,s=col_name, 
-                          horizontalalignment='left',
-                          verticalalignment='bottom',
-                          weight='bold')
+            self.check_y_max = y_max_temp
                 
-            if np.isfinite(y_max_temp):
-                scale_y = round(y_max_temp,2)
-            else:
-                scale_y = round(1,2)
+            scale_y = round(y_max_temp,2)
+            axis.text(x=-0.95, y=1.05*y_max_temp, s=col_name, 
+                      horizontalalignment='left',
+                      verticalalignment='bottom',
+                      weight='bold')
                 
             #set vertical lines
             vlines_loc_cluster = vlines_loc
@@ -446,8 +474,15 @@ class PostAnalysis:
             
         # Create the legend patches for cluster
         patch_dict = {}
-        col_name = self.param['variable']['random'][0] + '_0'
+        
+        if 0 in list(names_choice_options):
+            name_co_0 = names_choice_options[0]
+        else:
+            name_co_0 = str(0)
+        
+        col_name = self.param['variable']['random'][0] + '_' + name_co_0
         for i in range(k_cluster):
+            self.vlines_len_temp = vlines_len
             cluster_size_temp = int(round(vlines_len[col_name][i]*100,0))
             patch_dict['C' + str(i+1) + ': ' + str(cluster_size_temp) + '%'] = pal_cluster[i]
         patches_c = [mpatches.Patch(color=c, label=l) for l,c in patch_dict.items()]
@@ -1058,6 +1093,7 @@ class PostAnalysis:
         
         mixing_distribution = kwargs.get("mixing_distribution", "discrete")
         sense = kwargs.get("sense", {})
+        vector_output = kwargs.get("vector_output", False)
         
         if mixing_distribution == "discrete":       
             initial_point = self.initial_point
@@ -1168,8 +1204,12 @@ class PostAnalysis:
             logit_probs_matrix_shares = np.multiply(self.shares.values,logit_probs_matrix.T)
             #sum along all considered points of the parameter space
             logit_probs_summed = np.sum(logit_probs_matrix_shares, axis=2)
-            #get mean of all probabilities
-            res = np.mean(logit_probs_summed, axis=1)            
+            
+            if vector_output:
+                res = logit_probs_summed
+            else:
+                #get mean of all probabilities
+                res = np.mean(logit_probs_summed, axis=1)            
                         
         else:
             raise ValueError("Not yet implemented.")
@@ -1349,7 +1389,11 @@ class PostAnalysis:
             The clustering method. Defaults to "kmeans."
         kwargs save_fig_path : str
             If given, the visualizations are stored in this directory.
-
+        kwargs names_choice_options : dict
+            If given, this shall be a dictionary, which holds the 
+            names of the choice options as values and the numerical
+            indication of the choice option (0,1,2,...) as keys.
+            
         Raises
         ------
         ValueError
@@ -1374,6 +1418,7 @@ class PostAnalysis:
         save_fig_path = kwargs.get('save_fig_path', self.PATH_Visualize)
         external_points = kwargs.get('external_points', False)
         sense_scenarios = kwargs.get("sense_scenarios", False)
+        names_choice_options = kwargs.get("names_choice_options", {})
         
         #Dictionary to store simulation results
         res_simu = {}
@@ -1595,22 +1640,37 @@ class PostAnalysis:
         ### GENERAL CODE FOR VISUALIZATION STARTS BELOW ###
         
         #Observations in base data
-        res_simu['Base Data'] = [np.sum(self.data['choice_' + str(i)]) / len(self.data) for i in range(self.count_c)]
+        res_simu['Base Data'] = [
+            np.sum(self.data['choice_' + str(i)]) / len(self.data) for i in range(self.count_c)
+            ]
         
         #Barplot
-        self.check_res_simu = res_simu
         res_simu_pd = pd.DataFrame(res_simu)
         simu_names = res_simu_pd.columns.values
         res_simu_pd["Choice Option"] = res_simu_pd.index
         
-        res_simu_pd_long = pd.melt(res_simu_pd, id_vars='Choice Option', value_vars=simu_names)
-        res_simu_pd_long = res_simu_pd_long.rename(columns={"value":"Choice probability", "variable":"Scenario"})
+        res_simu_pd_long = pd.melt(
+            res_simu_pd, 
+            id_vars='Choice Option', 
+            value_vars=simu_names
+            )
+        res_simu_pd_long = res_simu_pd_long.rename(
+            columns={"value":"Choice probability", "variable":"Scenario"}
+            )
         
         sns.set_theme(style="whitegrid")
         
         n_colors_temp = (len(res_simu)-1)*2
         custom_palette = sns.cubehelix_palette(n_colors=n_colors_temp, start=.5, rot=-.5)
         custom_palette[len(res_simu)-1] = (0.6, 0.6, 0.6) #add grey for the last bar
+        
+        #Specify name of choice options
+        for choice_option in list(names_choice_options):
+            name_temp = names_choice_options[choice_option]
+            res_simu_pd_long.loc[
+                res_simu_pd_long["Choice Option"] == choice_option, 
+                "Choice Option"
+                ] = name_temp
         
         ax = sns.barplot(
             x="Choice Option", y="Choice probability", 
