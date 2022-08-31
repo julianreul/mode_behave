@@ -964,7 +964,7 @@ class PostAnalysis:
         param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
         sense = kwargs.get("sense", {})
-        external_point = kwargs.get("external_point", False)
+        external_point = kwargs.get("external_point", [])
 
         try:
             no_constant_fixed = len(param_transform['constant']['fixed'])
@@ -977,8 +977,7 @@ class PostAnalysis:
             no_variable_fixed = len(self.param['variable']['fixed'])
             no_variable_random = len(self.param['variable']['random'])
                     
-        
-        if external_point:
+        if len(external_point):
             if param_transform:
                 initial_point = self.transform_initial_point(
                     param=self.param, 
@@ -1379,7 +1378,7 @@ class PostAnalysis:
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
-        kwargs external_points : array
+        kwargs external_points : numpy array
             This array is two-dimensional and holds one or more alternative
             specifications of "initial_point" for the simulation of 
             multinomial logit.
@@ -1416,7 +1415,7 @@ class PostAnalysis:
             )
         
         save_fig_path = kwargs.get('save_fig_path', self.PATH_Visualize)
-        external_points = kwargs.get('external_points', False)
+        external_points = kwargs.get('external_points', np.array([]))
         sense_scenarios = kwargs.get("sense_scenarios", False)
         names_choice_options = kwargs.get("names_choice_options", {})
         
@@ -1432,7 +1431,7 @@ class PostAnalysis:
                         sense=sense_scenarios[sense_name]
                         )
                     
-            if external_points:
+            if external_points.size:
                 #iterate over external points.
                 for ep in range(external_points.shape[0]):
                     res_simu['External ' + str(ep)] = self.simulate_logit(
@@ -1462,8 +1461,7 @@ class PostAnalysis:
             points_scaled = points
         
             #   Import points of socio-economic groups
-            try:
-                external_points.size
+            if external_points.size:
                 
                 #get random points.
                 external_points_random = np.zeros(shape=(external_points.shape[0], number_random), dtype='float32')
@@ -1490,7 +1488,7 @@ class PostAnalysis:
                                 ] = external_points[group][index_temp] 
                                           
                 ext_points = True
-            except:
+            else:
                 print('No external reference points given.')
                 ext_points = False
             
@@ -1620,7 +1618,7 @@ class PostAnalysis:
                         sense=sense_scenarios[sense_name]
                         )
                     
-            if external_points:
+            if external_points.size:
                 #iterate over external points.
                 for ep in range(external_points.shape[0]):
                     res_simu['External ' + str(ep)] = self.simulate_logit(
