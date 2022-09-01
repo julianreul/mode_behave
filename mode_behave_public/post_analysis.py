@@ -953,6 +953,8 @@ class PostAnalysis:
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
+        kwargs asc_offset : list
+            offset values for alternative specific constants
             
         Returns
         -------
@@ -965,6 +967,7 @@ class PostAnalysis:
         count_c = self.count_c
         sense = kwargs.get("sense", {})
         external_point = kwargs.get("external_point", [])
+        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
 
         try:
             no_constant_fixed = len(param_transform['constant']['fixed'])
@@ -1028,12 +1031,12 @@ class PostAnalysis:
                 else:
                     data[3][i][c] = self.data[param + '_' + str(c)].values
                 
-        def get_utility_vector(c, data):
+        def get_utility_vector(c, data, asc_offset):
             if c == 0:
-                res_temp = initial_point[c-1]
+                res_temp = asc_offset[0] + 0
             else:
-                res_temp = 0
-                        
+                res_temp = asc_offset[0] + initial_point[c-1]
+                
             for a in range(no_constant_fixed):
                 res_temp += initial_point[(count_c-1) + a] * data[0][a][c]
             for a in range(no_constant_random):
@@ -1058,21 +1061,21 @@ class PostAnalysis:
                 
             return res_temp   
         
-        def calculate_logit_shares(av, data):
+        def calculate_logit_shares(av, data, asc_offset):
                 
             logit_probs = np.zeros(shape=count_c)
             
             #calculate bottom
             bottom = np.zeros(shape=av.shape[1])
             for c in range(count_c):   
-                bottom += av[c] * np.exp(get_utility_vector(c, data))  
+                bottom += av[c] * np.exp(get_utility_vector(c, data, asc_offset))  
             for c in range(count_c):   
-                top = av[c] * np.exp(get_utility_vector(c, data))
+                top = av[c] * np.exp(get_utility_vector(c, data, asc_offset))
                 logit_probs[c] = np.mean(top/bottom)
                 
             return logit_probs
 
-        res = calculate_logit_shares(self.av, data)
+        res = calculate_logit_shares(self.av, data, asc_offset)
             
         return res
                     
@@ -1093,6 +1096,7 @@ class PostAnalysis:
         mixing_distribution = kwargs.get("mixing_distribution", "discrete")
         sense = kwargs.get("sense", {})
         vector_output = kwargs.get("vector_output", False)
+        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
         
         if mixing_distribution == "discrete":       
             initial_point = self.initial_point
@@ -1136,7 +1140,7 @@ class PostAnalysis:
                         data[3][i][c] = self.data[param + '_' + str(c)].values
                         
             @njit
-            def get_utility_vector(c, point, l, data):
+            def get_utility_vector(c, point, l, data, asc_offset):
                 """
                 Calculates the utility of a choice option.
 
@@ -1158,9 +1162,9 @@ class PostAnalysis:
 
                 """
                 if c == 0:
-                    res_temp = 0
+                    res_temp = asc_offset[0] + 0
                 else:
-                    res_temp = initial_point[c-1]
+                    res_temp = asc_offset[c] + initial_point[c-1]
                 
                 for a in range(no_constant_fixed):
                     res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
@@ -1179,11 +1183,11 @@ class PostAnalysis:
                 return res_temp   
         
             @guvectorize(
-                ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:, :, :]'], 
-                '(m,p),(n,l),(i,j,n,l)->(m,l,n)', 
+                ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:], float64[:, :, :]'], 
+                '(m,p),(n,l),(i,j,n,l),(n)->(m,l,n)', 
                 nopython=True, target="parallel"
                 )
-            def calculate_logit_vector(points, av, data, logit_probs_):
+            def calculate_logit_vector(points, av, data, asc_offset, logit_probs_):
                 
                 for m in prange(points.shape[0]):  
                     point = points[m]
@@ -1193,12 +1197,12 @@ class PostAnalysis:
                         #calculate bottom
                         bottom = 0
                         for c in prange(count_c):   
-                            bottom += av[c][l] * exp(get_utility_vector(c, point, l, data))  
+                            bottom += av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))  
                         for c in prange(count_c):   
-                            top = av[c][l] * exp(get_utility_vector(c, point, l, data))
+                            top = av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))
                             logit_probs_[m][l][c] = top/bottom  
                         
-            logit_probs_matrix = calculate_logit_vector(self.points, self.av, data)
+            logit_probs_matrix = calculate_logit_vector(self.points, self.av, data, asc_offset)
             #multiply logit probs per point with share of the point
             logit_probs_matrix_shares = np.multiply(self.shares.values,logit_probs_matrix.T)
             #sum along all considered points of the parameter space
@@ -1249,6 +1253,7 @@ class PostAnalysis:
         param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
         sense = kwargs.get("sense", {})
+        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
         
         try:
             no_constant_fixed = len(param_transform['constant']['fixed'])
@@ -1305,12 +1310,12 @@ class PostAnalysis:
                     data[3][i][c] = self.data[param + '_' + str(c)].values
         
         @njit
-        def get_utility_vector(c, point, l, data):
+        def get_utility_vector(c, point, l, data, asc_offset):
             if c == 0:
-                res_temp = initial_point[c-1]
+                res_temp = asc_offset[0] + 0
             else:
-                res_temp = 0
-            
+                res_temp = asc_offset[c] + initial_point[c-1]
+                
             for a in range(no_constant_fixed):
                 res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
             for a in range(no_constant_random):
@@ -1326,11 +1331,11 @@ class PostAnalysis:
             return res_temp   
     
         @guvectorize(
-            ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:, :, :]'], 
-            '(m,p),(n,l),(i,j,n,l)->(m,l,n)', 
+            ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:], float64[:, :, :]'], 
+            '(m,p),(n,l),(i,j,n,l),(n)->(m,l,n)', 
             nopython=True, target="parallel"
             )
-        def calculate_logit_vector(points, av, data, logit_probs_):
+        def calculate_logit_vector(points, av, data, asc_offset, logit_probs_):
             
             for m in prange(points.shape[0]):  
                 point = points[m]
@@ -1340,12 +1345,12 @@ class PostAnalysis:
                     #calculate bottom
                     bottom = 0
                     for c in prange(count_c):   
-                        bottom += av[c][l] * exp(get_utility_vector(c, point, l, data))  
+                        bottom += av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))  
                     for c in prange(count_c):   
-                        top = av[c][l] * exp(get_utility_vector(c, point, l, data))
+                        top = av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))
                         logit_probs_[m][l][c] = top/bottom  
                     
-        logit_probs = calculate_logit_vector(latent_points, self.av, data)
+        logit_probs = calculate_logit_vector(latent_points, self.av, data, asc_offset)
         res = np.zeros(shape=logit_probs[0].shape)
         for latent_class in range(logit_probs.shape[0]):
             res += logit_probs[latent_class]*latent_shares[latent_class]
@@ -1418,16 +1423,18 @@ class PostAnalysis:
         external_points = kwargs.get('external_points', np.array([]))
         sense_scenarios = kwargs.get("sense_scenarios", False)
         names_choice_options = kwargs.get("names_choice_options", {})
+        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)]))
         
         #Dictionary to store simulation results
         res_simu = {}
         
         if method == "MNL":
-            res_simu['MNL'] = self.simulate_logit()
+            res_simu['MNL'] = self.simulate_logit(asc_offset=asc_offset)
             
             if sense_scenarios:
                 for sense_name in sense_scenarios.keys():
                     res_simu[sense_name] = self.simulate_logit(
+                        asc_offset=asc_offset,
                         sense=sense_scenarios[sense_name]
                         )
                     
@@ -1435,12 +1442,14 @@ class PostAnalysis:
                 #iterate over external points.
                 for ep in range(external_points.shape[0]):
                     res_simu['External ' + str(ep)] = self.simulate_logit(
+                        asc_offset=asc_offset,
                         external_point = external_points[ep]
                         )
                 
                     if sense_scenarios:
                         for sense_name in sense_scenarios.keys():
                             res_simu['External ' + str(ep) + ' - ' + sense_name] = self.simulate_logit(
+                                asc_offset=asc_offset,
                                 external_point = external_points[ep],
                                 sense=sense_scenarios[sense_name]
                                 )
@@ -1552,12 +1561,14 @@ class PostAnalysis:
                 res_simu['C' + str(k+1) + ' (' + str(cluster_sizes_rel_percent[k]) + "%)"] = self.simulate_latent_class(
                         np.array([cluster_center[k]]), 
                         np.array([1]), 
+                        asc_offset=asc_offset
                         )
                 if sense_scenarios:
                     for sense_name in sense_scenarios.keys():
                         res_simu['C' + str(k+1) + ' - ' + sense_name] = self.simulate_latent_class(
                                 np.array([cluster_center[k]]), 
                                 np.array([1]), 
+                                asc_offset=asc_offset,
                                 sense=sense_scenarios[sense_name]
                                 )
                                     
@@ -1566,7 +1577,9 @@ class PostAnalysis:
                 k_group = external_points_random.shape[0]
                 for g in range(k_group):
                     res_simu['External ' + str(g)] = self.simulate_latent_class(
-                            np.array([external_points_random[g]]), np.array([1]), 
+                            np.array([external_points_random[g]]), 
+                            np.array([1]), 
+                            asc_offset=asc_offset
                             )
                         
                     if sense_scenarios:
@@ -1574,6 +1587,7 @@ class PostAnalysis:
                             res_simu['External ' + str(g) + ' - ' + sense_name] = self.simulate_latent_class(
                                     np.array([external_points_random[g]]), 
                                     np.array([1]), 
+                                    asc_offset=asc_offset,
                                     sense=sense_scenarios[sense_name]
                                     )
                           
@@ -1594,7 +1608,9 @@ class PostAnalysis:
                 
             #Simulation of latent class model, based on cluster analysis.
             res_simu['Latent Class'] = self.simulate_latent_class(
-                cluster_center, cluster_sizes_rel
+                cluster_center, 
+                cluster_sizes_rel,
+                asc_offset=asc_offset
                 )
             
             if sense_scenarios:
@@ -1602,7 +1618,8 @@ class PostAnalysis:
                     res_simu['Latent Class' + ' - ' + sense_name] = self.simulate_latent_class(
                         cluster_center, 
                         cluster_sizes_rel,
-                        sense=sense_scenarios[sense_name]
+                        sense=sense_scenarios[sense_name],
+                        asc_offset=asc_offset
                         )
                                    
             cluster_sizes_str = ''
@@ -1610,11 +1627,12 @@ class PostAnalysis:
                 cluster_sizes_str += 'C' + str(i+1) + ' - ' + str(cluster_sizes_rel_percent[i]) + '%\n'
             
         elif method == "MXL":
-            res_simu['MXL'] = self.simulate_mixed_logit()
+            res_simu['MXL'] = self.simulate_mixed_logit(asc_offset=asc_offset)
             
             if sense_scenarios:
                 for sense_name in sense_scenarios.keys():
                     res_simu[sense_name] = self.simulate_mixed_logit(
+                        asc_offset=asc_offset,
                         sense=sense_scenarios[sense_name]
                         )
                     
@@ -1622,12 +1640,14 @@ class PostAnalysis:
                 #iterate over external points.
                 for ep in range(external_points.shape[0]):
                     res_simu['External ' + str(ep)] = self.simulate_logit(
+                        asc_offset=asc_offset,
                         external_point = external_points[ep]
                         )
                 
                     if sense_scenarios:
                         for sense_name in sense_scenarios.keys():
                             res_simu['External ' + str(ep) + ' - ' + sense_name] = self.simulate_logit(
+                                asc_offset=asc_offset,
                                 external_point = external_points[ep],
                                 sense=sense_scenarios[sense_name]
                                 )
