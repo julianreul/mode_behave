@@ -32,6 +32,7 @@ Installation
       
 #. If a NVIDIA-GPU is accessible, gpu-based estimation methods can be used. Therefore, please also install the python-package "cuda" and an appropriate NVIDIA-driver.
 
+©, Julian Reul, 2022.
 
 Workflow
 ========
