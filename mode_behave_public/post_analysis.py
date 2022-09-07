@@ -51,6 +51,7 @@ class PostAnalysis:
             )
         bottom_sum = np.sum(bottom, axis=0)
         self.check_bottom = bottom_sum
+        self.check_top = top_sum
         log_res = np.log(top_sum/bottom_sum)
         res = np.nansum(log_res)
         number_nan = np.sum(np.isnan(log_res))
@@ -1397,6 +1398,12 @@ class PostAnalysis:
             If given, this shall be a dictionary, which holds the 
             names of the choice options as values and the numerical
             indication of the choice option (0,1,2,...) as keys.
+        kwargs y_lim : tuple
+            If given, this tuple indicates the limits for the y-axis
+            within the visualization.
+        kwargs y_lim : tuple
+            If given, forecasted probabilities are returned. Defaults to False.
+
             
         Raises
         ------
@@ -1424,6 +1431,8 @@ class PostAnalysis:
         sense_scenarios = kwargs.get("sense_scenarios", False)
         names_choice_options = kwargs.get("names_choice_options", {})
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)]))
+        y_lim = kwargs.get("y_lim", ())
+        data_output = kwargs.get("data_output", False)
         
         #Dictionary to store simulation results
         res_simu = {}
@@ -1696,9 +1705,15 @@ class PostAnalysis:
             palette=custom_palette
             )
         
+        if y_lim:
+            ax.set(ylim=y_lim)
+        
         plt.legend(loc='upper right', bbox_to_anchor=(1.35, 1))
         
         if save_fig_path:
             fig = ax.get_figure()
             fig.savefig(save_fig_path + 'forecast.png', dpi=300, bbox_inches='tight')
+            
+        if data_output:
+            return res_simu_pd_long
                 
