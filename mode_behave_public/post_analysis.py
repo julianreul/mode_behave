@@ -41,20 +41,18 @@ class PostAnalysis:
         Probability of MNL model at a specified point.
 
         """
-        top = np.array(
-            [np.sum([self.av[c][e] * self.choice[c][e] * np.exp(self.get_utility(c,e)) for e in range(self.count_e)], axis=0) 
-             for c in range(self.count_c)]
-            )
-        top_sum = np.sum(top, axis=0)
-        self.check_top = top_sum
-        bottom = np.array(
-            [np.sum([self.av[c][e] * np.exp(self.get_utility(c,e)) for e in range(self.count_e)], axis=0) 
-             for c in range(self.count_c)]
-            )
-        bottom_sum = np.sum(bottom, axis=0)
-        self.check_bottom = bottom_sum
-        self.check_top = top_sum
-        log_res = np.log(top_sum/bottom_sum)
+        
+        top = np.zeros(shape=self.av.shape[2], dtype="float64")
+        bottom = np.zeros(shape=self.av.shape[2], dtype="float64")
+        for c in range(self.count_c):
+            for e in range(self.count_e):
+                top += self.av[c][e] * self.choice[c][e] * np.exp(self.get_utility(c,e))
+                bottom += self.av[c][e] * np.exp(self.get_utility(c,e))
+        
+        self.check_top = top
+        self.check_bottom = bottom
+        
+        log_res = np.log(top/bottom)
         res = np.nansum(log_res)
         number_nan = np.sum(np.isnan(log_res))
         
@@ -78,8 +76,14 @@ class PostAnalysis:
             Returns the utility for each observation.
 
         """
-        return(
-            self.initial_point[c-1]*(self.choice_zero[e]==0) +
+        
+        if c == 0:
+            ASC = 0
+        else:
+            ASC = self.initial_point[c-1]
+        
+        utility = (
+            ASC +
             np.sum(
                 [self.initial_point[(self.count_c-1) + a] * 
                  self.data[self.param['constant']['fixed'][a] + '_' + str(c) + '_' + str(e)] 
@@ -123,6 +127,8 @@ class PostAnalysis:
                  ], axis=0
                 )
             )
+        
+        return utility
     
     def loglike_MXL(self, **kwargs):
         """

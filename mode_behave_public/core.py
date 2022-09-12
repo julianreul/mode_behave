@@ -310,6 +310,3 @@ class Core(Estimation, Simulation, PostAnalysis):
                 for e in range(self.count_e):
                     self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
                     self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
-                                                                            
-            #create numpy arrays from self.data and add 1 to range over a to ensure dimensionality.
-            self.choice_zero = np.array(self.choice[0])        

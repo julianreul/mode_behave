@@ -265,8 +265,6 @@ class Estimation:
         
         #prepare input for numba
         initial_point = self.initial_point
-        choice_zero_bool = self.choice_zero
-        choice_zero = (choice_zero_bool==0)*1
         count_c = self.count_c
         count_e = self.count_e
         no_constant_fixed = self.no_constant_fixed
@@ -300,11 +298,10 @@ class Estimation:
             data = data.astype('float32')
             av = av.astype('int32')
             choice = choice.astype('int32')
-            choice_zero = choice_zero.astype('int32')
             
         if gpu:
             @cuda.jit(device=True)
-            def get_utility_gpu(c, e, point_, l, data, choice_zero):
+            def get_utility_gpu(c, e, point_, l, data):
                 """
                 This method calculates the utility of a choice option,
                 utilizing GPU-hardware. Therefore, it must be defined internally.
@@ -321,9 +318,6 @@ class Estimation:
                     DESCRIPTION.
                 data : multi-dimensional array
                     Base data.
-                choice_zero : array
-                    Indicates, whether the choice option is choosen within 
-                    the base data.
 
                 Returns
                 -------
@@ -334,7 +328,7 @@ class Estimation:
                 if c == 0:
                     res_temp = 0
                 else:
-                    res_temp = initial_point[c-1]*choice_zero[e][l]
+                    res_temp = initial_point[c-1]
                 for a in range(no_constant_fixed):
                     res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
                 for a in range(no_constant_random):
@@ -355,11 +349,11 @@ class Estimation:
             if self.bits_64:
 
                 @guvectorize(
-                    ['float64[:], int64[:, :, :], int64[:, :, :], int64[:, :], float64[:, :, :, :, :], float64[:]'], 
-                    '(p),(n,e,l),(n,e,l),(e,l),(i,j,n,e,l)->(l)', 
+                    ['float64[:], int64[:, :, :], int64[:, :, :], float64[:, :, :, :, :], float64[:]'], 
+                    '(p),(n,e,l),(n,e,l),(i,j,n,e,l)->(l)', 
                     target='cuda'
                     )
-                def calculate_logit_gpu(point, av, choice, choice_zero, data, logit_probs_):
+                def calculate_logit_gpu(point, av, choice, data, logit_probs_):
                     """
                     This method calculates the multinomial logit probability for a given
                     set of coefficients and all choices in the sample of the dataset.
@@ -372,9 +366,6 @@ class Estimation:
                         Availability array for all choice options.
                     choice : array
                         Array, indicating the choice of the actor in the base data.
-                    choice_zero : array
-                        Indicates, whether the choice option is choosen within 
-                        the base data.
                     data : array
                         Base data.
                 
@@ -392,9 +383,9 @@ class Estimation:
                         top = 0
                         for c in range(count_c):
                             for e in range(count_e):
-                                bottom += av[c][e][l] * exp(get_utility_gpu(c, e, point, l, data, choice_zero))                
+                                bottom += av[c][e][l] * exp(get_utility_gpu(c, e, point, l, data))                
                                 top += av[c][e][l] * choice[c][e][l] * exp(
-                                    get_utility_gpu(c, e, point, l, data, choice_zero)
+                                    get_utility_gpu(c, e, point, l, data)
                                     )
                         if bottom>0:
                             logit_probs_[l] = top/bottom      
@@ -404,11 +395,11 @@ class Estimation:
                         
             else:
                 @guvectorize(
-                    ['float32[:], int32[:, :, :], int32[:, :, :], int32[:, :], float32[:, :, :, :, :], float32[:]'], 
-                    '(p),(n,e,l),(n,e,l),(e,l),(i,j,n,e,l)->(l)', 
+                    ['float32[:], int32[:, :, :], int32[:, :, :], float32[:, :, :, :, :], float32[:]'], 
+                    '(p),(n,e,l),(n,e,l),(i,j,n,e,l)->(l)', 
                     target='cuda'
                     )
-                def calculate_logit_gpu(point, av, choice, choice_zero, data, logit_probs_):
+                def calculate_logit_gpu(point, av, choice, data, logit_probs_):
                     """
                     This method calculates the multinomial logit probability for a given
                     set of coefficients and all choices in the sample of the dataset.
@@ -421,9 +412,6 @@ class Estimation:
                         Availability array for all choice options.
                     choice : array
                         Array, indicating the choice of the actor in the base data.
-                    choice_zero : array
-                        Indicates, whether the choice option is choosen within 
-                        the base data.
                     data : array
                         Base data.
                 
@@ -440,9 +428,9 @@ class Estimation:
                         top = 0
                         for c in range(count_c):
                             for e in range(count_e):
-                                bottom += av[c][e][l] * exp(get_utility_gpu(c, e, point, l, data, choice_zero))                
+                                bottom += av[c][e][l] * exp(get_utility_gpu(c, e, point, l, data,))                
                                 top += av[c][e][l] * choice[c][e][l] * exp(
-                                    get_utility_gpu(c, e, point, l, data, choice_zero)
+                                    get_utility_gpu(c, e, point, l, data)
                                     )
                         if bottom>0:
                             logit_probs_[l] = top/bottom      
@@ -475,7 +463,7 @@ class Estimation:
                 if c == 0:
                     res_temp = 0
                 else:
-                    res_temp = initial_point[c-1]*choice_zero[e][l]
+                    res_temp = initial_point[c-1]
                 
                 for a in range(no_constant_fixed):
                     res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
@@ -1337,11 +1325,10 @@ class Estimation:
                 d_points = cuda.to_device(CG)
                 d_av = cuda.to_device(av)
                 d_data = cuda.to_device(data)
-                d_choice_zero = cuda.to_device(choice_zero)
                 d_choice = cuda.to_device(choice)
                 #calculation
                 d_drawn_logit_probs = calculate_logit_gpu(
-                    d_points, d_av, d_choice, d_choice_zero, d_data
+                    d_points, d_av, d_choice, d_data
                     )
                 cuda.synchronize()
                 #memory management: move data to host
