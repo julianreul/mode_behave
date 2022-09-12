@@ -268,6 +268,7 @@ class Estimation:
         choice_zero_bool = self.choice_zero
         choice_zero = (choice_zero_bool==0)*1
         count_c = self.count_c
+        count_e = self.count_e
         no_constant_fixed = self.no_constant_fixed
         no_constant_random = self.no_constant_random
         no_variable_fixed = self.no_variable_fixed
@@ -283,16 +284,17 @@ class Estimation:
             len(self.param['variable']['random']),
             )
                 
-        data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
+        data = np.zeros((4,dim_aggr_alt_max,self.count_c,self.av.shape[1],len(self.data)))
         for c in range(self.count_c):
-            for i, param in enumerate(self.param['constant']['fixed']):
-                data[0][i][c] = self.data[param + '_' + str(c)].values
-            for i, param in enumerate(self.param['constant']['random']):
-                data[1][i][c] = self.data[param + '_' + str(c)].values
-            for i, param in enumerate(self.param['variable']['fixed']):
-                data[2][i][c] = self.data[param + '_' + str(c)].values
-            for i, param in enumerate(self.param['variable']['random']):
-                data[3][i][c] = self.data[param + '_' + str(c)].values
+            for e in range(self.count_e):
+                for i, param in enumerate(self.param['constant']['fixed']):
+                    data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                for i, param in enumerate(self.param['constant']['random']):
+                    data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                for i, param in enumerate(self.param['variable']['fixed']):
+                    data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                for i, param in enumerate(self.param['variable']['random']):
+                    data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
                 
         if self.bits_64 == False:
             data = data.astype('float32')
@@ -302,7 +304,7 @@ class Estimation:
             
         if gpu:
             @cuda.jit(device=True)
-            def get_utility_gpu(c, point_, l, data, choice_zero):
+            def get_utility_gpu(c, e, point_, l, data, choice_zero):
                 """
                 This method calculates the utility of a choice option,
                 utilizing GPU-hardware. Therefore, it must be defined internally.
@@ -311,6 +313,8 @@ class Estimation:
                 ----------
                 c : int
                     Choice option.
+                e : int
+                    Number of equal choice options.
                 point_ : array
                     Point in the parameter space.
                 l : int
@@ -330,29 +334,29 @@ class Estimation:
                 if c == 0:
                     res_temp = 0
                 else:
-                    res_temp = initial_point[c-1]*choice_zero[l]
+                    res_temp = initial_point[c-1]*choice_zero[e][l]
                 for a in range(no_constant_fixed):
-                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
+                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
                 for a in range(no_constant_random):
-                    res_temp += point_[a] * data[1][a][c][l]
+                    res_temp += point_[a] * data[1][a][c][e][l]
                 for a in range(no_variable_fixed):
                     res_temp += initial_point[
                         (count_c-1) + 
                         no_constant_fixed + 
                         no_constant_random + 
                         (no_variable_fixed + no_variable_random)*c + a
-                        ] * data[2][a][c][l]
+                        ] * data[2][a][c][e][l]
                 for a in range(no_variable_random):
                     res_temp += point_[
                         no_constant_random + no_variable_random*c + a
-                        ] * data[3][a][c][l]
+                        ] * data[3][a][c][e][l]
                 return res_temp   
             
             if self.bits_64:
 
                 @guvectorize(
-                    ['float64[:], int64[:, :], int64[:, :], int64[:], float64[:, :, :, :], float64[:]'], 
-                    '(p),(n,l),(n,l),(l),(i,j,n,l)->(l)', 
+                    ['float64[:], int64[:, :, :], int64[:, :, :], int64[:, :], float64[:, :, :, :, :], float64[:]'], 
+                    '(p),(n,e,l),(n,e,l),(e,l),(i,j,n,e,l)->(l)', 
                     target='cuda'
                     )
                 def calculate_logit_gpu(point, av, choice, choice_zero, data, logit_probs_):
@@ -382,15 +386,16 @@ class Estimation:
                                             
                     #iterate over length of data array (len(av))
                     #What is the shape of the output array?!
-                    for l in range(av.shape[1]):
+                    for l in range(av.shape[2]):
                         #calculate bottom
                         bottom = 0
                         top = 0
-                        for c in range(count_c):   
-                            bottom += av[c][l] * exp(get_utility_gpu(c, point, l, data, choice_zero))                
-                            top += av[c][l] * choice[c][l] * exp(
-                                get_utility_gpu(c, point, l, data, choice_zero)
-                                )
+                        for c in range(count_c):
+                            for e in range(count_e):
+                                bottom += av[c][e][l] * exp(get_utility_gpu(c, e, point, l, data, choice_zero))                
+                                top += av[c][e][l] * choice[c][e][l] * exp(
+                                    get_utility_gpu(c, e, point, l, data, choice_zero)
+                                    )
                         if bottom>0:
                             logit_probs_[l] = top/bottom      
                         else:
@@ -399,8 +404,8 @@ class Estimation:
                         
             else:
                 @guvectorize(
-                    ['float32[:], int32[:, :], int32[:, :], int32[:], float32[:, :, :, :], float32[:]'], 
-                    '(p),(n,l),(n,l),(l),(i,j,n,l)->(l)', 
+                    ['float32[:], int32[:, :, :], int32[:, :, :], int32[:, :], float32[:, :, :, :, :], float32[:]'], 
+                    '(p),(n,e,l),(n,e,l),(e,l),(i,j,n,e,l)->(l)', 
                     target='cuda'
                     )
                 def calculate_logit_gpu(point, av, choice, choice_zero, data, logit_probs_):
@@ -427,26 +432,26 @@ class Estimation:
                     Array with logit-probabilities.
                 
                     """    
-                    
                     #iterate over length of data array (len(av))
                     #What is the shape of the output array?!
-                    for l in range(av.shape[1]):
+                    for l in range(av.shape[2]):
                         #calculate bottom
                         bottom = 0
                         top = 0
-                        for c in range(count_c):   
-                            bottom += av[c][l] * exp(get_utility_gpu(c, point, l, data, choice_zero))                
-                            top += av[c][l] * choice[c][l] * exp(
-                                get_utility_gpu(c, point, l, data, choice_zero)
-                                )
-                        if bottom > 0:
+                        for c in range(count_c):
+                            for e in range(count_e):
+                                bottom += av[c][e][l] * exp(get_utility_gpu(c, e, point, l, data, choice_zero))                
+                                top += av[c][e][l] * choice[c][e][l] * exp(
+                                    get_utility_gpu(c, e, point, l, data, choice_zero)
+                                    )
+                        if bottom>0:
                             logit_probs_[l] = top/bottom      
                         else:
-                            logit_probs_[l] = 0      
+                            logit_probs_[l] = 0     
                     
         else:
             @njit
-            def get_utility_vector(c, point, l, data):
+            def get_utility_vector(c, e, point, l, data):
                 """
                 Calculates the utility of a choice option.
 
@@ -466,32 +471,32 @@ class Estimation:
                 res_temp : float
                     Utility of a choice option.
 
-                """
+                """               
                 if c == 0:
                     res_temp = 0
                 else:
-                    res_temp = initial_point[c-1]*choice_zero[l]
+                    res_temp = initial_point[c-1]*choice_zero[e][l]
                 
                 for a in range(no_constant_fixed):
-                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
+                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
                 for a in range(no_constant_random):
-                    res_temp += point[a] * data[1][a][c][l]
+                    res_temp += point[a] * data[1][a][c][e][l]
                 for a in range(no_variable_fixed):
                     res_temp += initial_point[
                         (count_c-1) + 
                         no_constant_fixed + 
                         no_constant_random + 
                         (no_variable_fixed + no_variable_random)*c + a
-                        ] * data[2][a][c][l]
+                        ] * data[2][a][c][e][l]
                 for a in range(no_variable_random):
-                    res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][l]
+                    res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][e][l]
                                 
                 return res_temp   
             
             if self.bits_64:
                 @guvectorize(
-                    ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:, :]'], 
-                    '(m,p),(n,l),(i,j,n,l)->(m,l)', 
+                    ['float64[:, :], int64[:, :, :], float64[:, :, :, :, :], float64[:, :]'], 
+                    '(m,p),(n,e,l),(i,j,n,e,l)->(m,l)', 
                     nopython=True, 
                     target="parallel"
                     )
@@ -520,15 +525,16 @@ class Estimation:
                         
                         #iterate over length of data array (len(av))
                         #What is the shape of the output array?!
-                        for l in prange(av.shape[1]):
+                        for l in prange(av.shape[2]):
                             #calculate bottom
                             bottom = 0
                             top = 0
-                            for c in range(count_c):  
-                                exp_temp = exp(get_utility_vector(c, point, l, data))   
-                                bottom += av[c][l] * exp_temp        
-                                top += av[c][l] * choice[c][l] * exp_temp
-                                res_temp = top/bottom
+                            for c in range(count_c):
+                                for e in range(count_e):
+                                    exp_temp = exp(get_utility_vector(c, e, point, l, data))   
+                                    bottom += av[c][e][l] * exp_temp        
+                                    top += av[c][e][l] * choice[c][e][l] * exp_temp
+                                    res_temp = top/bottom
                             if np.isfinite(res_temp):
                                 logit_probs_[m][l] = res_temp  
                             else:
@@ -536,8 +542,8 @@ class Estimation:
                                 
             else:
                 @guvectorize(
-                    ['float32[:, :], int32[:, :], float32[:, :, :, :], float32[:, :]'], 
-                    '(m,p),(n,l),(i,j,n,l)->(m,l)', 
+                    ['float32[:, :], int32[:, :, :], float32[:, :, :, :, :], float32[:, :]'], 
+                    '(m,p),(n,e,l),(i,j,n,e,l)->(m,l)', 
                     nopython=True, 
                     target="parallel"
                     )
@@ -566,15 +572,16 @@ class Estimation:
                         
                         #iterate over length of data array (len(av))
                         #What is the shape of the output array?!
-                        for l in prange(av.shape[1]):
+                        for l in prange(av.shape[2]):
                             #calculate bottom
                             bottom = 0
                             top = 0
-                            for c in range(count_c): 
-                                exp_temp = exp(get_utility_vector(c, point, l, data))
-                                bottom += av[c][l] * exp_temp               
-                                top += av[c][l] * choice[c][l] * exp_temp
-                                res_temp = top/bottom
+                            for c in range(count_c):
+                                for e in range(count_e):
+                                    exp_temp = exp(get_utility_vector(c, e, point, l, data))
+                                    bottom += av[c][e][l] * exp_temp               
+                                    top += av[c][e][l] * choice[c][e][l] * exp_temp
+                                    res_temp = top/bottom
                             if np.isfinite(res_temp):
                                 logit_probs_[m][l] = res_temp
                             else:
@@ -1511,7 +1518,7 @@ class Estimation:
         
         kwarg stats : Boolean
             If True, summary statistics are returned as well. Defaults to True.
-        
+                    
         Returns
         -------
         list
@@ -1524,135 +1531,58 @@ class Estimation:
         def loglike(x):
             
             #logged numerator of MNL model
-            utility_single = (    
-                self.av[0] * self.choice[0] * (
+            utility_single = (
+                
+                sum([                
+                self.av[0][e] * self.choice[0][e] * (
                     sum(
                         [
                             (x[(self.count_c-1) + a] * 
-                             self.data[self.param['constant']['fixed'][a] + '_' + str(0)]) 
+                             self.data[self.param['constant']['fixed'][a] + '_' + str(0) + '_' + str(e)]) 
                             for a in range(self.no_constant_fixed)
                             ]
                         ) +
                     sum(
                         [
                             (x[(self.count_c-1) + self.no_constant_fixed + a] * 
-                             self.data[self.param['constant']['random'][a] + '_' + str(0)]) 
+                             self.data[self.param['constant']['random'][a] + '_' + str(0) + '_' + str(e)]) 
                             for a in range(self.no_constant_random)
                             ]
                         ) + 
                     sum(
                         [
                             (x[(self.count_c-1) + self.no_constant_fixed + self.no_constant_random + a] * 
-                             self.data[self.param['variable']['fixed'][a] + '_' + str(0)]) 
+                             self.data[self.param['variable']['fixed'][a] + '_' + str(0) + '_' + str(e)]) 
                             for a in range(self.no_variable_fixed)
                             ]
                         ) + 
                     sum(
                         [
                             (x[(self.count_c-1) + self.no_constant_fixed + self.no_constant_random + self.no_variable_fixed + a] * 
-                             self.data[self.param['variable']['random'][a] + '_' + str(0)]) 
-                            for a in range(self.no_variable_random)
-                            ]
-                        ) 
-                    ) +
-                sum(
-                    [self.av[c] * self.choice[c] * (
-                        x[c-1] +
-                        sum(
-                            [
-                                (x[(self.count_c-1) + a] * 
-                                 self.data[self.param['constant']['fixed'][a] + '_' + str(c)]) 
-                                for a in range(self.no_constant_fixed)
-                                ]
-                            ) +
-                        sum(
-                            [
-                                (x[(self.count_c-1) + self.no_constant_fixed + a] * 
-                                 self.data[self.param['constant']['random'][a] + '_' + str(c)]) 
-                                for a in range(self.no_constant_random)
-                                ]
-                            ) + 
-                        sum(
-                            [
-                                (x[
-                                    (self.count_c-1) + 
-                                    self.no_constant_fixed + 
-                                    self.no_constant_random + 
-                                    (self.no_variable_fixed+self.no_variable_random)*c + a
-                                    ] * 
-                                 self.data[self.param['variable']['fixed'][a] + '_' + str(c)]) 
-                                for a in range(self.no_variable_fixed)
-                                ]
-                            ) + 
-                        sum(
-                            [
-                                (x[
-                                    (self.count_c-1) + 
-                                    self.no_constant_fixed + 
-                                    self.no_constant_random + 
-                                    (self.no_variable_fixed+self.no_variable_random)*c + 
-                                    self.no_variable_fixed + a
-                                    ] * 
-                                 self.data[self.param['variable']['random'][a] + '_' + str(c)]) 
-                                for a in range(self.no_variable_random)
-                                ]
-                            ) 
-                    ) for c in range(1,self.count_c)]
-                )
-            )
-            
-            #logged denominator of MNL model
-            utility_all = (
-                np.exp(self.av[0] * (
-                    sum(
-                        [
-                            (x[(self.count_c-1) + a] * 
-                             self.data[self.param['constant']['fixed'][a] + '_' + str(0)]) 
-                            for a in range(self.no_constant_fixed)
-                            ]
-                        ) +
-                    sum(
-                        [
-                            (x[(self.count_c-1) + self.no_constant_fixed + a] * 
-                             self.data[self.param['constant']['random'][a] + '_' + str(0)]) 
-                            for a in range(self.no_constant_random)
-                            ]
-                        ) + 
-                    sum(
-                        [
-                            (x[(self.count_c-1) + self.no_constant_fixed + self.no_constant_random + a] * 
-                             self.data[self.param['variable']['fixed'][a] + '_' + str(0)]) 
-                            for a in range(self.no_variable_fixed)
-                            ]
-                        ) + 
-                    sum(
-                        [
-                            (x[
-                                (self.count_c-1) + 
-                                self.no_constant_fixed + 
-                                self.no_constant_random + 
-                                self.no_variable_fixed + a
-                                ] * 
-                             self.data[self.param['variable']['random'][a] + '_' + str(0)]) 
+                             self.data[self.param['variable']['random'][a] + '_' + str(0) + '_' + str(e)]) 
                             for a in range(self.no_variable_random)
                             ]
                         ) 
                     )
-                ) + 
-                sum(
-                    [np.exp(self.av[c] * (
-                        x[c-1] + 
+                for e in range(self.av.shape[1])])
+                
+                +
+                
+                sum([
+                    sum([
+                        self.av[c][e] * self.choice[c][e] * (
+                        x[c-1] +
                         sum(
                             [
                                 (x[(self.count_c-1) + a] * 
-                                 self.data[self.param['constant']['fixed'][a] + '_' + str(c)]) 
+                                 self.data[self.param['constant']['fixed'][a] + '_' + str(c) + '_' + str(e)]) 
                                 for a in range(self.no_constant_fixed)
                                 ]
                             ) +
                         sum(
                             [
                                 (x[(self.count_c-1) + self.no_constant_fixed + a] * 
-                                 self.data[self.param['constant']['random'][a] + '_' + str(c)]) 
+                                 self.data[self.param['constant']['random'][a] + '_' + str(c) + '_' + str(e)]) 
                                 for a in range(self.no_constant_random)
                                 ]
                             ) + 
@@ -1664,7 +1594,7 @@ class Estimation:
                                     self.no_constant_random + 
                                     (self.no_variable_fixed+self.no_variable_random)*c + a
                                     ] * 
-                                 self.data[self.param['variable']['fixed'][a] + '_' + str(c)]) 
+                                 self.data[self.param['variable']['fixed'][a] + '_' + str(c) + '_' + str(e)]) 
                                 for a in range(self.no_variable_fixed)
                                 ]
                             ) + 
@@ -1677,19 +1607,105 @@ class Estimation:
                                     (self.no_variable_fixed+self.no_variable_random)*c + 
                                     self.no_variable_fixed + a
                                     ] * 
-                                 self.data[self.param['variable']['random'][a] + '_' + str(c)]) 
+                                 self.data[self.param['variable']['random'][a] + '_' + str(c) + '_' + str(e)]) 
                                 for a in range(self.no_variable_random)
                                 ]
                             ) 
-                    )) for c in range(1,self.count_c)]
+                        ) for e in range(self.av.shape[1])])
+                    for c in range(1,self.count_c)
+                    ]
                 )
             )
-            
+                                    
+            #logged denominator of MNL model
+            utility_all = (
+                    sum([
+                        self.av[0][e] * (
+                            np.exp(
+                                sum([
+                                        (x[(self.count_c-1) + a] * 
+                                         self.data[self.param['constant']['fixed'][a] + '_' + str(0) + '_' + str(e)]) 
+                                        for a in range(self.no_constant_fixed)
+                                        ]
+                                    ) +
+                                sum([
+                                        (x[(self.count_c-1) + self.no_constant_fixed + a] * 
+                                         self.data[self.param['constant']['random'][a] + '_' + str(0) + '_' + str(e)]) 
+                                        for a in range(self.no_constant_random)
+                                        ]
+                                    ) + 
+                                sum([
+                                        (x[(self.count_c-1) + self.no_constant_fixed + self.no_constant_random + a] * 
+                                         self.data[self.param['variable']['fixed'][a] + '_' + str(0) + '_' + str(e)]) 
+                                        for a in range(self.no_variable_fixed)
+                                        ]
+                                    ) + 
+                                sum([
+                                        (x[(self.count_c-1) + self.no_constant_fixed + self.no_constant_random + self.no_variable_fixed + a] * 
+                                         self.data[self.param['variable']['random'][a] + '_' + str(0) + '_' + str(e)]) 
+                                        for a in range(self.no_variable_random)
+                                        ]
+                                    ) 
+                                )
+                            ) 
+                    for e in range(self.av.shape[1])])
+                
+                +
+                
+                sum([
+                    sum([
+                        self.av[c][e] * (
+                            np.exp(
+                                x[c-1] +
+                                sum([
+                                        (x[(self.count_c-1) + a] * 
+                                         self.data[self.param['constant']['fixed'][a] + '_' + str(c) + '_' + str(e)]) 
+                                        for a in range(self.no_constant_fixed)
+                                        ]
+                                    ) +
+                                sum([
+                                        (x[(self.count_c-1) + self.no_constant_fixed + a] * 
+                                         self.data[self.param['constant']['random'][a] + '_' + str(c) + '_' + str(e)]) 
+                                        for a in range(self.no_constant_random)
+                                        ]
+                                    ) + 
+                                sum([
+                                        (x[
+                                            (self.count_c-1) + 
+                                            self.no_constant_fixed + 
+                                            self.no_constant_random + 
+                                            (self.no_variable_fixed+self.no_variable_random)*c + a
+                                            ] * 
+                                         self.data[self.param['variable']['fixed'][a] + '_' + str(c) + '_' + str(e)]) 
+                                        for a in range(self.no_variable_fixed)
+                                        ]
+                                    ) + 
+                                sum([
+                                        (x[
+                                            (self.count_c-1) + 
+                                            self.no_constant_fixed + 
+                                            self.no_constant_random + 
+                                            (self.no_variable_fixed+self.no_variable_random)*c + 
+                                            self.no_variable_fixed + a
+                                            ] * 
+                                         self.data[self.param['variable']['random'][a] + '_' + str(c) + '_' + str(e)]) 
+                                        for a in range(self.no_variable_random)
+                                        ]
+                                    ) 
+                                )
+                            )
+                        for e in range(self.av.shape[1])])
+                    for c in range(1,self.count_c)])
+            )
+               
+            self.check_utility_all = utility_all
+                             
             #logged probability of MNL model
-            log_prob = sum([self.choice[c] * (utility_single - np.log(utility_all)) for c in range(self.count_c)])
+            log_prob = utility_single - np.log(utility_all)
             
-            return -np.sum(log_prob)
-        
+            res = -np.sum(log_prob)
+                                    
+            return res
         
         #initialize optimization of MNL coefficients
         no_param = (
@@ -1760,6 +1776,8 @@ class Estimation:
             )
         res_param = res.x
         
+        self.check_res = res
+        
         print(res_param)
  
         if stats_sum:   
@@ -1772,16 +1790,13 @@ class Estimation:
                 print('Cross-validation run: ', str(i))
                 self.data = data_safe[size_subset*i:size_subset*(i+1)]
                 
-                self.choice = []
-                self.av = []
-                #define choices and availabilities
+                self.choice = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
+                self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
                 for c in range(self.count_c):
-                    self.choice.append(self.data["choice_" + str(c)].values)
-                    self.av.append(self.data["av_" + str(c)].values)
-                    
-                self.choice = np.array(self.choice)
-                self.av = np.array(self.av)
-                
+                    for e in range(self.count_e):
+                        self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
+                        self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
+
                 res = minimize(
                     loglike, 
                     x0, 
@@ -1801,17 +1816,15 @@ class Estimation:
      
             #reset self.data, self.av, self.choice
             self.data = data_safe
-            self.choice = []
-            self.av = []
             #define choices and availabilities
+            self.choice = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
+            self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
             for c in range(self.count_c):
-                self.choice.append(self.data["choice_" + str(c)].values)
-                self.av.append(self.data["av_" + str(c)].values)
-                
-            self.choice = np.array(self.choice)
-            self.av = np.array(self.av)
- 
+                for e in range(self.count_e):
+                    self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
+                    self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
+                             
         print('LL_0: ', loglike(x0))
         print('LL_final: ', loglike(res_param))
-        
+                
         return res_param

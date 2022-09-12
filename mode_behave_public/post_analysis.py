@@ -41,13 +41,15 @@ class PostAnalysis:
         Probability of MNL model at a specified point.
 
         """
-        top = np.array([self.av[c] * self.choice[c] * np.exp(
-            self.get_utility(c)) for c in range(self.count_c)]
+        top = np.array(
+            [np.sum([self.av[c][e] * self.choice[c][e] * np.exp(self.get_utility(c,e)) for e in range(self.count_e)], axis=0) 
+             for c in range(self.count_c)]
             )
         top_sum = np.sum(top, axis=0)
         self.check_top = top_sum
         bottom = np.array(
-            [self.av[c] * np.exp(self.get_utility(c)) for c in range(self.count_c)]
+            [np.sum([self.av[c][e] * np.exp(self.get_utility(c,e)) for e in range(self.count_e)], axis=0) 
+             for c in range(self.count_c)]
             )
         bottom_sum = np.sum(bottom, axis=0)
         self.check_bottom = bottom_sum
@@ -58,7 +60,7 @@ class PostAnalysis:
         
         return res, number_nan
     
-    def get_utility(self, c):
+    def get_utility(self, c, e):
         """
         Calculation of the utility-function for all observations within 
         a given data-sample with respect to the persons choice c.
@@ -77,10 +79,10 @@ class PostAnalysis:
 
         """
         return(
-            self.initial_point[c-1]*(self.choice_zero==0) +
+            self.initial_point[c-1]*(self.choice_zero[e]==0) +
             np.sum(
                 [self.initial_point[(self.count_c-1) + a] * 
-                 self.data[self.param['constant']['fixed'][a] + '_' + str(c)] 
+                 self.data[self.param['constant']['fixed'][a] + '_' + str(c) + '_' + str(e)] 
                  for a in range(self.no_constant_fixed)], axis=0
                 ) +
             np.sum(
@@ -89,7 +91,7 @@ class PostAnalysis:
                         (self.count_c-1) + 
                         self.no_constant_fixed + a
                         ] * 
-                    self.data[self.param['constant']['random'][a] + '_' + str(c)] 
+                    self.data[self.param['constant']['random'][a] + '_' + str(c) + '_' + str(e)] 
                     for a in range(self.no_constant_random)
                     ], axis=0
                 ) +
@@ -103,7 +105,7 @@ class PostAnalysis:
                          self.no_variable_random)*c + a
                                        ] * 
                     self.data[
-                        self.param['variable']['fixed'][a] + '_' + str(c)
+                        self.param['variable']['fixed'][a] + '_' + str(c) + '_' + str(e)
                         ] for a in range(self.no_variable_fixed)
                  ], axis=0
                 ) +
@@ -116,7 +118,7 @@ class PostAnalysis:
                         (self.no_variable_fixed + self.no_variable_random)*c + 
                         self.no_variable_fixed + a
                         ] * self.data[
-                            self.param['variable']['random'][a] + '_' + str(c)
+                            self.param['variable']['random'][a] + '_' + str(c) + '_' + str(e)
                             ] for a in range(self.no_variable_random)
                  ], axis=0
                 )
@@ -144,8 +146,10 @@ class PostAnalysis:
             vector_output=True
             )
         
+        logit_vector_s = np.swapaxes(logit_vector, 0, 1)
+        
         # calculates the logit probability for the chosen choice option
-        logit_vector_choice = np.sum(logit_vector*self.choice, axis=0)
+        logit_vector_choice = np.sum(np.sum(logit_vector_s*self.choice, axis=0), axis=0)
         
         # get the log of each logit probability
         logit_vector_choice_log = np.log(logit_vector_choice)
@@ -966,6 +970,7 @@ class PostAnalysis:
         
         param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
+        count_e = self.count_e
         sense = kwargs.get("sense", {})
         external_point = kwargs.get("external_point", [])
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
@@ -1006,51 +1011,52 @@ class PostAnalysis:
             len(self.param['variable']['random']),
             )
             
-        data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
+        data = np.zeros((4,dim_aggr_alt_max,self.count_c,self.count_e,len(self.data)))
         for c in range(self.count_c):
-            for i, param in enumerate(self.param['constant']['fixed']):
-                if param in sense.keys():
-                    data[0][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[0][i][c] = self.data[param + '_' + str(c)].values
+            for e in range(self.count_e):
+                for i, param in enumerate(self.param['constant']['fixed']):
+                    if param in sense.keys():
+                        data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                        
+                for i, param in enumerate(self.param['constant']['random']):                
+                    if param in sense.keys():
+                        data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
                     
-            for i, param in enumerate(self.param['constant']['random']):                
-                if param in sense.keys():
-                    data[1][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[1][i][c] = self.data[param + '_' + str(c)].values
+                for i, param in enumerate(self.param['variable']['fixed']):
+                    if param in sense.keys():
+                        data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                        
+                for i, param in enumerate(self.param['variable']['random']):
+                    if param in sense.keys():
+                        data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
                 
-            for i, param in enumerate(self.param['variable']['fixed']):
-                if param in sense.keys():
-                    data[2][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[2][i][c] = self.data[param + '_' + str(c)].values
-                    
-            for i, param in enumerate(self.param['variable']['random']):
-                if param in sense.keys():
-                    data[3][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[3][i][c] = self.data[param + '_' + str(c)].values
-                
-        def get_utility_vector(c, data, asc_offset):
+        def get_utility_vector(c, e, data, asc_offset):
             if c == 0:
                 res_temp = asc_offset[0] + 0
             else:
                 res_temp = asc_offset[0] + initial_point[c-1]
                 
             for a in range(no_constant_fixed):
-                res_temp += initial_point[(count_c-1) + a] * data[0][a][c]
+                res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e]
             for a in range(no_constant_random):
                 res_temp += initial_point[
                     (count_c-1) + 
                     no_constant_fixed + 
                     a
-                    ] * data[1][a][c]
+                    ] * data[1][a][c][e]
             for a in range(no_variable_fixed):
                 res_temp += initial_point[
                     (count_c-1) + no_constant_fixed + no_constant_random + 
                     (no_variable_fixed + no_variable_random)*c + a
-                    ] * data[2][a][c]
+                    ] * data[2][a][c][e]
             for a in range(no_variable_random):
                 res_temp += initial_point[
                     (count_c-1) + 
@@ -1058,27 +1064,31 @@ class PostAnalysis:
                     no_constant_random + 
                     (no_variable_fixed + no_variable_random)*c + 
                     no_variable_fixed + a
-                    ] * data[3][a][c]
+                    ] * data[3][a][c][e]
                 
             return res_temp   
         
         def calculate_logit_shares(av, data, asc_offset):
                 
-            logit_probs = np.zeros(shape=count_c)
+            logit_probs = np.zeros(shape=(count_c, count_e))
             
             #calculate bottom
-            bottom = np.zeros(shape=av.shape[1])
+            bottom = np.zeros(shape=av.shape[2])
+            for c in range(count_c): 
+                for e in range(count_e):
+                    self.check_util_temp = np.exp(get_utility_vector(c, e, data, asc_offset))
+                    self.check_av = av[c][e]
+                    bottom += av[c][e] * np.exp(get_utility_vector(c, e, data, asc_offset))  
             for c in range(count_c):   
-                bottom += av[c] * np.exp(get_utility_vector(c, data, asc_offset))  
-            for c in range(count_c):   
-                top = av[c] * np.exp(get_utility_vector(c, data, asc_offset))
-                logit_probs[c] = np.mean(top/bottom)
+                for e in range(count_e):
+                    top = av[c][e] * np.exp(get_utility_vector(c, e, data, asc_offset))
+                    logit_probs[c][e] = np.mean(top/bottom)
                 
             return logit_probs
 
         res = calculate_logit_shares(self.av, data, asc_offset)
             
-        return res
+        return np.sum(res, axis=1)
                     
     def simulate_mixed_logit(self, **kwargs):
         """
@@ -1106,6 +1116,7 @@ class PostAnalysis:
             no_variable_fixed = self.no_variable_fixed
             no_variable_random = self.no_variable_random
             count_c = self.count_c
+            count_e = self.count_e
             
             dim_aggr_alt_max = max(
                 len(self.param['constant']['fixed']),
@@ -1114,34 +1125,35 @@ class PostAnalysis:
                 len(self.param['variable']['random']),
                 )
                 
-            data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
+            data = np.zeros((4,dim_aggr_alt_max,self.count_c,self.count_e,len(self.data)))
             for c in range(self.count_c):
-                for i, param in enumerate(self.param['constant']['fixed']):
-                    if param in sense.keys():
-                        data[0][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                    else:
-                        data[0][i][c] = self.data[param + '_' + str(c)].values
+                for e in range(self.count_e):
+                    for i, param in enumerate(self.param['constant']['fixed']):
+                        if param in sense.keys():
+                            data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                        else:
+                            data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                            
+                    for i, param in enumerate(self.param['constant']['random']):                
+                        if param in sense.keys():
+                            data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                        else:
+                            data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
                         
-                for i, param in enumerate(self.param['constant']['random']):                
-                    if param in sense.keys():
-                        data[1][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                    else:
-                        data[1][i][c] = self.data[param + '_' + str(c)].values
-                    
-                for i, param in enumerate(self.param['variable']['fixed']):
-                    if param in sense.keys():
-                        data[2][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                    else:
-                        data[2][i][c] = self.data[param + '_' + str(c)].values
-                        
-                for i, param in enumerate(self.param['variable']['random']):
-                    if param in sense.keys():
-                        data[3][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                    else:
-                        data[3][i][c] = self.data[param + '_' + str(c)].values
+                    for i, param in enumerate(self.param['variable']['fixed']):
+                        if param in sense.keys():
+                            data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                        else:
+                            data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                            
+                    for i, param in enumerate(self.param['variable']['random']):
+                        if param in sense.keys():
+                            data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                        else:
+                            data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
                         
             @njit
-            def get_utility_vector(c, point, l, data, asc_offset):
+            def get_utility_vector(c, e, point, l, data, asc_offset):
                 """
                 Calculates the utility of a choice option.
 
@@ -1168,24 +1180,24 @@ class PostAnalysis:
                     res_temp = asc_offset[c] + initial_point[c-1]
                 
                 for a in range(no_constant_fixed):
-                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
+                    res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
                 for a in range(no_constant_random):
-                    res_temp += point[a] * data[1][a][c][l]
+                    res_temp += point[a] * data[1][a][c][e][l]
                 for a in range(no_variable_fixed):
                     res_temp += initial_point[
                         (count_c-1) + 
                         no_constant_fixed + 
                         no_constant_random + 
                         (no_variable_fixed + no_variable_random)*c + a
-                        ] * data[2][a][c][l]
+                        ] * data[2][a][c][e][l]
                 for a in range(no_variable_random):
-                    res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][l]
+                    res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][e][l]
                     
                 return res_temp   
         
             @guvectorize(
-                ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:], float64[:, :, :]'], 
-                '(m,p),(n,l),(i,j,n,l),(n)->(m,l,n)', 
+                ['float64[:, :], int64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
+                '(m,p),(n,e,l),(i,j,n,e,l),(n)->(m,l,n,e)', 
                 nopython=True, target="parallel"
                 )
             def calculate_logit_vector(points, av, data, asc_offset, logit_probs_):
@@ -1194,27 +1206,29 @@ class PostAnalysis:
                     point = points[m]
                     
                     #iterate over length of data array (len(av))
-                    for l in prange(av.shape[1]):
+                    for l in prange(av.shape[2]):
                         #calculate bottom
                         bottom = 0
-                        for c in prange(count_c):   
-                            bottom += av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))  
-                        for c in prange(count_c):   
-                            top = av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))
-                            logit_probs_[m][l][c] = top/bottom  
+                        for c in prange(count_c):
+                            for e in prange(count_e):
+                                bottom += av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))  
+                        for c in prange(count_c): 
+                            for e in prange(count_e):
+                                top = av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))
+                                logit_probs_[m][l][c][e] = top/bottom  
                         
             logit_probs_matrix = calculate_logit_vector(self.points, self.av, data, asc_offset)
             #multiply logit probs per point with share of the point
-            logit_probs_matrix_shares = np.multiply(self.shares.values,logit_probs_matrix.T)
+            logit_probs_matrix_shares = self.shares.values*logit_probs_matrix.T
             #sum along all considered points of the parameter space
-            logit_probs_summed = np.sum(logit_probs_matrix_shares, axis=2)
+            logit_probs_summed = np.sum(logit_probs_matrix_shares, axis=3)
+            
             
             if vector_output:
                 res = logit_probs_summed
             else:
                 #get mean of all probabilities
-                res = np.mean(logit_probs_summed, axis=1)            
-                        
+                res = np.sum(np.mean(logit_probs_summed, axis=2), axis=0)            
         else:
             raise ValueError("Not yet implemented.")
             
@@ -1253,6 +1267,7 @@ class PostAnalysis:
         
         param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
+        count_e = self.count_e
         sense = kwargs.get("sense", {})
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
         
@@ -1284,56 +1299,57 @@ class PostAnalysis:
             len(self.param['variable']['random']),
             )
             
-        data = np.zeros((4,dim_aggr_alt_max,self.count_c, len(self.data)))
+        data = np.zeros((4,dim_aggr_alt_max,self.count_c,self.count_e,len(self.data)))
         for c in range(self.count_c):
-            for i, param in enumerate(self.param['constant']['fixed']):
-                if param in sense.keys():
-                    data[0][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[0][i][c] = self.data[param + '_' + str(c)].values
+            for e in range(self.count_e):
+                for i, param in enumerate(self.param['constant']['fixed']):
+                    if param in sense.keys():
+                        data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                        
+                for i, param in enumerate(self.param['constant']['random']):                
+                    if param in sense.keys():
+                        data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
                     
-            for i, param in enumerate(self.param['constant']['random']):                
-                if param in sense.keys():
-                    data[1][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[1][i][c] = self.data[param + '_' + str(c)].values
-                
-            for i, param in enumerate(self.param['variable']['fixed']):
-                if param in sense.keys():
-                    data[2][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[2][i][c] = self.data[param + '_' + str(c)].values
-                    
-            for i, param in enumerate(self.param['variable']['random']):
-                if param in sense.keys():
-                    data[3][i][c] = self.data[param + '_' + str(c)].values*sense[param][c]
-                else:
-                    data[3][i][c] = self.data[param + '_' + str(c)].values
+                for i, param in enumerate(self.param['variable']['fixed']):
+                    if param in sense.keys():
+                        data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                        
+                for i, param in enumerate(self.param['variable']['random']):
+                    if param in sense.keys():
+                        data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values*sense[param][c][e]
+                    else:
+                        data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
         
         @njit
-        def get_utility_vector(c, point, l, data, asc_offset):
+        def get_utility_vector(c, e, point, l, data, asc_offset):
             if c == 0:
                 res_temp = asc_offset[0] + 0
             else:
                 res_temp = asc_offset[c] + initial_point[c-1]
                 
             for a in range(no_constant_fixed):
-                res_temp += initial_point[(count_c-1) + a] * data[0][a][c][l]
+                res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
             for a in range(no_constant_random):
-                res_temp += point[a] * data[1][a][c][l]
+                res_temp += point[a] * data[1][a][c][e][l]
             for a in range(no_variable_fixed):
                 res_temp += initial_point[
                     (count_c-1) + no_constant_fixed + no_constant_random + 
                     (no_variable_fixed + no_variable_random)*c + a
-                    ] * data[2][a][c][l]
+                    ] * data[2][a][c][e][l]
             for a in range(no_variable_random):
-                res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][l]
+                res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][e][l]
                 
             return res_temp   
     
         @guvectorize(
-            ['float64[:, :], int64[:, :], float64[:, :, :, :], float64[:], float64[:, :, :]'], 
-            '(m,p),(n,l),(i,j,n,l),(n)->(m,l,n)', 
+            ['float64[:, :], int64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
+            '(m,p),(n,e,l),(i,j,n,e,l),(n)->(m,l,n,e)', 
             nopython=True, target="parallel"
             )
         def calculate_logit_vector(points, av, data, asc_offset, logit_probs_):
@@ -1342,21 +1358,26 @@ class PostAnalysis:
                 point = points[m]
                 
                 #iterate over length of data array (len(av))
-                for l in prange(av.shape[1]):
+                for l in prange(av.shape[2]):
                     #calculate bottom
                     bottom = 0
+                    for c in prange(count_c):
+                        for e in prange(count_e):
+                            bottom += av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))  
                     for c in prange(count_c):   
-                        bottom += av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))  
-                    for c in prange(count_c):   
-                        top = av[c][l] * exp(get_utility_vector(c, point, l, data, asc_offset))
-                        logit_probs_[m][l][c] = top/bottom  
+                        for e in prange(count_e):
+                            top = av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))
+                            logit_probs_[m][l][c][e] = top/bottom  
                     
         logit_probs = calculate_logit_vector(latent_points, self.av, data, asc_offset)
         res = np.zeros(shape=logit_probs[0].shape)
         for latent_class in range(logit_probs.shape[0]):
             res += logit_probs[latent_class]*latent_shares[latent_class]
+            
+        #sum over equal alternatives
+        res_sum = np.sum(res, axis=2)
                     
-        return np.mean(res, axis=0)
+        return np.mean(res_sum, axis=0)
             
     def forecast(self, method, **kwargs):        
         """
@@ -1614,7 +1635,7 @@ class PostAnalysis:
                     
             else:
                 k_group = 0    
-                
+                                
             #Simulation of latent class model, based on cluster analysis.
             res_simu['Latent Class'] = self.simulate_latent_class(
                 cluster_center, 
@@ -1668,7 +1689,7 @@ class PostAnalysis:
         
         #Observations in base data
         res_simu['Base Data'] = [
-            np.sum(self.data['choice_' + str(i)]) / len(self.data) for i in range(self.count_c)
+            np.sum([np.sum(self.data['choice_' + str(i) + '_' + str(e)]) for e in range(self.count_e)]) / len(self.data) for i in range(self.count_c)
             ]
         
         #Barplot

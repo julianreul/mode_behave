@@ -9,7 +9,7 @@ import unittest
 import pickle
 import numpy as np
 
-import mode_behave_public as mb
+import mode_behave_public_deploy as mb
 
 class TestEstimation(unittest.TestCase):
     
@@ -45,7 +45,8 @@ class TestEstimation(unittest.TestCase):
         model = mb.Core(param=param_cars, 
                         data_name = 'example_data', 
                         max_space=81, 
-                        alt=4, 
+                        alt=4,
+                        equal_alt=1
                         )
         
         #estimate mixed logit model
@@ -64,10 +65,10 @@ class TestEstimation(unittest.TestCase):
             bits_64=False
             )
 
-        with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+        with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + ".pickle", 'rb') as handle:
             initial_point_compare = pickle.load(handle)  
                 
-        with open(model.PATH_ModelParam + "shares_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+        with open(model.PATH_ModelParam + "shares_" + str(param_random) + ".pickle", 'rb') as handle:
             shares_compare = pickle.load(handle)  
         
         model.shares = model.shares.sort_index().copy()
@@ -112,6 +113,7 @@ class TestEstimation(unittest.TestCase):
                         data_name = 'example_data', 
                         max_space=81, 
                         alt=4, 
+                        equal_alt=1
                         )
         
         #estimate mixed logit model
@@ -130,10 +132,10 @@ class TestEstimation(unittest.TestCase):
             bits_64=True
             )
 
-        with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+        with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + ".pickle", 'rb') as handle:
             initial_point_compare = pickle.load(handle)  
                 
-        with open(model.PATH_ModelParam + "shares_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+        with open(model.PATH_ModelParam + "shares_" + str(param_random) + ".pickle", 'rb') as handle:
             shares_compare = pickle.load(handle)  
         
         model.shares = model.shares.sort_index().copy()
@@ -177,11 +179,12 @@ class TestEstimation(unittest.TestCase):
                         data_name = 'example_data', 
                         max_space=81, 
                         alt=4, 
+                        equal_alt=1
                         )
                  
         model.initial_point = model.estimate_logit(stats=False)
         
-        with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + "_simple.pickle", 'rb') as handle:
+        with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + ".pickle", 'rb') as handle:
             initial_point_compare = pickle.load(handle)  
                 
         #test estimation of initial_point (via the method estimate_logit())

@@ -58,6 +58,12 @@ class Core(Estimation, Simulation, PostAnalysis):
         kwargs alt: int
             Number of discrete choice alternatives.
             
+        kwargs equal_alt: int
+            Maximum number of equal alternatives (with different attributes) 
+            in a single observation/choice set. 
+            E.g. mode choice: Available are two buses and one car. This would
+            lead to a maximum of two equal alternatives (two buses).
+            
         kwargs space : dict
             Parameter space for all coefficients (random and fixed).
             Parameter names are keys.
@@ -169,6 +175,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             #random or fixed within parameter space of Mixed Logit
             self.param = kwargs.get('param', False)
             self.count_c = kwargs.get('alt', False)
+            self.count_e = kwargs.get('equal_alt', False)
             self.max_space = kwargs.get('max_space', False)
             #param_ext defines logit parameters externally.
             #   type : dict
@@ -182,7 +189,9 @@ class Core(Estimation, Simulation, PostAnalysis):
             if self.param == False:
                 raise ValueError('Argument -param- needs to be specified!')                
             if self.count_c == False:
-                raise ValueError('Argument -alt- needs to be specified!')                
+                raise ValueError('Argument -alt- needs to be specified!')
+            if self.count_e == False:
+                raise ValueError('Argument -equal_alt- needs to be specified!')                               
             if self.max_space == False:
                 raise ValueError('Argument -max_space- needs to be specified!')                
             if self.data_name == False:
@@ -293,17 +302,14 @@ class Core(Estimation, Simulation, PostAnalysis):
                     print('Length of dataset: ', str(len(self.data)))
             else:
                 print('Length of dataset: ', str(len(self.data)))
-                
-            self.choice = []
-            self.av = []
-            
+                            
             #define choices and availabilities
+            self.choice = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
+            self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
             for c in range(self.count_c):
-                self.choice.append(self.data["choice_" + str(c)].values)
-                self.av.append(self.data["av_" + str(c)].values)
-                
-            self.choice = np.array(self.choice)
-            self.av = np.array(self.av)
-                                                            
+                for e in range(self.count_e):
+                    self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
+                    self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
+                                                                            
             #create numpy arrays from self.data and add 1 to range over a to ensure dimensionality.
             self.choice_zero = np.array(self.choice[0])        
