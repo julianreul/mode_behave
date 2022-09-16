@@ -82,10 +82,12 @@ However, the software’s application is not limited to this research field.
 MO|DE.behave is a generally applicable framework for the rapid quantitative 
 analysis of choice behavior, based on discrete choice theory. 
 A typical use case is the analysis of survey data, including the following steps:
-1. Preparation of the survey data according to the input format, specified in the repository’s documentation.
-2. Selection of model attributes and specification of model parameters.
-3. Estimation of a multinomial or mixed logit model.
-4. Visualization of estimated model parameters, simulated choice probabilities, identified consumer groups and calculated model sensitivities. 
+
+ 1. Preparation of the survey data according to the input format, specified in the repository’s documentation.
+ 2. Selection of model attributes and specification of model parameters.
+ 3. Estimation of a multinomial or mixed logit model.
+ 4. Visualization of estimated model parameters, simulated choice probabilities, identified consumer groups and calculated model sensitivities. 
+
 The publication of MO|DE.behave aims to ease the application of discrete choice 
 models, especially regarding the less documented mixed logit model with 
 nonparametric design, for any researcher with an interest in choice modeling.
