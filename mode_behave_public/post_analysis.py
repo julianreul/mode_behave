@@ -429,7 +429,7 @@ class PostAnalysis:
         fig.subplots_adjust(hspace=.4)
         
         # Remove axes details that don't play well with overlap
-        fig.suptitle('Distribution of Preferences', fontsize=14, fontweight="bold", y=0.95)
+        fig.suptitle('Distribution of Preferences', fontsize=14, fontweight="bold", y=1)
         plt.setp(ax, 
                  xticks=[-0.8, 0, 0.8], 
                  xticklabels=['Max. Negative Impact', 'No Impact', 'Max. Positive Impact'], 
@@ -1048,7 +1048,7 @@ class PostAnalysis:
             if c == 0:
                 res_temp = asc_offset[0] + 0
             else:
-                res_temp = asc_offset[0] + initial_point[c-1]
+                res_temp = asc_offset[c] + initial_point[c-1]
                 
             for a in range(no_constant_fixed):
                 res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e]
@@ -1454,6 +1454,7 @@ class PostAnalysis:
             )
         
         save_fig_path = kwargs.get('save_fig_path', self.PATH_Visualize)
+        name_scenario = kwargs.get('name_scenario', False)
         external_points = kwargs.get('external_points', np.array([]))
         sense_scenarios = kwargs.get("sense_scenarios", False)
         names_choice_options = kwargs.get("names_choice_options", {})
@@ -1737,10 +1738,13 @@ class PostAnalysis:
         
         plt.legend(loc='upper right', bbox_to_anchor=(1.35, 1))
         
-        if save_fig_path:
+                
+        if name_scenario:
+            fig = ax.get_figure()
+            fig.savefig(save_fig_path + 'forecast_' + name_scenario + '.png', dpi=300, bbox_inches='tight')
+        else:
             fig = ax.get_figure()
             fig.savefig(save_fig_path + 'forecast.png', dpi=300, bbox_inches='tight')
-            
+                    
         if data_output:
             return res_simu_pd_long
-                
