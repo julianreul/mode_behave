@@ -790,10 +790,10 @@ class Estimation:
                     #calculate expectation
                     expect_tmp = 0
                     for m in prange(logit_probs.shape[0]):
-                        for l in prange(logit_probs.shape[1]):
-                            if shares_update[m] == 0:
-                                continue
-                            else:
+                        if shares_update[m] == 0:
+                            continue
+                        else:
+                            for l in prange(logit_probs.shape[1]):
                                 expect_tmp += log(shares_update[m]) * point_probs[m][l]
                     expect[0] = expect_tmp 
             else:
@@ -853,10 +853,10 @@ class Estimation:
                     #calculate expectation
                     expect_tmp = 0
                     for m in prange(logit_probs.shape[0]):
-                        for l in prange(logit_probs.shape[1]):
-                            if shares_update[m] == 0:
-                                continue
-                            else:
+                        if shares_update[m] == 0:
+                            continue
+                        else:
+                            for l in prange(logit_probs.shape[1]):
                                 expect_tmp += log(shares_update[m]) * point_probs[m][l]
                     expect[0] = expect_tmp 
         

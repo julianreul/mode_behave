@@ -9,7 +9,7 @@ import unittest
 import pickle
 import numpy as np
 
-import mode_behave_public_deploy as mb
+import mode_behave_public as mb
 
 class TestEstimation(unittest.TestCase):
     

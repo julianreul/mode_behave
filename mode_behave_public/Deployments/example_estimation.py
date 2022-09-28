@@ -39,12 +39,11 @@ param_cars['variable']['random'] = [param_random]
 #Initialize model
 model = mb.Core(param=param_cars, 
                 data_name='example_data', 
-                max_space=10000, 
+                max_space=81, 
                 alt=4, 
                 equal_alt=1
                 )
 
-                #max_space=81, 
 
 #%% ESTIMATION OF PARAMETERS. - Takes ca. 5-10 min.
 
