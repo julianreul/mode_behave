@@ -32,20 +32,19 @@ bibliography: paper.bib
 
 MO|DE.behave is a python-based software package for the estimation and 
 simulation of discrete choice models. The purpose of this software is to enable 
-a rapid workflow for the quantitative analysis of survey data on the choice 
-behavior of individuals or groups, utilizing advanced discrete choice methods. 
+a rapid quantitative analysis of survey data on choice behavior of individuals 
+or groups, utilizing advanced discrete choice methods. 
 Therefore, MO|DE.behave incorporates estimation routines for conventional 
 multinomial logit models as well as for mixed logit models with nonparametric 
 distributions [@Train2009; @McFadden2000]. Since the estimation of this type of 
 mixed logit model can be computationally expensive, the software facilitates the 
 use of GPU-hardware during the estimation process to decrease computation time. 
 Furthermore, MO|DE.behave contains a set of post-processing tools to visualize 
-the estimation results and simulated choice probabilities, to identify consumer 
-groups and to calculate model sensitivities. Additionally, pre-estimated 
+the estimation and simulated results. Additionally, pre-estimated 
 discrete choice simulation methods for transportation research are included to 
 enrich the software package for this specific community.
 
-# Statement of need
+# Statement of Need
 
 The analysis of choice behavior is an important element in economic research as 
 well as in related fields, such as the social sciences or civil engineering. 
@@ -76,23 +75,26 @@ simulation methods for the specific field of transportation research.
 
 Until now, MO|DE.behave has only been used internally at the Institute for 
 Techno-economic Systems Analysis (IEK-3) at the Forschungszentrum Jülich GmbH 
-(Juelich Research Center), Germany. Primary applications took place in the 
+(Juelich Research Center). Primary applications took place in the 
 field of transportation research [@Reul2022]. 
 However, the software’s application is not limited to this research field. 
 MO|DE.behave is a generally applicable framework for the rapid quantitative 
 analysis of choice behavior, based on discrete choice theory. 
 A typical use case is the analysis of survey data, including the following steps:
 
- 1. Preparation of the survey data according to the input format, specified in the repository’s documentation.
+ 1. Preparation of the survey data according to the input format, specified in the repository’s documentation (long data format).
  2. Selection of model attributes and specification of model parameters.
  3. Estimation of a multinomial or mixed logit model.
- 4. Visualization of estimated model parameters, simulated choice probabilities, identified consumer groups and calculated model sensitivities. 
+ 4. Analysis and visualization of estimated model parameters and simulation results. 
 
 The publication of MO|DE.behave aims to ease the application of discrete choice 
 models, especially regarding the less documented mixed logit model with 
 nonparametric design, for any researcher with an interest in choice modeling.
-Further developments of the presented software package might integrate 
-estimation routines for other discrete choice models, such as mixed logit with parametric distributions (e.g., normal distribution). We encourage an active participation in the software development process to adapt it to the user’s needs.
+Further developments of the presented software package shall integrate 
+estimation routines for other discrete choice models, such as mixed logit with 
+parametric distributions (e.g., normal distribution). 
+We encourage an active participation in the software development process to adapt 
+it to the user’s needs.
 
 # Exemplary Visualizations
 
@@ -103,7 +105,8 @@ mixed logit model based on a subsample of survey data, describing the car
 purchase behavior of households regarding different drive technologies. 
 The available choice alternatives are internal combustion engines (ICEV), 
 plug-in hybrid electric vehicles (PHEV), battery electric vehicles (BEV) and 
-fuel cell electric vehicles (FCEV). 
+fuel cell electric vehicles (FCEV).
+
 Figure 1 and Figure 2 are created by post-processing methods, which are 
 included in the software package.
 
@@ -113,9 +116,9 @@ The bar in light petrol green (left bar for each choice alternative) indicates
 the choice probabilities simulated by a multinomial logit (MNL-)model on the 
 base data, while the blue bar (middle bar for each choice alternative) 
 visualizes the choice probabilities for a scenario with decreased purchase 
-costs of electric vehicles. The simulated probabilities indicate increased 
+costs of electric vehicles. The simulation results indicate increased 
 choice probabilities for the electrified drive technologies BEV and FCEV in 
-case of reduced purchase costs.
+case of reduced purchase costs for electric vehicles.
 
 ![Simulated choice probabilities for a conventional multinomial logit (MNL-)model in comparison to a scenario variation with decreased purchase costs for electric vehicles and the survey (base) data.](imgs/forecast_sensitivity.png)
 
@@ -123,12 +126,14 @@ Figure 2 shows the simulated choice probabilities for two identified consumer
 groups (C1 and C2) in petrol green (the two left bars for each choice alternative), 
 relative to the choice probabilities of a combined latent class model in blue 
 (third bar from the left for each choice alternative) and the survey (base) 
-data in grey. According to the visualized choice probabilities, 
+data in grey. The latent class model indicates the average choice probabilities 
+of the identified consumer groups, weighted by their size. 
+According to the visualized simulation results, 
 consumer group C1 indicates slightly higher choice probabilities for the 
-electrified drive technologies BEV and FCEV compared to consumer group C2, 
+electric drive technologies BEV and FCEV compared to consumer group C2, 
 the latent class model and the base data.
 
-![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data.](imgs/forecast_clustering.png)
+![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data. The latent class model indicates the average choice probabilities of the identified consumer groups, weighted by their size](imgs/forecast_clustering.png)
 
 # Acknowledgements
 
