@@ -1,5 +1,5 @@
 ---
-title: 'MODE.behave: A Python Package for Estimating Discrete Choice Models'
+title: 'MODE.behave: A Python Package for Discrete Choice Modeling'
 tags:
   - Python
   - discrete choice
