@@ -180,16 +180,16 @@ The algorithm roughly follows the procedure below:
 4. In order to speed up the estimation procedure and to handle memory-issues,
    three adaptations can be/are applied:
    
-   * Batch-Estimation (Default):
+   a) Batch-Estimation (Default):
      The estimation procedure can be conducted in batches, not optimizing
      the whole parameter-space at once, but exploring it incrementally
      in batches. This method reduced memory allocation.
-   * Assuming a proximity (Optional): 
+   b) Assuming a proximity (Optional): 
      If we additionally assume, that the estimated shares
      for a single batch are itself normally distributed over classes in 
      proximity to the estimated ones within the batch, estimation time
      is reduced.
-   * GPU-utilization (Optional): The optimization during the estimation process
+   c) GPU-utilization (Optional): The optimization during the estimation process
      can be performed on GPU-hardware, if available.
 
       
