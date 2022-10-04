@@ -78,7 +78,6 @@ class Estimation:
         kwargs bits_64 : Boolean
             If True, numerical precision is increased to 64 bits, instead of 32 bits.
             Defaults to False.
-
         kwargs PROBS_min : Float
             Indicates the share of the parameter space, which shall be explored.
             Defaults to 0.9.
