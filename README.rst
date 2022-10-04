@@ -1,21 +1,28 @@
 Model Purpose and General Information
 =====================================
-This package is a framework for the estimation of multinomial logit and 
-mixed logit models with a discrete mixing distribution with fixed points 
-(see K. Train (2009): Discrete Choice Methods and Simulation).
-A mixed logit model is a multinomial logit model, in which the coefficients 
-are distributed over a (discrete) parameter space. The discrete subsets
-of the parameter space are called classes (compare latent class model).
-The goal of the estimation procedure for mixed logit models is to estimate 
-the optimal shares of the classes.
-The model can be calibrated on any dataset, following a certain structure.
+MO|DE.behave is a Python-based software package for the estimation and 
+simulation of discrete choice models. The purpose of this software is to enable 
+the rapid quantitative analysis of survey data on choice behavior, 
+utilizing advanced discrete choice methods. 
+Therefore, MO|DE.behave incorporates estimation routines for conventional 
+multinomial logit models, as well as for mixed logit models with nonparametric 
+distributions. As the estimation of this type of 
+mixed logit model can be computationally-expensive, the software facilitates the 
+use of GPU hardware during the estimation process in order to decrease computation time. 
+Furthermore, MO|DE.behave contains a set of post-processing tools for visualizing 
+estimation and simulated results. Additionally, pre-estimated 
+discrete choice simulation methods for transportation research are included to 
+enrich the software package for this specific community.
 
-The benefit of this package is, that it enables access to estimation routines
-for mixed logit models with discrete mixing distributions, leveraging 
-computation of GPU-hardware.
-
-The benefit of mixed logit models is, that they enable capturing
-preference heterogeneities within the oberved choice data.
+On mixed logit models:
+In recent years, a new modeling approach in the field of discrete choice theory 
+became popular – the mixed logit model (see Train, K. (2009): "Mixed logit", 
+in Discrete choice methods with simulation (pp. 76–93), Cambridge University Press). 
+Conventional discrete choice models only have a limited capability to describe 
+the heterogeneity of choice preferences within a base population, i.e., 
+the divergent choice behavior of different individuals or consumer groups can 
+only be studied to a limited degree. Mixed logit models overcome this deficiency and 
+allow for the analysis of preference distributions across base populations.
 
 Installation
 ============
@@ -37,7 +44,7 @@ Workflow
 ========
 1. Import model with::
 
-      import mode_behave as mb
+      import mode_behave_public as mb
 
 2. Initialize a model with::
     
@@ -52,15 +59,16 @@ Workflow
 The estimation of the mixed logit model can be modified by definition of keyword-arguments
 during instantiation and within the estimation-method itself.
 
-| **Arguments for instantion** (ov.Core(...)):
+| **Arguments for instantiation** (ov.Core(...)):
 | dict param: Indicated the names of the model attributes. The attribute-names 
 |       shall be derived from the column names of the input data.
 | int max_space: Defines the maximum number of parameter points within the 
 |       considered parameter space.
 | str data_name: Indicates the name of the input data-file. 
 | int alt: Indicates the number of considered choice alternatives.
+| int equal_alt: Indicates the maximum number of equal choice alternatives per choice set.
 |
-| **Keyword-arguments for Instantion** (ov.Core(...)): 
+| **Keyword-arguments for instantiation** (ov.Core(...)): 
 | int sample_data: Define subset of data for estimation of base MNL-model.
 | tuple select_data: Defines a tuple of (str: attribute name, int/float: attribute value)
 |     to estimate mixed logit model upon specific subset of data.
@@ -105,19 +113,20 @@ Structure of Parameters and Input Data
 
    The input dataset contains the observations with which the model is 
    calibrated. The input data is called with the specified string of the
-   keyword-argument *data_name*. The input data shall be placed within 
-   the subfolder *InputData* within the package *mode_behave*.
+   keyword-argument *data_name*. The input data shall be placed in .csv- or 
+   .pickle-format within the subfolder *InputData* of the package *mode_behave*.
    The data shall follow the structure below:
    
    * Rows: Observations.
    * Columns:
-         - One column per parameter of the utility function AND per alternative.
-           Specified as: 'Attribute_name_' + str(no_alternative)
-         - One column for the choice-indication of each  alternative.
-           Specified as: 'choice_' + str(no_alternative)
-         - One column per alternative, indicating the availability.
-           Specified as: 'av_' + str(no_alternative)
-         - If a parameter is constant across alternatives, then let the columns be equal.
+         - One column per parameter of the utility function AND per alternative AND per equal alternative.
+           Specified as: 'Attribute_name_' + str(no_alternative) + str(no_equal_alternative)
+         - One column for the choice-indication of EACH alternative AND per equal alternative.
+           Specified as: 'choice_' + str(no_alternative) + str(no_equal_alternative)
+         - One column per alternative AND per equal alternative, indicating the availability.
+           Specified as: 'av_' + str(no_alternative) + str(no_equal_alternative)
+         - If a parameter is constant across alternatives or equal alternatives, then let the columns be equal.
+   * Index: The index shall start from '0'.
           
 2. Initialization argument 'param':
     
@@ -138,7 +147,7 @@ Structure of Parameters and Input Data
    The coefficients in vector x (solution vector of maximum likelihood optimization)
    follow a certain structure (alternatives=alt):
    
-   * x[:(alt-1)] : ASC-constants for the alternatives 1-#of alternatives. ASC for choice option 0 defaults to 0.
+   * x[:(alt-1)]: ASC-constants for the alternatives 1-#of alternatives. ASC for choice option 0 defaults to 0.
    * x[(alt-1):(alt-1)+no_constant_fixed]: Coefficients of constant and fixed attributes.
    * x[(alt-1)+no_constant_fixed:(alt-1)+(no_constant_fixed+no_constant_random)]: 
      Coefficients of constant and fixed attributes.   
@@ -153,10 +162,10 @@ Theoretical Background
 A mixed logit model is a multinomial logit model (MNL), in which the coefficients 
 do not take a single value, but are distributed over a parameter space. 
 Within this package, the mixed logit models 
-are estimated on a discrete parameter space, which is specified by the researcher.
+are estimated on a discrete parameter space, which is specified by the researcher (nonparametric design).
 The discrete subsets of the parameter space are called classes, 
 analogously to latent class models (LCM). The goal of the estimation procedure
-is to estimate the optimal share of each class within the discrete parameter space.
+is to estimate the optimal share, i.e. weight, of each class within the discrete parameter space.
 The algorithm roughly follows the procedure below:
 
 1. Estimate initial coefficients of a standard multinomial logit model.
@@ -165,7 +174,7 @@ The algorithm roughly follows the procedure below:
    (The standard deviation can be calculated from a k-fold cross-validation.)
    Alternatively, the parameter space can be defined via the absolute values
    of the parameters. Let the number of classes, i.e. the granularity of the discrete parameter space,
-   be determined by the maximum number of classes, specified during initialization.
+   be determined by the maximum number of classes, specified during model initialization.
 3. Estimate the optimal share for each class in the discrete parameter space
    with an expectation-maximization (EM) algorithm. (see Train, 2009)
 4. In order to speed up the estimation procedure and to handle memory-issues,
@@ -184,6 +193,11 @@ The algorithm roughly follows the procedure below:
 |       can be performed on GPU-hardware, if available.
 |
       
+Further reading:
+- Train, K. (2009): "Mixed logit", in Discrete choice methods with simulation (pp. 76–93), Cambridge University Press
+- Train, K. (2008): "EM algorithms for nonparametric estimation of mixing distributions", in Journal of Choice Modelling, 1(1), 40–69, https://doi.org/10.1016/S1755-5345(13)70022-8
+- Train, K. (2016): "Mixed logit with a flexible mixing distribution", in Journal of Choice Modelling, 19, 40–53, https://doi.org/10.1016/j.jocm.2016.07.004
+- McFadden, D. and Train, K. (2000): "Mixed MNL models for discrete response", in Journal of Applied Econometrics, 15(5), 447-470, https://www.jstor.org/stable/2678603 
 
 Post-Analysis
 =============
@@ -207,16 +221,16 @@ Post-Analysis
       
 3. Forecast with cluster centers::
 
-    model.forecast(
-        choice_values = np.array([0,1,2,3]), **kwargs
-                )
+    model.forecast(method, **kwargs)
                 
-    "Choice values" indicated the numerical value of each choice option.
-    In **kwargs, also "k_cluster" can be given to indicate the number of cluster
+    "method" indicates the type of the discrete choice model ("MNL", "MXL", or "LC" for latent class).
+    In **kwargs, also "k" can be given to indicate the number of cluster
     centers which shall be analyzed. This method forecasts the mean choice, based
     on the estimated parameters of each cluster center and the attribute values
     of the base data. It is a good reference point to study the diverging choice
-    behavior of each cluster center.      
+    behavior of each cluster center. Furthermore, the keyword-argument
+    "sense_scenarios" can be given to study model sensitivities by 
+    indicating a relative change in the value of certain model attributes.
 
           
 Simulation
@@ -266,23 +280,3 @@ ratio of the average car price divided by household income (relative_cost_per_ca
 Average market prices can be derived from Kraus' vehicle cost model.
 Last input parameter is the average age of the adults, living in the household,
 scaled by *0.1!
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
