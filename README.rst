@@ -180,24 +180,25 @@ The algorithm roughly follows the procedure below:
 4. In order to speed up the estimation procedure and to handle memory-issues,
    three adaptations can be/are applied:
    
-|   4.1 Batch-Estimation (Default):
-|       The estimation procedure can be conducted in batches, not optimizing
-|       the whole parameter-space at once, but exploring it incrementally
-|       in batches. This method reduced memory allocation.
-|   4.2 Assuming a proximity (Optional): 
-|       If we additionally assume, that the estimated shares
-|       for a single batch are itself normally distributed over classes in 
-|       proximity to the estimated ones within the batch, estimation time
-|       is reduced.
-|   4.3 GPU-utilization (Optional): The optimization during the estimation process
-|       can be performed on GPU-hardware, if available.
-|
+   * Batch-Estimation (Default):
+     The estimation procedure can be conducted in batches, not optimizing
+     the whole parameter-space at once, but exploring it incrementally
+     in batches. This method reduced memory allocation.
+   * Assuming a proximity (Optional): 
+     If we additionally assume, that the estimated shares
+     for a single batch are itself normally distributed over classes in 
+     proximity to the estimated ones within the batch, estimation time
+     is reduced.
+   * GPU-utilization (Optional): The optimization during the estimation process
+     can be performed on GPU-hardware, if available.
+
       
 Further reading:
-- Train, K. (2009): "Mixed logit", in Discrete choice methods with simulation (pp. 76–93), Cambridge University Press
-- Train, K. (2008): "EM algorithms for nonparametric estimation of mixing distributions", in Journal of Choice Modelling, 1(1), 40–69, https://doi.org/10.1016/S1755-5345(13)70022-8
-- Train, K. (2016): "Mixed logit with a flexible mixing distribution", in Journal of Choice Modelling, 19, 40–53, https://doi.org/10.1016/j.jocm.2016.07.004
-- McFadden, D. and Train, K. (2000): "Mixed MNL models for discrete response", in Journal of Applied Econometrics, 15(5), 447-470, https://www.jstor.org/stable/2678603 
+
+* Train, K. (2009): "Mixed logit", in Discrete choice methods with simulation (pp. 76–93), Cambridge University Press
+* Train, K. (2008): "EM algorithms for nonparametric estimation of mixing distributions", in Journal of Choice Modelling, 1(1), 40–69, https://doi.org/10.1016/S1755-5345(13)70022-8
+* Train, K. (2016): "Mixed logit with a flexible mixing distribution", in Journal of Choice Modelling, 19, 40–53, https://doi.org/10.1016/j.jocm.2016.07.004
+* McFadden, D. and Train, K. (2000): "Mixed MNL models for discrete response", in Journal of Applied Econometrics, 15(5), 447-470, https://www.jstor.org/stable/2678603 
 
 Post-Analysis
 =============
