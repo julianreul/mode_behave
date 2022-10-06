@@ -113,21 +113,24 @@ included in the software package.
 Figure 1 visualizes the simulated choice probabilities for each drivetrain technology, 
 as well as the choice probabilities according to the survey (base) data itself. 
 The bar in light petrol green (left bar for each choice alternative) indicates 
-the choice probabilities simulated by a multinomial logit (MNL-)model on the 
+the choice probabilities simulated by a multinomial logit model on the 
 base data, whereas the blue bar (middle bar for each choice alternative) 
 visualizes the choice probabilities for a scenario with decreased purchasing 
 costs of electric vehicles. The simulation results indicate increased 
 choice probabilities for the electrified drivetrain technologies of BEVs and FCEVs in 
 the case of reduced purchasing costs for electric vehicles.
 
-![Simulated choice probabilities for a conventional multinomial logit (MNL-)model in comparison to a scenario variation with decreased purchasing costs for electric vehicles and the survey (base) data.](imgs/forecast_sensitivity.png)
+![Simulated choice probabilities for a conventional multinomial logit model in comparison to a scenario variation with decreased purchasing costs for electric vehicles and the survey (base) data.](imgs/forecast_sensitivity.png)
 
-Figure 2 shows the simulated choice probabilities for two identified consumer 
+Figure 2 shows the simulated multinomial logit choice probabilities for two identified consumer 
 groups (C1 and C2) in petrol green (the two left bars for each choice alternative)
 relative to the choice probabilities of a combined latent class model in blue 
 (third bar from the left for each choice alternative) and the survey (base) 
-data in gray. The latent class model indicates the average choice probabilities 
-of the identified consumer groups, weighted by their size. 
+data in gray. The latent class model indicates the average multinomial logit choice probabilities 
+of the identified consumer groups, weighted by their size.
+In turn, the choice preferences of the consumer groups C1 and C2 are derived 
+from a preceding cluster analysis of a preference distribution, 
+found by a mixed logit model with nonparametric design. 
 According to the visually-depicted simulation results, 
 consumer group C1 indicates slightly higher choice probabilities for the 
 electric drivetrain technologies of BEVs and FCEVs compared to consumer group C2, 
