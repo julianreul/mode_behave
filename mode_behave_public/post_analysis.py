@@ -1202,7 +1202,7 @@ class PostAnalysis:
                 return res_temp   
         
             @guvectorize(
-                ['float64[:, :], int64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
+                ['float64[:, :], float64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
                 '(m,p),(n,e,l),(i,j,n,e,l),(n)->(m,l,n,e)', 
                 nopython=True, target="parallel"
                 )
@@ -1354,7 +1354,7 @@ class PostAnalysis:
             return res_temp   
     
         @guvectorize(
-            ['float64[:, :], int64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
+            ['float64[:, :], float64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
             '(m,p),(n,e,l),(i,j,n,e,l),(n)->(m,l,n,e)', 
             nopython=True, target="parallel"
             )

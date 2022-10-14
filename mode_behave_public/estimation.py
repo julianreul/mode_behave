@@ -271,6 +271,7 @@ class Estimation:
         no_variable_fixed = self.no_variable_fixed
         no_variable_random = self.no_variable_random
         av = self.av
+        weight = self.weight_vector
         choice = self.choice
         
         #maximum number of aggregated alternatives per segment
@@ -295,7 +296,8 @@ class Estimation:
                 
         if self.bits_64 == False:
             data = data.astype('float32')
-            av = av.astype('int32')
+            av = av.astype('float32')
+            weight = weight.astype('float32')
             choice = choice.astype('int32')
             
         if gpu:
@@ -348,11 +350,11 @@ class Estimation:
             if self.bits_64:
 
                 @guvectorize(
-                    ['float64[:], int64[:, :, :], int64[:, :, :], float64[:, :, :, :, :], float64[:]'], 
-                    '(p),(n,e,l),(n,e,l),(i,j,n,e,l)->(l)', 
+                    ['float64[:], float64[:, :, :], float64[:], int64[:, :, :], float64[:, :, :, :, :], float64[:]'], 
+                    '(p),(n,e,l),(l),(n,e,l),(i,j,n,e,l)->(l)', 
                     target='cuda'
                     )
-                def calculate_logit_gpu(point, av, choice, data, logit_probs_):
+                def calculate_logit_gpu(point, av, weight, choice, data, logit_probs_):
                     """
                     This method calculates the multinomial logit probability for a given
                     set of coefficients and all choices in the sample of the dataset.
@@ -387,18 +389,19 @@ class Estimation:
                                     get_utility_gpu(c, e, point, l, data)
                                     )
                         if bottom>0:
-                            logit_probs_[l] = top/bottom      
+                            res_temp = top/bottom
+                            logit_probs_[l] = pow(res_temp,weight[l])
                         else:
                             logit_probs_[l] = 0     
                                 
                         
             else:
                 @guvectorize(
-                    ['float32[:], int32[:, :, :], int32[:, :, :], float32[:, :, :, :, :], float32[:]'], 
-                    '(p),(n,e,l),(n,e,l),(i,j,n,e,l)->(l)', 
+                    ['float32[:], float32[:, :, :], float32[:], int32[:, :, :], float32[:, :, :, :, :], float32[:]'], 
+                    '(p),(n,e,l),(l),(n,e,l),(i,j,n,e,l)->(l)', 
                     target='cuda'
                     )
-                def calculate_logit_gpu(point, av, choice, data, logit_probs_):
+                def calculate_logit_gpu(point, av, weight, choice, data, logit_probs_):
                     """
                     This method calculates the multinomial logit probability for a given
                     set of coefficients and all choices in the sample of the dataset.
@@ -432,7 +435,8 @@ class Estimation:
                                     get_utility_gpu(c, e, point, l, data)
                                     )
                         if bottom>0:
-                            logit_probs_[l] = top/bottom      
+                            res_temp = top/bottom
+                            logit_probs_[l] = pow(res_temp,weight[l])
                         else:
                             logit_probs_[l] = 0     
                     
@@ -482,12 +486,12 @@ class Estimation:
             
             if self.bits_64:
                 @guvectorize(
-                    ['float64[:, :], int64[:, :, :], float64[:, :, :, :, :], float64[:, :]'], 
-                    '(m,p),(n,e,l),(i,j,n,e,l)->(m,l)', 
+                    ['float64[:, :], float64[:, :, :], float64[:], float64[:, :, :, :, :], float64[:, :]'], 
+                    '(m,p),(n,e,l),(l),(i,j,n,e,l)->(m,l)', 
                     nopython=True, 
                     target="parallel"
                     )
-                def calculate_logit_vector(points, av, data, logit_probs_):
+                def calculate_logit_vector(points, av, weight, data, logit_probs_):
                     """
                     This method calculates the multinomial logit probability for a given
                     set of coefficients and all choices in the sample of the dataset.
@@ -521,20 +525,20 @@ class Estimation:
                                     exp_temp = exp(get_utility_vector(c, e, point, l, data))   
                                     bottom += av[c][e][l] * exp_temp        
                                     top += av[c][e][l] * choice[c][e][l] * exp_temp
-                                    res_temp = top/bottom
+                            res_temp = top/bottom
                             if np.isfinite(res_temp):
-                                logit_probs_[m][l] = res_temp  
+                                logit_probs_[m][l] = pow(res_temp,weight[l])
                             else:
                                 logit_probs_[m][l] = 0
                                 
             else:
                 @guvectorize(
-                    ['float32[:, :], int32[:, :, :], float32[:, :, :, :, :], float32[:, :]'], 
-                    '(m,p),(n,e,l),(i,j,n,e,l)->(m,l)', 
+                    ['float32[:, :], float32[:, :, :], float32[:], float32[:, :, :, :, :], float32[:, :]'], 
+                    '(m,p),(n,e,l),(l),(i,j,n,e,l)->(m,l)', 
                     nopython=True, 
                     target="parallel"
                     )
-                def calculate_logit_vector(points, av, data, logit_probs_):
+                def calculate_logit_vector(points, av, weight, data, logit_probs_):
                     """
                     This method calculates the multinomial logit probability for a given
                     set of coefficients and all choices in the sample of the dataset.
@@ -568,9 +572,9 @@ class Estimation:
                                     exp_temp = exp(get_utility_vector(c, e, point, l, data))
                                     bottom += av[c][e][l] * exp_temp               
                                     top += av[c][e][l] * choice[c][e][l] * exp_temp
-                                    res_temp = top/bottom
+                            res_temp = top/bottom
                             if np.isfinite(res_temp):
-                                logit_probs_[m][l] = res_temp
+                                logit_probs_[m][l] = pow(res_temp,weight[l])
                             else:
                                 logit_probs_[m][l] = 0
                                         
@@ -1323,17 +1327,18 @@ class Estimation:
                 #data management: move data to device
                 d_points = cuda.to_device(CG)
                 d_av = cuda.to_device(av)
+                d_weight = cuda.to_device(weight)
                 d_data = cuda.to_device(data)
                 d_choice = cuda.to_device(choice)
                 #calculation
                 d_drawn_logit_probs = calculate_logit_gpu(
-                    d_points, d_av, d_choice, d_data
+                    d_points, d_av, d_weight, d_choice, d_data
                     )
                 cuda.synchronize()
                 #memory management: move data to host
                 drawn_logit_probs = d_drawn_logit_probs.copy_to_host()
             else:
-                drawn_logit_probs = calculate_logit_vector(CG, av, data)
+                drawn_logit_probs = calculate_logit_vector(CG, av, weight, data)
                                
             #Step 4: Apply EM-algorithm on drawn indices
             convergence = 0
@@ -1687,7 +1692,7 @@ class Estimation:
             self.check_utility_all = utility_all
                              
             #logged probability of MNL model
-            log_prob = utility_single - np.log(utility_all)
+            log_prob = self.weight_vector*(utility_single - np.log(utility_all))
             
             res = -np.sum(log_prob)
                                     
@@ -1775,13 +1780,16 @@ class Estimation:
             for i in range(10):
                 print('Cross-validation run: ', str(i))
                 self.data = data_safe[size_subset*i:size_subset*(i+1)]
-                
+                if "weight" in self.data.columns and self.include_weights == True:
+                    self.weight_vector = self.data["weight"].values.copy()
+                else:
+                    self.weight_vector = np.ones(shape=len(self.data))
                 self.choice = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
-                self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
+                self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.float64)
                 for c in range(self.count_c):
                     for e in range(self.count_e):
                         self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
-                        self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
+                        self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values     
 
                 res = minimize(
                     loglike, 
@@ -1803,12 +1811,16 @@ class Estimation:
             #reset self.data, self.av, self.choice
             self.data = data_safe
             #define choices and availabilities
+            if "weight" in self.data.columns and self.include_weights == True:
+                self.weight_vector = self.data["weight"].values.copy()
+            else:
+                self.weight_vector = np.ones(shape=len(self.data))
             self.choice = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
-            self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
+            self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.float64)
             for c in range(self.count_c):
                 for e in range(self.count_e):
                     self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
-                    self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
+                    self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values     
                              
         print('LL_0: ', loglike(x0))
         print('LL_final: ', loglike(res_param))

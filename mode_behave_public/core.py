@@ -74,6 +74,11 @@ class Core(Estimation, Simulation, PostAnalysis):
         kwargs sample_data : int
             Defines the size of the dataset, on which the model shall be
             estimated.
+            
+        kwargs include_weights : boolean
+            If True, the model searches for a column in the input data, which
+            is called "weight". This column indicates the weight of each 
+            observation in the input data. Defaults to True.
                         
         kwargs data_name : str
             Defines the filename of the file, which holds the base data
@@ -141,6 +146,14 @@ class Core(Estimation, Simulation, PostAnalysis):
             else:
                 #default
                 self.initial_point_mode = config.initial_point_mode
+                
+            if len(self.initial_point_car_type_ext) and self.dc_type == 'MNL':
+                #external parameters
+                self.initial_point_car_type = self.initial_point_car_type_ext
+            else:
+                #default
+                self.initial_point_car_type = config.initial_point_car_type
+
                 
             self.log_param = config.log_param
             dict_specific_travel_cost_ext = kwargs.get('dict_specific_travel_cost', {})
@@ -214,6 +227,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             #select_data shall be a numpy array of tuples of (attribute, attribute_value, comparison_type)
             #comparison_type can be "equal", "below", "above"
             self.select_data = kwargs.get("select_data", np.array([]))
+            self.include_weights = kwargs.get("include_weights", True)
             
             if self.initial_point_name:
                 with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
@@ -304,8 +318,13 @@ class Core(Estimation, Simulation, PostAnalysis):
                 print('Length of dataset: ', str(len(self.data)))
                             
             #define choices and availabilities
+            #scale availabilities, if weights are provided in input-data
+            if "weight" in self.data.columns and self.include_weights == True:
+                self.weight_vector = self.data["weight"].values.copy()
+            else:
+                self.weight_vector = np.ones(shape=len(self.data), dtype=np.float64)
             self.choice = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
-            self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.int64)
+            self.av = np.zeros((self.count_c,self.count_e,len(self.data)), dtype=np.float64)
             for c in range(self.count_c):
                 for e in range(self.count_e):
                     self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
