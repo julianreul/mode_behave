@@ -48,11 +48,8 @@ class PostAnalysis:
             for e in range(self.count_e):
                 top += self.av[c][e] * self.choice[c][e] * np.exp(self.get_utility(c,e))
                 bottom += self.av[c][e] * np.exp(self.get_utility(c,e))
-        
-        self.check_top = top
-        self.check_bottom = bottom
-        
-        log_res = np.log(top/bottom)
+                
+        log_res = self.weight_vector*np.log(top/bottom)
         res = np.nansum(log_res)
         number_nan = np.sum(np.isnan(log_res))
         
@@ -149,20 +146,20 @@ class PostAnalysis:
         # for each data point and each choice option
         logit_vector = self.simulate_mixed_logit(
             points_in=points_in, 
-            vector_output=True
+            vector_output_no_weights=True
             )
         
         logit_vector_s = np.swapaxes(logit_vector, 0, 1)
         
         # calculates the logit probability for the chosen choice option
         logit_vector_choice = np.sum(np.sum(logit_vector_s*self.choice, axis=0), axis=0)
-        
+                
         # get the log of each logit probability
-        logit_vector_choice_log = np.log(logit_vector_choice)
+        logit_vector_choice_weighted_log = self.weight_vector*np.log(logit_vector_choice)
         
         # return the sum of the log-probabilities. Ignore nan-values
         
-        return np.nansum(logit_vector_choice_log)
+        return np.nansum(logit_vector_choice_weighted_log)
     
     def visualize_space(self, **kwargs):
         """
@@ -1082,18 +1079,16 @@ class PostAnalysis:
             bottom = np.zeros(shape=av.shape[2])
             for c in range(count_c): 
                 for e in range(count_e):
-                    self.check_util_temp = np.exp(get_utility_vector(c, e, data, asc_offset))
-                    self.check_av = av[c][e]
                     bottom += av[c][e] * np.exp(get_utility_vector(c, e, data, asc_offset))  
             for c in range(count_c):   
                 for e in range(count_e):
                     top = av[c][e] * np.exp(get_utility_vector(c, e, data, asc_offset))
-                    logit_probs[c][e] = np.mean(top/bottom)
+                    logit_probs[c][e] = np.mean((top/bottom)*self.weight_vector)
                 
             return logit_probs
 
         res = calculate_logit_shares(self.av, data, asc_offset)
-            
+                    
         return np.sum(res, axis=1)
                     
     def simulate_mixed_logit(self, **kwargs):
@@ -1112,7 +1107,7 @@ class PostAnalysis:
         
         mixing_distribution = kwargs.get("mixing_distribution", "discrete")
         sense = kwargs.get("sense", {})
-        vector_output = kwargs.get("vector_output", False)
+        vector_output_no_weights = kwargs.get("vector_output_no_weights", False)
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
         
         if mixing_distribution == "discrete":       
@@ -1221,20 +1216,21 @@ class PostAnalysis:
                         for c in prange(count_c): 
                             for e in prange(count_e):
                                 top = av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))
-                                logit_probs_[m][l][c][e] = top/bottom  
+                                logit_probs_[m][l][c][e] = (top/bottom)  
                         
             logit_probs_matrix = calculate_logit_vector(self.points, self.av, data, asc_offset)
             #multiply logit probs per point with share of the point
             logit_probs_matrix_shares = self.shares.values*logit_probs_matrix.T
             #sum along all considered points of the parameter space
             logit_probs_summed = np.sum(logit_probs_matrix_shares, axis=3)
+            self.c_logit_probs_summed = logit_probs_summed
             
             
-            if vector_output:
+            if vector_output_no_weights:
                 res = logit_probs_summed
             else:
                 #get mean of all probabilities
-                res = np.sum(np.mean(logit_probs_summed, axis=2), axis=0)            
+                res = np.sum(np.mean(logit_probs_summed*self.weight_vector, axis=2), axis=0)            
         else:
             raise ValueError("Not yet implemented.")
             
@@ -1354,11 +1350,11 @@ class PostAnalysis:
             return res_temp   
     
         @guvectorize(
-            ['float64[:, :], float64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
-            '(m,p),(n,e,l),(i,j,n,e,l),(n)->(m,l,n,e)', 
+            ['float64[:, :], float64[:, :, :], float64[:], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
+            '(m,p),(n,e,l),(l),(i,j,n,e,l),(n)->(m,l,n,e)', 
             nopython=True, target="parallel"
             )
-        def calculate_logit_vector(points, av, data, asc_offset, logit_probs_):
+        def calculate_logit_vector(points, av, weight, data, asc_offset, logit_probs_):
             
             for m in prange(points.shape[0]):  
                 point = points[m]
@@ -1373,9 +1369,10 @@ class PostAnalysis:
                     for c in prange(count_c):   
                         for e in prange(count_e):
                             top = av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))
-                            logit_probs_[m][l][c][e] = top/bottom  
+                            logit_probs_[m][l][c][e] = (top/bottom)*weight[l]
                     
-        logit_probs = calculate_logit_vector(latent_points, self.av, data, asc_offset)
+        logit_probs = calculate_logit_vector(latent_points, self.av, self.weight_vector, data, asc_offset)
+        self.check_logit_probs = logit_probs
         res = np.zeros(shape=logit_probs[0].shape)
         for latent_class in range(logit_probs.shape[0]):
             res += logit_probs[latent_class]*latent_shares[latent_class]
@@ -1696,7 +1693,7 @@ class PostAnalysis:
         
         #Observations in base data
         res_simu['Base Data'] = [
-            np.sum([np.sum(self.data['choice_' + str(i) + '_' + str(e)]) for e in range(self.count_e)]) / len(self.data) for i in range(self.count_c)
+            np.sum([np.sum(self.data['choice_' + str(i) + '_' + str(e)]*self.weight_vector) for e in range(self.count_e)]) / len(self.data) for i in range(self.count_c)
             ]
         
         #Barplot

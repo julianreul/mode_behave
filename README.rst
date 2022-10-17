@@ -72,6 +72,9 @@ during instantiation and within the estimation-method itself.
 | int sample_data: Define subset of data for estimation of base MNL-model.
 | tuple select_data: Defines a tuple of (str: attribute name, int/float: attribute value)
 |     to estimate mixed logit model upon specific subset of data.
+| boolean include_weights: If this is set to True, the model will search for a
+|     column in the input-data, called "weight", which indicates the weight
+|     for each observation. Defaults to True.
 | str initial_point_name: Specify name of pickle-file within subfolder *ModelParam*,
 |     if MNL-model was previously estimated (saves CPU-time).
 | dict param_transform: Specify alternative definition of parameter structure,
@@ -126,6 +129,7 @@ Structure of Parameters and Input Data
          - One column per alternative AND per equal alternative, indicating the availability.
            Specified as: 'av_' + str(no_alternative) + str(no_equal_alternative)
          - If a parameter is constant across alternatives or equal alternatives, then let the columns be equal.
+         - Furthermore, the observations can be given a weight. Therefore, an additional column needs to be provided, named 'weight'. - Without any further suffix.
    * Index: The index shall start from '0'.
           
 2. Initialization argument 'param':
