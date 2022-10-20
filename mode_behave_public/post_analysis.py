@@ -25,7 +25,21 @@ class PostAnalysis:
     """
     
     def _init_(self):
-        pass          
+        pass       
+    
+    def get_AIC_MNL(self):
+        LL = self.loglike_MNL()
+        
+        AIC = -2*LL[0]+2*len(self.initial_point)
+        
+        return AIC
+    
+    def get_BIC_MNL(self):
+        LL = self.loglike_MNL()
+        
+        BIC = -2*LL[0]+np.log(len(self.data))*len(self.initial_point)
+        
+        return BIC
 
     def loglike_MNL(self):
         """

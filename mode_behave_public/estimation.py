@@ -187,7 +187,6 @@ class Estimation:
                 offset_values = self.std_cross_val
             except:
                 print('Estimate initial coefficients.')
-                
                 self.initial_point = self.estimate_logit()
                 #define std of parameter as offset
                 offset_values = self.std_cross_val
@@ -1490,7 +1489,7 @@ class Estimation:
             
         end = time.time()
         delta = end-start
-        print('Estimation of shares took: ', str(delta), 'seconds.')
+        print('____EM algorithm took: ', str(delta), 'seconds.')
                   
         if np.sum(np.isnan(SHARES)):
             raise ValueError(
@@ -1757,6 +1756,7 @@ class Estimation:
                             ] = (param_ext_list[i], param_ext_list[i])
         
         # optimization of objective function: Nelder-Mead, L-BFGS-B
+        start_logit = time.time()
         res = minimize(
             loglike, 
             x0, 
@@ -1765,15 +1765,17 @@ class Estimation:
             bounds=bounds_def,
             jac='cs'
             )
-        res_param = res.x
+        end_logit = time.time()
+        delta_logit = end_logit - start_logit        
+        print("Estimation of standard logit took [sec.]:", int(delta_logit))
         
-        self.check_res = res
+        res_param = res.x
         
         print(res_param)
  
         if stats_sum:   
             print('Calculation of summary statistics starts.')
-            
+            start_stats = time.time()
             data_safe = self.data
             size_subset = int(len(self.data) / 10)
             param_cross_val = {j: [] for j in range(no_coeff)}
@@ -1801,6 +1803,10 @@ class Estimation:
                 #iterate over estimated coefficients
                 for j, param in enumerate(res.x):
                     param_cross_val[j].append(param)
+            
+            end_stats = time.time()
+            delta_stats = end_stats - start_stats        
+            print("Estimation of summary statistics took [sec.]:", int(delta_stats))
             
             self.check_param_cross_val = param_cross_val
             
