@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 from math import sqrt, pow, floor, exp
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import matplotlib.patches as mpatches
 from sklearn.cluster import KMeans, AgglomerativeClustering, MeanShift, DBSCAN
 from operator import mod
@@ -174,6 +175,161 @@ class PostAnalysis:
         # return the sum of the log-probabilities. Ignore nan-values
         
         return np.nansum(logit_vector_choice_weighted_log)
+    
+    def get_index_of_attribute(self, attribute):
+        """
+        This method returns the index of a given attribute name for the 
+        array "self.initial_point".
+
+        Parameters
+        ----------
+        attribute : str
+            Name of the attribute to be visualized.
+
+        Returns
+        -------
+        index_attribute : int
+            index value of the specified attribute in the array 
+            self.initial_point
+
+        """
+        found = False
+        index_attribute = []
+        for cf, contant_fixed in enumerate(self.param["constant"]["fixed"]):
+            if found:
+                break
+            else:
+                if attribute == contant_fixed:
+                    for c in range(self.count_c):
+                        index_c = (self.count_c-1) + cf
+                        index_attribute.append(index_c)
+                    found = True
+                else:
+                    continue
+        for cr, contant_random in enumerate(self.param["constant"]["random"]):
+            if found:
+                break
+            else:
+                if attribute == contant_random:
+                    for c in range(self.count_c):
+                        index_c = (self.count_c-1) + self.no_constant_fixed + cr
+                        index_attribute.append(index_c)
+                    found = True
+                else:
+                    continue
+        for vf, variable_fixed in enumerate(self.param["variable"]["fixed"]):
+            if found:
+                break
+            else:
+                if attribute == variable_fixed:
+                    for c in range(self.count_c):
+                        index_c = (
+                            (self.count_c-1) + 
+                        self.no_constant_fixed + 
+                        self.no_constant_random + 
+                        (self.no_variable_fixed+self.no_variable_random)*c + vf
+                        )
+                        index_attribute.append(index_c)
+                    found = True
+                else:
+                    continue
+        for vr, variable_random in enumerate(self.param["variable"]["random"]):
+            if found:
+                break
+            else:
+                if attribute == variable_random:
+                    for c in range(self.count_c):
+                        index_c = (
+                            (self.count_c-1) + 
+                            self.no_constant_fixed + 
+                            self.no_constant_random + 
+                            (self.no_variable_fixed+self.no_variable_random)*c + 
+                            self.no_variable_fixed + vr
+                            )
+                        index_attribute.append(index_c)
+                    found = True
+                else:
+                    continue
+                
+        if len(index_attribute) == 0:
+            raise ValueError("No such attribute")
+            
+        return index_attribute
+        
+    
+    def visualize_attribute(self, attribute, **kwargs):
+        """
+        This method visualizes the attribute weights for an exogenously specified
+        attribute and additionally indicates the t-statistics, based on the
+        estimation results of the standard logit model.
+
+        Parameters
+        ----------
+        attribute : str
+            Name of the attribute to be visualized.
+        
+        kwargs save_fig_path : string
+            Path, which indicated the place where to store the visualization
+            as a .png-file.
+            
+        kwargs names_choice_options : dict
+            If given, this shall be a dictionary, which holds the 
+            names of the choice options as values and the numerical
+            indication of the choice option (0,1,2,...) as keys.
+
+
+        Returns
+        -------
+        None.
+
+        """
+        #get keyword arguments
+        save_fig_path = kwargs.get('save_fig_path', False)
+        
+        #get index of attribute
+        index_attribute = self.get_index_of_attribute(attribute)
+        names_choice_options = kwargs.get("names_choice_options", {})
+        
+        list_param = []
+        list_t_stats = []
+        tick_label_temp = []
+        for i, index in enumerate(index_attribute):
+            list_param.append(self.initial_point[index])
+            list_t_stats.append(self.t_stats[index][0])
+            if i in list(names_choice_options):
+                tick_label_temp.append(names_choice_options[i])
+            else:
+                tick_label_temp.append("choice_" + str(i))
+            
+        #continue with something as below!
+        fig, ax = plt.subplots()
+        title_temp = "Attribute: " + attribute
+        ax.set_title(title_temp)
+        custom_lines = [
+                Line2D([0], [0], color="black", lw=1, linestyle="-"),
+                Line2D([0], [0], color="black", lw=1, linestyle="--")]
+        
+        ax.legend(custom_lines, ["t-statistic >=1.96", "t-statistic <1.96"])
+        plt.ylabel("Attribute weight")
+        bar_temp = ax.bar(
+            range(self.count_c), 
+            list_param,
+            tick_label = tick_label_temp, 
+            color="white", edgecolor="black"
+            )
+        ylim_temp = ax.get_ylim()
+        for b in range(self.count_c):
+            if abs(list_t_stats[b]) < 1.96:
+                bar_temp[b].set_linestyle("--")
+            t_stat_temp = round(abs(list_t_stats[b]), 2)
+            textstr = "t-statistic:\n" + str(t_stat_temp)
+            ax.text(b-0.3, ylim_temp[0]*0.2, textstr)
+                
+        print("t-stats:", list_t_stats)
+        print("param:", list_param)
+        
+        if save_fig_path:
+            fig.savefig(save_fig_path + 'attribute_' + attribute + '.png', dpi=300, bbox_inches='tight')
     
     def visualize_space(self, **kwargs):
         """
