@@ -277,6 +277,9 @@ class PostAnalysis:
             names of the choice options as values and the numerical
             indication of the choice option (0,1,2,...) as keys.
 
+        kwargs shift_t_stats : float
+            Shifts the text-fields which indicate the value of the t-statistic
+            in positive or negative direction..
 
         Returns
         -------
@@ -285,6 +288,7 @@ class PostAnalysis:
         """
         #get keyword arguments
         save_fig_path = kwargs.get('save_fig_path', False)
+        shift_t_stats = kwargs.get('shift_t_stats', 0)
         
         #get index of attribute
         index_attribute = self.get_index_of_attribute(attribute)
@@ -323,7 +327,7 @@ class PostAnalysis:
                 bar_temp[b].set_linestyle("--")
             t_stat_temp = round(abs(list_t_stats[b]), 2)
             textstr = "t-statistic:\n" + str(t_stat_temp)
-            ax.text(b-0.3, ylim_temp[0]*0.2, textstr)
+            ax.text(b-0.3, ylim_temp[0]*0.2+shift_t_stats, textstr)
                 
         print("t-stats:", list_t_stats)
         print("param:", list_param)
