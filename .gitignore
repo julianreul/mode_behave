@@ -1,0 +1,7 @@
+# directories
+*.eggs/
+*.egg-info/
+
+# file types to ignore
+*.egg-info
+
