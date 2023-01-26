@@ -10,12 +10,11 @@ to analyze the estimated mixed logit model.
 
 import pandas as pd
 import numpy as np
-from math import sqrt, pow, floor, exp
+from math import exp
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import matplotlib.patches as mpatches
 from sklearn.cluster import KMeans, AgglomerativeClustering, MeanShift, DBSCAN
-from operator import mod
 from numba import guvectorize, prange, njit
 import seaborn as sns
 
@@ -29,6 +28,17 @@ class PostAnalysis:
         pass       
     
     def get_AIC_MNL(self):
+        """
+        This method calculates the AIC of an estimated MNL-model.
+        The AIC is a measure to evaluate the quality of the estimated model.
+
+        Returns
+        -------
+        AIC : float
+            Akaike information criterion.
+
+        """
+        
         LL = self.loglike_MNL()
         
         AIC = -2*LL[0]+2*len(self.initial_point)
@@ -36,6 +46,17 @@ class PostAnalysis:
         return AIC
     
     def get_BIC_MNL(self):
+        """
+        This method calculates the BIC of an estimated MNL-model.
+        The BIC is a measure to evaluate the quality of the estimated model.
+
+        Returns
+        -------
+        BIC : float
+            Bayesian information criterion.
+
+        """
+        
         LL = self.loglike_MNL()
         
         BIC = -2*LL[0]+np.log(len(self.data))*len(self.initial_point)
@@ -53,7 +74,11 @@ class PostAnalysis:
 
         Returns
         -------
-        Probability of MNL model at a specified point.
+        res : float
+            Log-likelihood: Log-Probability of MNL model at a specified point.
+        number_nan : int
+            Number of occured nan-values: Should be zero, otherwise,
+            some numerical issue occures during calculation (e.g., log(0))
 
         """
         
@@ -144,6 +169,8 @@ class PostAnalysis:
     
     def loglike_MXL(self, **kwargs):
         """
+        This method calculates the log-likelihood for MXL-models.
+        
         For reference on log-likelihood calculation see:
             Ch. 5.5 (pp. 118) in "Discrete Choice Analysis", by Ben-Akiva (1985)
         
@@ -151,8 +178,6 @@ class PostAnalysis:
         -------
         Float64
             Returns the log-likelihood (LL) of the estimated mixed logit model.
-            The following should hold for model validity:
-                LL_mixed_logit > LL_initial_point (multinomial logit)
                 
         """
         points_in = kwargs.get('points_in', self.points)
@@ -163,6 +188,8 @@ class PostAnalysis:
             points_in=points_in, 
             vector_output_no_weights=True
             )
+        
+        self.logit_vector_check = logit_vector.copy()
         
         logit_vector_s = np.swapaxes(logit_vector, 0, 1)
         
@@ -180,6 +207,7 @@ class PostAnalysis:
         """
         This method returns the index of a given attribute name for the 
         array "self.initial_point".
+        This method is a supportive method for visualize_attribute()
 
         Parameters
         ----------
@@ -305,7 +333,6 @@ class PostAnalysis:
             else:
                 tick_label_temp.append("choice_" + str(i))
             
-        #continue with something as below!
         fig, ax = plt.subplots()
         title_temp = "Attribute: " + attribute
         ax.set_title(title_temp)
@@ -531,7 +558,7 @@ class PostAnalysis:
             cluster_labels_pd = cluster_labels_pd.reset_index(drop=True)
             cluster_labels_pd['weights'] = self.shares.values[index_clustered]
         else:
-            cluster_labels_pd['weights'] = self.shares.values
+            cluster_labels_pd['weights'] = self.shares
         cluster_sizes_rel = [cluster_labels_pd.loc[cluster_labels_pd['labels'] == i, 'weights'].sum() for i in range(k_cluster)]
         
         #sort cluster_center and cluster_sizes_rel
@@ -550,7 +577,7 @@ class PostAnalysis:
             vlines_loc[names_constant_random[i]] = cluster_center[count_random_variable]
             vlines_len[names_constant_random[i]] = cluster_sizes_rel
             count_random_variable += 1
-            attributes_temp += [names_constant_random[i]]*len(shares.values)
+            attributes_temp += [names_constant_random[i]]*len(shares)
         for c in range(self.count_c):
             for i in range(len(self.param['variable']['random'])):
                 if c in list(names_choice_options):
@@ -564,13 +591,13 @@ class PostAnalysis:
                 vlines_loc[names_variable_random[i] + '_' + name_co] = cluster_center[count_random_variable]
                 vlines_len[names_variable_random[i] + '_' + name_co] = cluster_sizes_rel
                 count_random_variable += 1
-                attributes_temp += [names_variable_random[i] + '_' + name_co]*len(shares.values)
+                attributes_temp += [names_variable_random[i] + '_' + name_co]*len(shares)
         df['g'] = attributes_temp
         df = df.sort_values(by='g')
-        weights_ = shares.values
+        weights_ = shares
         for w in range(number_random-1):
         #for w in range(self.count_c-1):
-            weights_ = np.append(weights_, shares.values)
+            weights_ = np.append(weights_, shares)
         df['weights'] = weights_
         
 
@@ -688,262 +715,9 @@ class PostAnalysis:
             fig.savefig(save_fig_path + 'preference_distribution.png', dpi=300, bbox_inches='tight')
             
         if return_res:
-            return res_clustering    
-                
-    def get_points(self, index):
-        """
-        This methods draws explicit points for respective estimated shares 
-        from the multidimensional space array, by indicating the index of
-        the points within the space array.
-        
-        Parameters
-        ----------
-        index : array
-            The index of specific points of the parameter space within
-            the multidimensional space array.
-
-        Returns
-        -------
-        point : array
-            An array of explicitly drawn points.
-        
-        """
-        
-        if self.bits_64:
-            @guvectorize(
-                ['float64[:, :], int64[:], float64[:, :]'], '(r,m),(n)->(n,r)', 
-                nopython=True, target="parallel"
-                )
-            def get_points_from_draws_vector(space, draws, drawn_points): 
-                """
-                This methods draws explicit points for respective estimated shares 
-                from the multidimensional space array, by indicating the index of
-                the points within the space array.
-                    
-                Parameters
-                ----------
-                space : array
-                    Multidimensional array, which describes the complete
-                    parameter space.
-                draws : array
-                    An array which holds the index of the points, which shall 
-                    be explicitly drawn from space.
-    
-                Returns
-                -------
-                drawn_points : array
-                    Array with explicitly drawn points from the parameter space.
-    
-                """
-                no_random = space.shape[0]
-                ppc = space.shape[1]
-                #convention: Count indices, starting from last column.
-                for d in prange(len(draws)):
-                    rest = draws[d]
-                    for i in prange(no_random):
-                        exp_temp = no_random-(i+1)
-                        index_temp = floor(rest/pow(ppc, exp_temp))
-                        drawn_points[d][i] = space[i][index_temp]
-                        rest = mod(rest, pow(ppc, exp_temp))
-                        
-        else:
-            @guvectorize(
-                ['float32[:, :], int64[:], float32[:, :]'], '(r,m),(n)->(n,r)', 
-                nopython=True, target="parallel"
-                )
-            def get_points_from_draws_vector(space, draws, drawn_points): 
-                """
-                This methods draws explicit points for respective estimated shares 
-                from the multidimensional space array, by indicating the index of
-                the points within the space array.
-                    
-                Parameters
-                ----------
-                space : array
-                    Multidimensional array, which describes the complete
-                    parameter space.
-                draws : array
-                    An array which holds the index of the points, which shall 
-                    be explicitly drawn from space.
-    
-                Returns
-                -------
-                drawn_points : array
-                    Array with explicitly drawn points from the parameter space.
-    
-                """
-                no_random = space.shape[0]
-                ppc = space.shape[1]
-                #convention: Count indices, starting from last column.
-                for d in prange(len(draws)):
-                    rest = draws[d]
-                    for i in prange(no_random):
-                        exp_temp = no_random-(i+1)
-                        index_temp = floor(rest/pow(ppc, exp_temp))
-                        drawn_points[d][i] = space[i][index_temp]
-                        rest = mod(rest, pow(ppc, exp_temp))
-        
-        points_temp = get_points_from_draws_vector(self.space, index)
-        
-        return points_temp
-    
-    
-    def transform_initial_point(self, param, param_t, **kwargs):
-        """
-        This method transforms the order of parameters within an
-        initial point array to fit an alternative attribute specification.
-        Therefore, the same attributes must have be considered during the 
-        estimation of the MNL model, however a different order of attributes 
-        could have been defined.
-        
-        Parameters
-        ----------
-        param : array
-            Original definition of parameters/attributes.
-        param_t : array
-            Desired definition of parameters/attributes.
-        kwargs point : array
-            An exogenously defined initial_point.
-
-        Returns
-        -------
-        array
-            Re-ordered initial_point.
-        """
-        
-        point = kwargs.get('point', self.initial_point)
-        
-        X = {}
-        for i, key_0 in enumerate(param):
-            for j, key_1 in enumerate(param[key_0]):
-                for k, key_2 in enumerate(param[key_0][key_1]):
-                    X[key_2] = (i*2+j,k)
-                    
-        X_t = {}
-        for i, key_0 in enumerate(param_t):
-            for j, key_1 in enumerate(param_t[key_0]):
-                for k, key_2 in enumerate(param_t[key_0][key_1]):
-                    X_t[key_2] = (i*2+j,k)       
-        
-        count_alt = self.count_c-1
-        
-        count_constant_fixed = 0
-        count_constant_random = 0
-        count_variable_fixed = 0
-        count_variable_random = 0
-        
-        for key in X:
-            pos = X[key]
-            if pos[0] == 0:
-                count_constant_fixed += 1
-            elif pos[0] == 1:
-                count_constant_random += 1
-            elif pos[0] == 2:
-                count_variable_fixed += 1
-            else:
-                count_variable_random += 1
-                
-        count_constant_fixed_t = 0
-        count_constant_random_t = 0
-        count_variable_fixed_t = 0
-        count_variable_random_t = 0
-        
-        for key in X_t:
-            pos_t = X_t[key]
-            if pos_t[0] == 0:
-                count_constant_fixed_t += 1
-            elif pos_t[0] == 1:
-                count_constant_random_t += 1
-            elif pos_t[0] == 2:
-                count_variable_fixed_t += 1
-            else:
-                count_variable_random_t += 1
-                
-        #initialize transformed initial point
-        initial_point_t = np.zeros(shape=point.shape)
-                
-        for key in X:
-                
-            pos = X[key]
-            pos_t = X_t[key]
+            return res_clustering   
             
-            if pos[0] == 0:
-                #constant fixed
-                values = point[count_alt + pos[1]]
-            elif pos[0] == 1:
-                #constant random
-                values = point[count_alt + count_constant_fixed+pos[1]]
-            elif pos[0] == 2:
-                #variable fixed
-                values = []
-                for c in range(self.count_c):
-                    index_temp = (count_alt +
-                            count_constant_fixed + 
-                            count_constant_random + 
-                            (count_variable_fixed + count_variable_random)*c +
-                            pos[1]
-                            )
-                    values.append(point[index_temp])
-                    
-            else:
-                #variable random
-                values = []
-                for c in range(self.count_c):
-                    index_temp = (count_alt +
-                            count_constant_fixed + 
-                            count_constant_random + 
-                            (count_variable_fixed + count_variable_random)*c +
-                            count_variable_fixed + pos[1])
-                    values.append(point[index_temp])
-                    
-            if pos_t[0] == 0:
-                #constant fixed
-                initial_point_t[count_alt + pos_t[1]] = values
-            elif pos_t[0] == 1:
-                #constant random
-                initial_point_t[count_alt + count_constant_fixed_t+pos_t[1]] = values
-            elif pos_t[0] == 2:
-                #variable fixed
-                for c in range(self.count_c):
-                    index_temp = (count_alt +
-                        count_constant_fixed_t + 
-                        count_constant_random_t + 
-                        (count_variable_fixed_t + count_variable_random_t)*c +
-                        pos_t[1])
-                    
-                    initial_point_t[index_temp] = values[c]
-            else:
-                #variable random
-                for c in range(self.count_c):
-                    index_temp = (count_alt +
-                        count_constant_fixed_t + 
-                        count_constant_random_t + 
-                        (count_variable_fixed_t + count_variable_random_t)*c +
-                        count_variable_fixed_t + pos_t[1])
-                    
-                    initial_point_t[index_temp] = values[c]
-                     
-        return initial_point_t
-    
-    def weighted_cov(self, X, Y):
         
-        average_x = np.average(X, weights=self.shares)
-        average_y = np.average(Y, weights=self.shares)
-        
-        return np.average((X-average_x)*(Y-average_y), weights=self.shares)
-    
-    def weighted_corr(self, random_param_a, random_param_b):
-        
-        X = self.points.T[random_param_a]
-        Y = self.points.T[random_param_b]
-        cov_xy = self.weighted_cov(X,Y)
-        var_x = self.weighted_cov(X,X)
-        var_y = self.weighted_cov(Y,Y)
-        std_x = sqrt(var_x)
-        std_y = sqrt(var_y)
-        
-        return cov_xy / (std_x*std_y)
-    
     def cluster_space(self, method, k, **kwargs):
         """
         This method analyses the estimated points and shares within the 
@@ -987,13 +761,13 @@ class PostAnalysis:
             try:
                 points = np.nan_to_num(self.points)
             except:
-                points = np.nan_to_num(self.get_points(np.array(shares.index, dtype='int64')))
+                raise ValueError("No such attribute -points- defined.")
         
         if method == 'kmeans':                
             #create instance of KMeans-algorithm
             kmeans = KMeans(n_clusters=k, tol=tol_temp)
             #Compute cluster centers
-            labels = kmeans.fit_predict(points, sample_weight=shares.values)
+            labels = kmeans.fit_predict(points, sample_weight=shares)
             #get inertia and silhouhette score for elbow method
             inertia = kmeans.inertia_
             #get cluster centers
@@ -1121,6 +895,150 @@ class PostAnalysis:
         else:
             raise ValueError('No such method defined.')
             
+           
+    def assign_to_cluster(self, **kwargs):
+        """
+        This method calculates the probabilities, that a data point in the 
+        base data belongs to a cluster. The probabilities are the logit-
+        probabilities of the chosen choice alternatives, calculates with
+        the cluster centers.
+        The probabilities indicate the likelihood that an observation in the 
+        base data belongs to a cluster, which is different to the probability
+        that a point in the parameter space belongs to a cluster!
+        Thus, "assign_to_cluster()" yields different cluster-sizes than
+        the analysis of the output of "cluster_space()", which is also used
+        in here.
+
+        Parameters
+        ----------
+        **kwargs : TYPE
+            method : string.
+                indicates the clustering method.
+            k : int
+                Indicates the number of clusters to be calculated with.
+
+        Returns
+        -------
+        cluster_probs : Pandas DataFrame
+            Dataframe, indicating the probabilities, that an observation in the
+            base data is chosen with the points of cluster center k.
+        cluster_centers : Numpy array
+            The points of the cluster centers.
+
+        """
+        
+        method = kwargs.get("method", "kmeans")
+        k = kwargs.get("k", 3)
+        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
+        
+        #Input: shares, points, cluster-method, #of clusters
+        res_clustering = self.cluster_space(method, k)
+        
+        #method: calculate the probability, that an observation has points of cluster x.
+        #This probability is the "logit-vector"
+        initial_point = self.initial_point
+        no_constant_fixed = self.no_constant_fixed
+        no_constant_random = self.no_constant_random
+        no_variable_fixed = self.no_variable_fixed
+        no_variable_random = self.no_variable_random
+        count_c = self.count_c
+        count_e = self.count_e
+        
+        dim_aggr_alt_max = max(
+            len(self.param['constant']['fixed']),
+            len(self.param['constant']['random']),
+            len(self.param['variable']['fixed']),
+            len(self.param['variable']['random']),
+            )
+            
+        data = np.zeros((4,dim_aggr_alt_max,self.count_c,self.av.shape[1],len(self.data)))
+        for c in range(self.count_c):
+            for e in range(self.count_e):
+                for i, param in enumerate(self.param['constant']['fixed']):
+                    data[0][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                for i, param in enumerate(self.param['constant']['random']):
+                    data[1][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                for i, param in enumerate(self.param['variable']['fixed']):
+                    data[2][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                for i, param in enumerate(self.param['variable']['random']):
+                    data[3][i][c][e] = self.data[param + '_' + str(c) + '_' + str(e)].values
+                    
+        @njit
+        def get_utility_vector(c, e, point, l, data, asc_offset):
+            """
+            Calculates the utility of a choice option.
+
+            Parameters
+            ----------
+            c : int
+                Choice option.
+            point : array
+                Multi-dimensional point in the parameter space.
+            l : array
+                DESCRIPTION.
+            data : array
+                Base data.
+
+            Returns
+            -------
+            res_temp : float
+                Utility of a choice option.
+
+            """
+            if c == 0:
+                res_temp = asc_offset[0] + 0
+            else:
+                res_temp = asc_offset[c] + initial_point[c-1]
+            
+            for a in range(no_constant_fixed):
+                res_temp += initial_point[(count_c-1) + a] * data[0][a][c][e][l]
+            for a in range(no_constant_random):
+                res_temp += point[a] * data[1][a][c][e][l]
+            for a in range(no_variable_fixed):
+                res_temp += initial_point[
+                    (count_c-1) + 
+                    no_constant_fixed + 
+                    no_constant_random + 
+                    (no_variable_fixed + no_variable_random)*c + a
+                    ] * data[2][a][c][e][l]
+            for a in range(no_variable_random):
+                res_temp += point[no_constant_random + no_variable_random*c + a] * data[3][a][c][e][l]
+                
+            return res_temp   
+    
+        @guvectorize(
+            ['float64[:, :], float64[:, :, :], float64[:, :, :], float64[:, :, :, :, :], float64[:], float64[:, :, :, :]'], 
+            '(m,p),(n,e,l),(n,e,l),(i,j,n,e,l),(n)->(m,l,n,e)', 
+            nopython=True, target="parallel"
+            )
+        def calculate_logit_vector(points, av, choice, data, asc_offset, logit_probs_):
+            
+            for m in prange(points.shape[0]):  
+                point = points[m]
+                
+                #iterate over length of data array (len(av))
+                for l in prange(av.shape[2]):
+                    #calculate bottom
+                    bottom = 0
+                    for c in prange(count_c):
+                        for e in prange(count_e):
+                            bottom += av[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))  
+                    for c in prange(count_c): 
+                        for e in prange(count_e):
+                            top = av[c][e][l] * choice[c][e][l] * exp(get_utility_vector(c, e, point, l, data, asc_offset))
+                            logit_probs_[m][l][c][e] = (top/bottom)  
+                            
+        logit_vector = calculate_logit_vector(res_clustering[0], self.av, self.choice, data, asc_offset)
+        
+        df_input = logit_vector.sum(axis=(2,3)).T
+        
+        column_names = ["cluster_prob_" + str(i) for i in range(k)]
+        cluster_probs = pd.DataFrame(data=df_input, columns=column_names)
+        cluster_centers = res_clustering[0]
+        
+        return cluster_probs, cluster_centers           
+            
+            
     def simulate_logit(self, **kwargs):
         """
         This method simulates a multinomial logit model, based on the naming-
@@ -1128,8 +1046,6 @@ class PostAnalysis:
 
         Parameters
         ----------
-        kwargs param_transform : TYPE
-            DESCRIPTION
         kwargs sense : dictionary
             The dictionary "sense" holds the attribute names for which sensitivities
             shall be simulated as keys. The values are the arrays or lists
@@ -1145,41 +1061,24 @@ class PostAnalysis:
 
         """
         
-        param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
         count_e = self.count_e
         sense = kwargs.get("sense", {})
         external_point = kwargs.get("external_point", [])
-        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
+        asc_offset = kwargs.get(
+            "asc_offset", 
+            np.array([0 for c in range(self.count_c)], dtype="float64")
+            )
 
-        try:
-            no_constant_fixed = len(param_transform['constant']['fixed'])
-            no_constant_random = len(param_transform['constant']['random'])
-            no_variable_fixed = len(param_transform['variable']['fixed'])
-            no_variable_random = len(param_transform['variable']['random'])
-        except:
-            no_constant_fixed = len(self.param['constant']['fixed'])
-            no_constant_random = len(self.param['constant']['random'])
-            no_variable_fixed = len(self.param['variable']['fixed'])
-            no_variable_random = len(self.param['variable']['random'])
+        no_constant_fixed = len(self.param['constant']['fixed'])
+        no_constant_random = len(self.param['constant']['random'])
+        no_variable_fixed = len(self.param['variable']['fixed'])
+        no_variable_random = len(self.param['variable']['random'])
                     
         if len(external_point):
-            if param_transform:
-                initial_point = self.transform_initial_point(
-                    param=self.param, 
-                    param_t=self.param_transform,
-                    point=external_point
-                    )
-            else:
-                initial_point = external_point
+            initial_point = external_point
         else:
-            if param_transform:
-                initial_point = self.transform_initial_point(
-                    param=self.param, 
-                    param_t=self.param_transform
-                    )
-            else:
-                initial_point = self.initial_point
+            initial_point = self.initial_point
                 
         dim_aggr_alt_max = max(
             len(self.param['constant']['fixed']),
@@ -1264,7 +1163,8 @@ class PostAnalysis:
         res = calculate_logit_shares(self.av, data, asc_offset)
                     
         return np.sum(res, axis=1)
-                    
+               
+     
     def simulate_mixed_logit(self, **kwargs):
         """
         Calculation of probabilities of mixed logit model for all
@@ -1394,11 +1294,10 @@ class PostAnalysis:
                         
             logit_probs_matrix = calculate_logit_vector(self.points, self.av, data, asc_offset)
             #multiply logit probs per point with share of the point
-            logit_probs_matrix_shares = self.shares.values*logit_probs_matrix.T
+            logit_probs_matrix_shares = self.shares*logit_probs_matrix.T
             #sum along all considered points of the parameter space
             logit_probs_summed = np.sum(logit_probs_matrix_shares, axis=3)
             self.c_logit_probs_summed = logit_probs_summed
-            
             
             if vector_output_no_weights:
                 res = logit_probs_summed
@@ -1410,6 +1309,7 @@ class PostAnalysis:
             
         return res    
         
+    
     def simulate_latent_class(self, latent_points, latent_shares, **kwargs):
         """
         This method simulates a latent class model, based on the naming-
@@ -1426,8 +1326,6 @@ class PostAnalysis:
             The random points within each class.
         latent_shares : 1D numpy array.
             The share of each class.
-        kwargs param_transform : TYPE
-            DESCRIPTION
         kwargs sense : dictionary
             The dictionary "sense" holds the attribute names for which sensitivities
             shall be simulated as keys. The values are the arrays or lists
@@ -1441,32 +1339,22 @@ class PostAnalysis:
 
         """
         
-        param_transform = kwargs.get("param_transform", False)
         count_c = self.count_c
         count_e = self.count_e
         sense = kwargs.get("sense", {})
-        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
-        
-        try:
-            no_constant_fixed = len(param_transform['constant']['fixed'])
-            no_constant_random = len(param_transform['constant']['random'])
-            no_variable_fixed = len(param_transform['variable']['fixed'])
-            no_variable_random = len(param_transform['variable']['random'])
-        except:
-            no_constant_fixed = len(self.param['constant']['fixed'])
-            no_constant_random = len(self.param['constant']['random'])
-            no_variable_fixed = len(self.param['variable']['fixed'])
-            no_variable_random = len(self.param['variable']['random'])
+        asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))      
+
+        no_constant_fixed = len(self.param['constant']['fixed'])
+        no_constant_random = len(self.param['constant']['random'])
+        no_variable_fixed = len(self.param['variable']['fixed'])
+        no_variable_random = len(self.param['variable']['random'])
             
         #check compatabiilty of latent_points and no_variable
         no_random = no_constant_random + no_variable_random*count_c
         if no_random != latent_points.shape[1]:
             raise ValueError('Defined parameter set -param- does not match number of random variables.')
         
-        if param_transform:
-            initial_point = self.transform_initial_point(param=self.param, param_t=self.param_transform)
-        else:
-            initial_point = self.initial_point
+        initial_point = self.initial_point
                 
         dim_aggr_alt_max = max(
             len(self.param['constant']['fixed']),
@@ -1667,11 +1555,8 @@ class PostAnalysis:
             k = kwargs.get('k', 3)
             method_temp = kwargs.get('cluster_method', 'kmeans')
             
-            #   step 1: Scale parameters
-            try:
-                points = np.nan_to_num(self.points)
-            except:
-                points = np.nan_to_num(self.get_points(np.array(self.shares.index, dtype='int64')))
+            #   step 1: Check parameters
+            points = np.nan_to_num(self.points)
             
             #   get only points, above share-treshold.
             shares = self.shares        
@@ -1683,13 +1568,7 @@ class PostAnalysis:
                 #get random points.
                 external_points_random = np.zeros(shape=(external_points.shape[0], number_random), dtype='float32')
     
-                for group in range(external_points.shape[0]):
-                    if self.param_transform:
-                        #convert external point.
-                        external_points[group] = self.transform_initial_point(
-                            self.param_init, self.param_transform, point=external_points[group]
-                            )
-                                    
+                for group in range(external_points.shape[0]):     
                     for c in range(len(names_constant_random)):
                         index_temp = self.count_c-1 + len(names_constant_fixed) + c
                         external_points_random[group][c] = external_points[group][index_temp]
@@ -1798,19 +1677,7 @@ class PostAnalysis:
                                     asc_offset=asc_offset,
                                     sense=sense_scenarios[sense_name]
                                     )
-                          
-                    # The code below takes the affinity of external points to cluster
-                    # points as a reference value to state the number of points, 
-                    # which would belong to the external points, if they were
-                    # cluster centers themselves. (group_size_percent)
-                    
-                    #cluster_affinity = ''
-                    #group_size = 0
-                    #for i in range(k):
-                    #    cluster_affinity += 'C' + str(i+1) + ' - ' + str(affinity_percent_all[g][i]) + '%\n'
-                    #    group_size += (affinity_percent_all[g][i]/100) * (cluster_sizes_rel_percent[i]/100)
-                    #group_size_percent = round(group_size*100)
-                    
+                                              
             else:
                 k_group = 0    
                                 
@@ -1867,7 +1734,9 @@ class PostAnalysis:
         
         #Observations in base data
         res_simu['Base Data'] = [
-            np.sum([np.sum(self.data['choice_' + str(i) + '_' + str(e)]*self.weight_vector) for e in range(self.count_e)]) / len(self.data) for i in range(self.count_c)
+            np.sum(
+                [np.sum(self.data['choice_' + str(i) + '_' + str(e)]*self.weight_vector) for e in range(self.count_e)]
+                ) / len(self.data) for i in range(self.count_c)
             ]
         
         #Barplot

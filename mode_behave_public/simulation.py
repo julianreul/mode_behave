@@ -13,7 +13,6 @@ applications within other models. Thus, good documentation is even more importan
 """
 
 import numpy as np
-
 from numba import njit
 
 class Simulation:
@@ -181,10 +180,45 @@ class Simulation:
         return probs
         
     def func(self, x, scale):
+        """
+        This method is a supportive function for the method get_speed().
+
+        Parameters
+        ----------
+        x : float
+            Input value to be scaled.
+        scale : float
+            scaling factor.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
         return np.log(x + 1) * scale
 
     # derivation of mode specific speed: UNIT = [km/h]
     def get_speed(self, mode, distance, regiontype):
+        """
+        This method calculates the average speed for a given transport mode,
+        travel distance and travel regiontype.
+
+        Parameters
+        ----------
+        mode : int
+            Transport mode.
+        distance : int
+            Travel distance.
+        regiontype : int
+            Region of travel.
+
+        Returns
+        -------
+        speed : float
+            Average speed.
+
+        """
         if mode == 1:
             return 5
         elif mode in (3, 4, 5):
@@ -198,10 +232,30 @@ class Simulation:
                 (self.log_param["regiontype"] == 0) & (self.log_param["mode"] == mode),
                 "scale",
             ].values[0]
+            
+        speed = self.func(distance, scale)
 
-        return self.func(distance, scale)
+        return speed
 
     def get_travel_duration_single(self, mode, distance, regiontype):
+        """
+        This method calculates the duration of travel.
+
+        Parameters
+        ----------
+        mode : int
+            Transport mode.
+        distance : int
+            Travel distance.
+        regiontype : int
+            Region of travel.
+
+        Returns
+        -------
+        float
+            Travel duration.
+
+        """
         # self.check_distance = distance
         if distance == 0:
             return 0
@@ -209,6 +263,24 @@ class Simulation:
             return distance / (self.get_speed(mode, distance, regiontype) / 60)
 
     def get_travel_cost(self, distance, mode, regiontype):
+        """
+        This method calculated the travel costs.
+
+        Parameters
+        ----------
+        mode : int
+            Transport mode.
+        distance : int
+            Travel distance.
+        regiontype : int
+            Region of travel.
+
+        Returns
+        -------
+        cost_temp : float
+            Travel costs in €.
+
+        """
         if mode == 10:
             cost_temp = (
                 self.get_travel_duration_single(mode, distance, regiontype)
@@ -320,6 +392,24 @@ class Simulation:
         
         @njit
         def get_utility_fast_MNL_mode(c, data, initial_point):
+            """
+            This method calculates the utility of a choice option.
+
+            Parameters
+            ----------
+            c : int
+                choice option.
+            data : numpy array
+                Array, containing the base data.
+            initial_point : numpy array
+                Array, containing the estimated model parameters.
+
+            Returns
+            -------
+            res_temp : float
+                Utility of choice option.
+
+            """
             if c == 0:
                 res_temp = initial_point[c-1]
             else:
