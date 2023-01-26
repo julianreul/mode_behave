@@ -9,7 +9,7 @@ Created on Thu Jul 21 09:55:20 2022
 import time
 import numpy as np
 
-import mode_behave_public as mb
+import mode_behave as mb
 
 #%% SIMPLE MODEL - 3 ATTRIBUTES
 

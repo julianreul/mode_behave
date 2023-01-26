@@ -40,7 +40,7 @@ Workflow
 ========
 1. Import model with::
 
-      import mode_behave_public as mb
+      import mode_behave as mb
 
 2. Initialize a model with::
     
