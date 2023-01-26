@@ -47,11 +47,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             between variables that are not randomly distributed within
             a group of decision-makers ('fixed') and those, that are randomly
             distributed with a discrete distribution ('random')
-            
-        param_transform : dict
-            Same structure as -param-. Is employed to depict a different
-            order of parameters. 
-                        
+                                    
         kwargs max_space : int
             Maximum number of data points within parameter space.
             
@@ -63,18 +59,10 @@ class Core(Estimation, Simulation, PostAnalysis):
             in a single observation/choice set. 
             E.g. mode choice: Available are two buses and one car. This would
             lead to a maximum of two equal alternatives (two buses).
-            
-        kwargs space : dict
-            Parameter space for all coefficients (random and fixed).
-            Parameter names are keys.
-            
+                        
         kwargs norm_alt : int
             Defines, which alternative shall be normalized. Defaults to 0.
-            
-        kwargs sample_data : int
-            Defines the size of the dataset, on which the model shall be
-            estimated.
-            
+                        
         kwargs include_weights : boolean
             If True, the model searches for a column in the input data, which
             is called "weight". This column indicates the weight of each 
@@ -94,19 +82,7 @@ class Core(Estimation, Simulation, PostAnalysis):
         kwargs dc_type : str
             Determines the model type for simulation: MNL or MXL model. 
             Depends on which estimated model parameters are available.
-        
-        kwargs initial_point_cars_ext : list
-            External definition of MNL parameters for the simulation of 
-            car ownership on household level.
-
-        kwargs initial_point_car_type_ext : list
-            External definition of MNL parameters for the simulation of 
-            the choice of a propulsion technology.
-        
-        kwargs initial_point_mode_ext : list
-            External definition of MNL parameters for the simulation of 
-            mode choice.
-        
+                
         kwargs dict_specific_travel_cost : dictionary
             External specification of transport costs. Relevant for the 
             simulation of mode choice.
@@ -122,38 +98,13 @@ class Core(Estimation, Simulation, PostAnalysis):
         if self.model_type == 'simulation':
             #specify the type of discrete choice model (MXL or MNL)
             self.dc_type = kwargs.get('dc_type', 'MNL')
-            if self.dc_type == 'MXL':
-                self.shares_cars = config.shares_cars
-                self.points_cars = config.points_cars
                 
-            self.initial_point_cars_ext = kwargs.get('initial_point_cars_ext', [])
-            self.initial_point_car_type_ext = kwargs.get('initial_point_car_type_ext', [])
-            self.initial_point_mode_ext = kwargs.get('initial_point_mode_ext', [])
             self.asc_offset_hh_cars = config.asc_offset_hh_cars
             
             #load previously estimated model parameters, 
             #if model-type is simulation.
-            if len(self.initial_point_cars_ext) and self.dc_type == 'MNL':
-                #external parameters
-                self.initial_point_cars = self.initial_point_cars_ext
-            else:
-                #default
-                self.initial_point_cars = config.initial_point_cars
-                                
-            if len(self.initial_point_mode_ext) and self.dc_type == 'MNL':
-                #external parameters
-                self.initial_point_mode = self.initial_point_mode_ext
-            else:
-                #default
-                self.initial_point_mode = config.initial_point_mode
-                
-            if len(self.initial_point_car_type_ext) and self.dc_type == 'MNL':
-                #external parameters
-                self.initial_point_car_type = self.initial_point_car_type_ext
-            else:
-                #default
-                self.initial_point_car_type = config.initial_point_car_type
-
+            self.initial_point_cars = config.initial_point_cars
+            self.initial_point_mode = config.initial_point_mode
                 
             self.log_param = config.log_param
             dict_specific_travel_cost_ext = kwargs.get('dict_specific_travel_cost', {})
@@ -180,7 +131,6 @@ class Core(Estimation, Simulation, PostAnalysis):
             sep = os.path.sep
             self.data_name = kwargs.get("data_name", False)
             self.initial_point_name = kwargs.get("initial_point_name", False)
-            self.param_transform = kwargs.get("param_transform", False)
             self.PATH_InputData = PATH_MODULE + sep + 'InputData' + sep
             self.PATH_ModelParam = PATH_MODULE + sep + 'ModelParam' + sep
             self.PATH_Visualize = PATH_MODULE + sep + 'Visualizations' + sep
@@ -189,14 +139,6 @@ class Core(Estimation, Simulation, PostAnalysis):
             self.param = kwargs.get('param', False)
             self.count_c = kwargs.get('alt', False)
             self.count_e = kwargs.get('equal_alt', False)
-            self.max_space = kwargs.get('max_space', False)
-            #param_ext defines logit parameters externally.
-            #   type : dict
-            #   e.g.: {'PARAM_NAME': [param_ext_list, alternative_list},
-            #   where -alternative_list- is a list of choice alternatives for
-            #   which to set the parameter -PARAM_NAME- to a given value in
-            #   -param_ext_list-.
-            self.param_ext = kwargs.get('param_ext', {})
             
             #check, if necessary values have been specified.
             if self.param == False:
@@ -204,44 +146,23 @@ class Core(Estimation, Simulation, PostAnalysis):
             if self.count_c == False:
                 raise ValueError('Argument -alt- needs to be specified!')
             if self.count_e == False:
-                raise ValueError('Argument -equal_alt- needs to be specified!')                               
-            if self.max_space == False:
-                raise ValueError('Argument -max_space- needs to be specified!')                
+                raise ValueError('Argument -equal_alt- needs to be specified!')             
             if self.data_name == False:
                 raise ValueError('Argument -data_name- needs to be specified!')                
             
-            try:
-                self.no_constant_fixed = len(self.param_transform['constant']['fixed'])
-                self.no_constant_random = len(self.param_transform['constant']['random'])
-                self.no_variable_fixed = len(self.param_transform['variable']['fixed'])
-                self.no_variable_random = len(self.param_transform['variable']['random'])
-            except:
-                self.no_constant_fixed = len(self.param['constant']['fixed'])
-                self.no_constant_random = len(self.param['constant']['random'])
-                self.no_variable_fixed = len(self.param['variable']['fixed'])
-                self.no_variable_random = len(self.param['variable']['random'])
+            self.no_constant_fixed = len(self.param['constant']['fixed'])
+            self.no_constant_random = len(self.param['constant']['random'])
+            self.no_variable_fixed = len(self.param['variable']['fixed'])
+            self.no_variable_random = len(self.param['variable']['random'])
                             
-            self.space = kwargs.get("space", False)
-            self.sample_data = kwargs.get("sample_data", False)
             self.data_index = kwargs.get("data_index", np.array([]))
-            #select_data shall be a numpy array of tuples of (attribute, attribute_value, comparison_type)
-            #comparison_type can be "equal", "below", "above"
-            self.select_data = kwargs.get("select_data", np.array([]))
+
             self.include_weights = kwargs.get("include_weights", True)
             
             if self.initial_point_name:
                 with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
                     self.initial_point = pickle.load(handle)  
-                    
-            if self.initial_point_name and self.param_transform:
-                print('Transformation of initial_point.')
-                self.initial_point = self.transform_initial_point(
-                    self.param, 
-                    self.param_transform
-                    )
-                self.param_init = self.param
-                self.param = self.param_transform
-            
+                                
             print('Data wrangling.')
             
             try:
@@ -257,66 +178,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             #get data-points from indicated indices
             if self.data_index.size:
                 self.data = self.data.iloc[self.data_index]
-                                
-            #select a subset of the data to estimate socio-economic sub-groups
-            if self.select_data.size > 0:
-                for i in range(self.select_data.shape[0]):
-                    print('Attribute: ', str(self.select_data[i][0]))
-                    print('Value: ', str(self.select_data[i][1]))
-                    if self.select_data[i][2] == 'equal':
-                        print(
-                            'Estimate subset of data: Attribute ', 
-                            str(self.select_data[i][0]), 
-                            ', attribute-value == ', 
-                            str(self.select_data[i][1])
-                            )
-                        self.data = self.data.loc[
-                            self.data[
-                                self.select_data[i][0]
-                                ] == float(self.select_data[i][1])
-                            ]
-                        self.data_index = self.data.index
-                    elif self.select_data[i][2] == 'below':
-                        print(
-                            'Estimate subset of data: Attribute ', 
-                            str(self.select_data[i][0]), 
-                            ', attribute-value < ', 
-                            str(self.select_data[i][1])
-                            )
-                        self.data = self.data.loc[
-                            self.data[
-                                self.select_data[i][0]
-                                ] < float(self.select_data[i][1])
-                            ]
-                        self.data_index = self.data.index
-                    elif self.select_data[i][2] == 'above':
-                        print(
-                            'Estimate subset of data: Attribute ', 
-                            str(self.select_data[i][0]), 
-                            ', attribute-value > ', 
-                            str(self.select_data[i][1])
-                            )
-                        self.data = self.data.loc[
-                            self.data[
-                                self.select_data[i][0]
-                                ] > float(self.select_data[i][1])
-                            ]
-                        self.data_index = self.data.index
-                    else:
-                        raise ValueError('Invalid comparison type!')
-                
-            #shorten dataset for calculation of numerator of utility-function.
-            if self.sample_data:
-                if self.sample_data < len(self.data):
-                    print('Length of dataset: ', str(self.sample_data))
-                    self.data = self.data.sample(self.sample_data)
-                    self.data_index = self.data.index
-                    self.data = self.data.reset_index(drop=True)
-                else:
-                    print('Length of dataset: ', str(len(self.data)))
-            else:
-                print('Length of dataset: ', str(len(self.data)))
-                            
+                                                                            
             #define choices and availabilities
             #scale availabilities, if weights are provided in input-data
             if "weight" in self.data.columns and self.include_weights == True:
