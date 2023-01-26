@@ -1,0 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 26 15:54:49 2023
+
+@author: j.reul
+"""
+
+include imgs/*.png
+include mode_behave_public/Deployments/*.py
+include mode_behave_public/InputData/*.pickle
+include mode_behave_public/InputData/*.csv
+include mode_behave_public/ModelParam/*.pickle
+include mode_behave_public/Visualizations/*.png

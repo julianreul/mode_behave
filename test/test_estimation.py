@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-import mode_behave as mb
+import mode_behave_public as mb
 
 class TestEstimation(unittest.TestCase):       
         

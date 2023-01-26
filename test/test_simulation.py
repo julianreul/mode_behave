@@ -8,7 +8,7 @@ Created on Sat May  7 11:46:16 2022
 import unittest
 import numpy as np
 
-import mode_behave as mb
+import mode_behave_public as mb
 
 class TestCarOwnership(unittest.TestCase):
     def test_simulate_hh_cars(self):
