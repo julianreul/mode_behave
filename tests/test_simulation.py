@@ -30,7 +30,7 @@ class TestCarOwnership(unittest.TestCase):
         regiontype = 1
         
         #simulate
-        model = mb.Core(model_type = 'simulation', dc_type = 'MNL')        
+        model = mb.Core(model_type = 'simulation')        
         result = model.simulate_hh_cars(urban_region, rural_region, hh_size,
                              adults_working, children, htype, quali_opnv, sharing,
                              relative_cost_per_car, age_adults, regiontype)
@@ -52,7 +52,7 @@ class TestCarOwnership(unittest.TestCase):
 
         """
         #simulate
-        model = mb.Core(model_type = 'simulation', dc_type = 'MNL')        
+        model = mb.Core(model_type = 'simulation')        
         result = model.simulate_mode_choice(
             agegroup=2,
             occupation=1,

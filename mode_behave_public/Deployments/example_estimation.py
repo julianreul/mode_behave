@@ -7,7 +7,6 @@ Created on Thu Jul 21 09:55:20 2022
 
 #import necessary modules
 import time
-import pickle
 import numpy as np
 
 import mode_behave_public as mb
@@ -15,13 +14,10 @@ import mode_behave_public as mb
 #%% SIMPLE MODEL - 3 ATTRIBUTES
 
 #define model parameters
-param_random = 'RELATIVER_KAUFPREIS'
+param_fixed = []
+param_random = ['RELATIVER_KAUFPREIS', 'REICHWEITE_DURCH100', 'LADE_TANK_ZEIT']
 
-param_ranking = ['RELATIVER_KAUFPREIS', 'REICHWEITE_DURCH100', 'LADE_TANK_ZEIT']
-
-param_ranking.remove(param_random)
-
-param_cars = {'constant': 
+param_temp = {'constant': 
                   {
                    'fixed':[],
                    'random':[]
@@ -33,55 +29,39 @@ param_cars = {'constant':
                    }
               }
 
-param_cars['variable']['fixed'] = param_ranking
-param_cars['variable']['random'] = [param_random]    
+param_temp['variable']['fixed'] = param_fixed
+param_temp['variable']['random'] = param_random    
     
 #Initialize model
-model = mb.Core(param=param_cars, 
-                data_name='example_data', 
-                max_space=81, 
-                alt=4, 
-                equal_alt=1
-                )
+model = mb.Core(
+    param=param_temp, 
+    data_name='example_data', 
+    alt=4, 
+    equal_alt=1
+    )
 
-
-#%% ESTIMATION OF PARAMETERS. - Takes ca. 5-10 min.
+#%% ESTIMATION OF PARAMETERS.
 
 #estimate MXL model
 start = time.time()
-res = model.estimate_mixed_logit(
-    min_iter=5, 
-    max_iter=20,
-    opt_search=True,
+#estimate mixed logit model
+model.estimate_mixed_logit(
+    min_iter=10, 
+    max_iter=1000,
+    tol=0.01,
     space_method = 'std_value',
-    blind_exploration = 0,
-    scale_space = 1,
-    SHARES_max = 1000,
-    PROBS_min = 0.95,
-    draws_per_iter = 500,
-    updated_shares = 15,
-    gpu=False,
-    bits_64=True
+    scale_space = 2,
+    max_shares = 1000,
+    bits_64=True,
+    t_stats_out=False
     )
 end = time.time()
 delta = int(end-start)
 print('Estimation of logit model took: ', str(delta), ' seconds.')
 
-#store t-statistic
-t_stats = model.t_stats
-
-#calculate random points from shares.index
-model.points = model.get_points(model.shares.index)
-
-#%% FOR POST-PROCESSING: LOAD PRE-ESTIMATED PARAMETERS FOR SIMPLE MODEL
-with open(model.PATH_ModelParam + "initial_point_" + str(param_random) + ".pickle", 'rb') as handle:
-    model.initial_point = pickle.load(handle)  
-
-with open(model.PATH_ModelParam + "points_" + str(param_random) + ".pickle", 'rb') as handle:
-    model.points = pickle.load(handle)  
-
-with open(model.PATH_ModelParam + "shares_" + str(param_random) + ".pickle", 'rb') as handle:
-    model.shares = pickle.load(handle)  
+#%%Evaluation of MNL- and MXL-model
+print("LL-Ratio of MNL-model:", model.loglike_MNL()[0])
+print("LL-Ratio of MXL-model:", model.loglike_MXL())
 
 #%%Post-processing
 # Visualization of MXL-results and indication of clustering-results. 

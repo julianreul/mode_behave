@@ -6,11 +6,9 @@ the rapid quantitative analysis of survey data on choice behavior,
 utilizing advanced discrete choice methods. 
 Therefore, MO|DE.behave incorporates estimation routines for conventional 
 multinomial logit models, as well as for mixed logit models with nonparametric 
-distributions. As the estimation of this type of 
-mixed logit model can be computationally-expensive, the software facilitates the 
-use of GPU hardware during the estimation process in order to decrease computation time. 
+distributions.
 Furthermore, MO|DE.behave contains a set of post-processing tools for visualizing 
-estimation and simulated results. Additionally, pre-estimated 
+estimation and simulation results. Additionally, pre-estimated 
 discrete choice simulation methods for transportation research are included to 
 enrich the software package for this specific community.
 
@@ -37,8 +35,6 @@ Installation
     
       pip install -e .
       
-#. If a NVIDIA-GPU is accessible, gpu-based estimation methods can be used. Therefore, please also install the python-package "cuda" and an appropriate NVIDIA-driver.
-
 
 Workflow
 ========
@@ -48,7 +44,13 @@ Workflow
 
 2. Initialize a model with::
     
-      model = mb.Core(param = param_temp, max_space = 1000, data_name = 'data_in', alt=3)
+      model = mb.Core(
+          param = param_temp, 
+          data_name="artificial_data", 
+          alt=3,
+          equal_alt=1,
+          include_weights=False
+          )
       
    The structure of the input data and the parameter-input are given below.
 
@@ -62,43 +64,26 @@ during instantiation and within the estimation-method itself.
 | **Arguments for instantiation** (ov.Core(...)):
 | dict param: Indicated the names of the model attributes. The attribute-names 
 |       shall be derived from the column names of the input data.
-| int max_space: Defines the maximum number of parameter points within the 
-|       considered parameter space.
 | str data_name: Indicates the name of the input data-file. 
 | int alt: Indicates the number of considered choice alternatives.
 | int equal_alt: Indicates the maximum number of equal choice alternatives per choice set.
 |
 | **Keyword-arguments for instantiation** (ov.Core(...)): 
-| int sample_data: Define subset of data for estimation of base MNL-model.
-| tuple select_data: Defines a tuple of (str: attribute name, int/float: attribute value)
-|     to estimate mixed logit model upon specific subset of data.
 | boolean include_weights: If this is set to True, the model will search for a
 |     column in the input-data, called "weight", which indicates the weight
 |     for each observation. Defaults to True.
 | str initial_point_name: Specify name of pickle-file within subfolder *ModelParam*,
 |     if MNL-model was previously estimated (saves CPU-time).
-| dict param_transform: Specify alternative definition of parameter structure,
-|     if a previously estimated initial point (MNL-model) is loaded, but 
-|     further estimation is carried out upon alternative param-structure. 
-|     (e.g.: Parameters are set to random, which were fixed before.)
 |
 | **Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))**:
 | int min_inter: Min. iterations for EM-algorithm.
-| int max_iter: Max. iterations for EM-algorithm
-| bool gpu: If set to True, then the estimation process is conducted using GPU-hardware.
-|     A necessary pre-condition for that is the existence of some NVIDIA-GPU
-|     on your hardware ans the installation of the python module numba.
+| int max_iter: Max. iterations for EM-algorithm.
+| float tol: Numerical tolerance of EM-algorithm.
 | bool bit_64: Defaults to False. If set to True, all numbers are calculated
 |     in 64-bit format, which increases precision, but also runtime.
-| str space_method: 'abs_value' or 'std_value', defines type of space-creation
-| int blind_exploration: Number of iteration in which shares are not updated. 
-|     Reduces initialization bias of random draws.
-| int scale_space: Defines the size of the space, relative to the chosen space_method
-| float PROBS_single_percent: Treshold between 0-1, when to neglect certain points. Default = 0.9
-| float PROBS_min: Min. percentage to which the parameter space shall be analyzed.
-| int draws_per_iter: Number of random draws per iteration of EM-algorithm.
-| int updated_shares: Number of stochastically updated shares around the analyzed point.
-|     If large, calculation speeds up exponentially, but results might diverge from optimum.
+| str space_method: Defines the chosen method to span the parameter space for the mixed logit estimation.
+| int scale_space: Defines the size of the space, relative to the chosen space_method.
+| int max_shares: Defines the maximum number of points to be observed in the parameter space.
 |
       
 4. The package can also be used to estimate multinomial logit models::
@@ -108,7 +93,12 @@ during instantiation and within the estimation-method itself.
 | **Keyword-arguments for estimation-method (model.estimate_logit(...))**:
 | bool stats: If set to True, t-statistics from the estimation process are evaluated.
 |
-   
+
+5. An exemplary model workflow is provided with the package and can be accessed via the following path::
+
+    PATH_TO_PACKAGE/mode_behave_public/Deployments/example_estimation.py
+
+
 Structure of Parameters and Input Data
 ======================================
 
@@ -173,20 +163,13 @@ is to estimate the optimal share, i.e. weight, of each class within the discrete
 The algorithm roughly follows the procedure below:
 
 1. Estimate initial coefficients of a standard multinomial logit model.
-2. Specify the discrete parameter space of the random coefficients with
+2. Specify a continuous parameter space for the random coefficients with
    the mean and the standard deviation of each initially calculated random coefficient. 
    (The standard deviation can be calculated from a k-fold cross-validation.)
    Alternatively, the parameter space can be defined via the absolute values
-   of the parameters. Let the number of classes, i.e. the granularity of the discrete parameter space,
-   be determined by the maximum number of classes, specified during model initialization.
-3. Estimate the optimal share for each class in the discrete parameter space
-   with an expectation-maximization (EM) algorithm. (see Train, 2009)
-4. In order to speed up the estimation procedure and to handle memory-issues,
-   three adaptations can be/are applied:
-   
-   a) Batch-Estimation (Default): The estimation procedure can be conducted in batches, not optimizing the whole parameter-space at once, but exploring it incrementally in batches. This method reduced memory allocation.
-   b) Assuming a proximity (Optional): If we additionally assume, that the estimated shares for a single batch are itself normally distributed over classes in proximity to the estimated ones within the batch, estimation time is reduced.
-   c) GPU-utilization (Optional): The optimization during the estimation process can be performed on GPU-hardware, if available.
+   of the parameters.
+3. Draw points (maximum number of point = -max_shares-) from the parameter space via latin hypercube sampling.
+3. Estimate the optimal share for each drawn point with an expectation-maximization (EM) algorithm. (see Train, 2009)
 
       
 Further reading:
@@ -229,6 +212,26 @@ Post-Analysis
     "sense_scenarios" can be given to study model sensitivities by 
     indicating a relative change in the value of certain model attributes.
 
+4. Cluster the drawn points from the parameter space to similar preference groups (e.g. consumer groups)::
+
+    model.cluster_space(method, k, **kwargs)
+    
+    "method" indicates the clustering algorithm, e.g. kmeans. 
+    "k" indicates the number of cluster centers.
+    The output of this method is the classification of the drawn points
+    from the parameter space into clusters. The second output are
+    the calculated cluster centers. 
+    The clusters can be interpreted as consumer groups.
+
+5. Assignment of observations to cluster centers::
+    
+    model.assign_to_cluster(**kwargs)
+    
+    This method calculates probabilities for each observation in the base data,
+    which indicate the likelihood with which an observation belongs to a 
+    cluster center (the method internally calls self.cluster_space to
+    determine the cluster centers). 
+    This method is useful to characterize the consumer groups.
           
 Simulation
 ==========

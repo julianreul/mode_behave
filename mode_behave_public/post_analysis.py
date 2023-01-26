@@ -477,11 +477,7 @@ class PostAnalysis:
         if external_points.size:
             #get random points.
             external_points_random = np.zeros(shape=(external_points.shape[0], number_random), dtype='float64')
-            for group in range(external_points.shape[0]):
-                if self.param_transform:
-                    #convert external point.
-                    external_points[group] = self.transform_initial_point(self.param_init, self.param_transform, point=external_points[group])
-                
+            for group in range(external_points.shape[0]):                
                 for c in range(len(names_constant_random)):
                     index_temp = self.count_c-1 + len(names_constant_fixed) + c
                     external_points_random[group][c] = external_points[group][index_temp]
@@ -1619,9 +1615,9 @@ class PostAnalysis:
             if method_temp in ('agglo', 'meanshift'):
                 index_clustered = res_clustering[2]
                 cluster_labels_pd = cluster_labels_pd.reset_index(drop=True)
-                cluster_labels_pd['weights'] = self.shares.values[index_clustered]
+                cluster_labels_pd['weights'] = self.shares[index_clustered]
             else:
-                cluster_labels_pd['weights'] = self.shares.values
+                cluster_labels_pd['weights'] = self.shares
             
             if method_temp in ('meanshift', 'dbscan'):
                 k = res_clustering[0].shape[0]
