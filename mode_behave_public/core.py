@@ -96,8 +96,6 @@ class Core(Estimation, Simulation, PostAnalysis):
         self.model_type = kwargs.get('model_type', 'estimation')
         
         if self.model_type == 'simulation':
-            #specify the type of discrete choice model (MXL or MNL)
-            self.dc_type = kwargs.get('dc_type', 'MNL')
                 
             self.asc_offset_hh_cars = config.asc_offset_hh_cars
             
@@ -178,7 +176,9 @@ class Core(Estimation, Simulation, PostAnalysis):
             #get data-points from indicated indices
             if self.data_index.size:
                 self.data = self.data.iloc[self.data_index]
-                                                                            
+                                
+            print('Length of dataset:', len(self.data))
+                                            
             #define choices and availabilities
             #scale availabilities, if weights are provided in input-data
             if "weight" in self.data.columns and self.include_weights == True:
