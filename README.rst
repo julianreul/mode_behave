@@ -26,21 +26,30 @@ Installation
 ============
 1. Download or clone the repository to a local folder.
 #. Open (Anaconda) Prompt.
-#. cd to the directory, where you stored the repository and where the setup.py file is located.
 #. Create a new environment from reference_environment.yml file::
 
       conda env create -f reference_environment.yml
+      
+#. Activate the environment with::
+
+      conda activate env_mode_behave
+      
+#. cd to the directory, where you stored the repository and where the setup.py file is located.
 
 #. In this folder run::
     
       pip install -e .
       
+#. Alternatively, run::
+      
+      pip install mode-behave
+
 
 Workflow
 ========
 1. Import model with::
 
-      import mode_behave as mb
+      import mode_behave_public as mb
 
 2. Initialize a model with::
     
