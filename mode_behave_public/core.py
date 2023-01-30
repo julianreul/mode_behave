@@ -71,6 +71,10 @@ class Core(Estimation, Simulation, PostAnalysis):
         kwargs data_name : str
             Defines the filename of the file, which holds the base data
             to calibrate the MNL or MXL model on.
+            
+        kwargs data_in : DataFrame
+            Alternative to -data_name-, if survey data is already loaded
+            to the workspace as a pandas dataframe.
         
         kwargs data_index : array
             An array, which holds the index values of those datapoints
@@ -127,7 +131,8 @@ class Core(Estimation, Simulation, PostAnalysis):
             #define path to input data
             PATH_MODULE = os.path.dirname(__file__)
             sep = os.path.sep
-            self.data_name = kwargs.get("data_name", False)
+            self.data_name = kwargs.get("data_name", None)
+            self.data_in = kwargs.get("data_in", None)
             self.initial_point_name = kwargs.get("initial_point_name", False)
             self.PATH_InputData = PATH_MODULE + sep + 'InputData' + sep
             self.PATH_ModelParam = PATH_MODULE + sep + 'ModelParam' + sep
@@ -145,8 +150,6 @@ class Core(Estimation, Simulation, PostAnalysis):
                 raise ValueError('Argument -alt- needs to be specified!')
             if self.count_e == False:
                 raise ValueError('Argument -equal_alt- needs to be specified!')             
-            if self.data_name == False:
-                raise ValueError('Argument -data_name- needs to be specified!')                
             
             self.no_constant_fixed = len(self.param['constant']['fixed'])
             self.no_constant_random = len(self.param['constant']['random'])
@@ -164,12 +167,18 @@ class Core(Estimation, Simulation, PostAnalysis):
             print('Data wrangling.')
             
             try:
-                self.data = pd.read_csv(self.PATH_InputData + self.data_name + ".csv", sep = ",")
-                if len(list(self.data)) == 1:
-                    raise ValueError('Check the separator of the imported .csv-files. Should be ","-separated.')
+                self.data = self.data_in.copy()    
             except:
-                with open(self.PATH_InputData + self.data_name + ".pickle", 'rb') as handle:
-                    self.data = pickle.load(handle)  
+                try:
+                    self.data = pd.read_csv(self.PATH_InputData + self.data_name + ".csv", sep = ",")
+                    if len(list(self.data)) == 1:
+                        raise ValueError('Check the separator of the imported .csv-files. Should be ","-separated.')
+                except:
+                    try:
+                        with open(self.PATH_InputData + self.data_name + ".pickle", 'rb') as handle:
+                            self.data = pickle.load(handle)
+                    except:
+                        raise AttributeError("No input data specified. Define -data_in- or -data_name-.")
                     
             self.data = self.data.reset_index(drop=True)
                         

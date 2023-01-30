@@ -375,6 +375,9 @@ class PostAnalysis:
         kwargs return_res : Boolean
             If True, the clustering results are returned. Defaults to False.
             
+        kwargs return_figure : Boolean
+            If True, the rendered figure is returned. Defaults to False.
+            
         kwargs cluster_method : string
             Specification of the clustering method, which shall be used to cluster
             the preferences estimated by the mixed logit model.
@@ -423,6 +426,8 @@ class PostAnalysis:
         sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
              
         return_res = kwargs.get('return_res', False)
+        return_figure = kwargs.get('return_figure', False)
+
         method_temp = kwargs.get('cluster_method', 'kmeans')
         names_choice_options = kwargs.get("names_choice_options", {})
         
@@ -710,9 +715,15 @@ class PostAnalysis:
         else:
             fig.savefig(save_fig_path + 'preference_distribution.png', dpi=300, bbox_inches='tight')
             
-        if return_res:
-            return res_clustering   
-            
+        if return_res and return_figure:
+            return res_clustering, fig
+        elif return_res:
+            return_res
+        elif return_figure:
+            fig
+        else:
+            pass
+                    
         
     def cluster_space(self, method, k, **kwargs):
         """
@@ -1485,7 +1496,10 @@ class PostAnalysis:
             within the visualization.
         kwargs y_lim : tuple
             If given, forecasted probabilities are returned. Defaults to False.
-
+        kwargs return_data : Boolean
+            If True, the simulated data is returned. Defaults to False.
+        kwargs return_figure : Boolean
+            If True, the visualized figure is returned. Defaults to False
             
         Raises
         ------
@@ -1515,7 +1529,8 @@ class PostAnalysis:
         names_choice_options = kwargs.get("names_choice_options", {})
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)]))
         y_lim = kwargs.get("y_lim", ())
-        data_output = kwargs.get("data_output", False)
+        return_data = kwargs.get("return_data", False)
+        return_figure = kwargs.get("return_figure", False)
         
         #Dictionary to store simulation results
         res_simu = {}
@@ -1782,5 +1797,11 @@ class PostAnalysis:
             fig = ax.get_figure()
             fig.savefig(save_fig_path + 'forecast.png', dpi=300, bbox_inches='tight')
                     
-        if data_output:
+        if return_data and return_figure:
+            return res_simu_pd_long, fig
+        elif return_data:
             return res_simu_pd_long
+        elif return_figure:
+            return fig
+        else:
+            pass
