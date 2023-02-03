@@ -6,4 +6,4 @@
 *.egg-info
 
 #exclude InpuData
-./mode_behave_public/InputData/*
+mode_behave_public/InputData/*
