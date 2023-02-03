@@ -6,8 +6,15 @@ Created on Thu Jan 26 15:54:49 2023
 """
 
 include imgs/*.png
-include mode_behave_public/Deployments/*.py
-include mode_behave_public/InputData/*.pickle
-include mode_behave_public/InputData/*.csv
-include mode_behave_public/ModelParam/*.pickle
+include mode_behave_public/Deployments/example_estimation.py
+
+include mode_behave_public/InputData/example_data*
+include mode_behave_public/InputData/artificial_data*
+
+include mode_behave_public/ModelParam/asc_offset_hh_cars*
+include mode_behave_public/ModelParam/initial_point_artificial_data*
+include mode_behave_public/ModelParam/initial_point_mode*
+include mode_behave_public/ModelParam/initial_point_car_ownership*
+include mode_behave_public/ModelParam/speed_parameters*
+
 include mode_behave_public/Visualizations/*.png

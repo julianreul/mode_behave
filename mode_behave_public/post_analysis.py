@@ -902,7 +902,286 @@ class PostAnalysis:
         else:
             raise ValueError('No such method defined.')
             
-           
+    def visualize_all_attributes(self, **kwargs):
+        """
+        This method visualizes all attribute weights and additionally 
+        indicates the t-statistics, based on the
+        estimation results of the standard logit model.
+
+        Parameters
+        ----------
+        
+        kwargs save_fig_path : string
+            Path, which indicated the place where to store the visualization
+            as a .png-file.
+            
+        kwargs names_choice_options : dict
+            If given, this shall be a dictionary, which holds the 
+            names of the choice options as values and the numerical
+            indication of the choice option (0,1,2,...) as keys.
+
+        kwargs shift_t_stats : float
+            Shifts the text-fields which indicate the value of the t-statistic
+            in positive or negative direction..
+
+        Returns
+        -------
+        None.
+
+        """
+        #get keyword arguments
+        model_name = kwargs.get('model_name', '')
+        save_fig_path = kwargs.get('save_fig_path', False)        
+        names_choice_options = kwargs.get('names_choice_options', False)  
+        control_left_annotation = kwargs.get('control_left_annotation', 0)  
+        control_right_annotation = kwargs.get('control_right_annotation', 0)  
+        control_legend = kwargs.get("control_legend", [0,0])  
+        ext_x_limits = kwargs.get("ext_x_limits", False)
+        control_colorbar_label = kwargs.get("control_colorbar_label", [0,0])
+
+        relative = kwargs.get('relative', False)
+        stepwise = kwargs.get('stepwise', False)
+        set_title = kwargs.get('set_title', False)
+        set_xlabel = kwargs.get('set_xlabel', False)
+        map_y_values = kwargs.get('map_y_values', False)
+        if names_choice_options == False:
+            names_choice_options = ["Choice option " + str(i) for i in range(self.count_c)]
+        
+        #get data
+        y_values = []
+        for attr in self.param['constant']['fixed']:
+            y_values.append(attr)
+        for attr in self.param['constant']['random']:
+            y_values.append(attr)
+        for attr in self.param['variable']['fixed']:
+            y_values.append(attr)
+        for attr in self.param['variable']['random']:
+            y_values.append(attr)
+            
+        x_values = {c:[] for c in range(self.count_c)}
+        x_values_mean = {c:[] for c in range(self.count_c)}
+        t_stats = {c:[] for c in range(self.count_c)}
+        for attr in y_values:
+            index_attribute = self.get_index_of_attribute(attr)
+            list_value_temp = []
+            for c in range(self.count_c):
+                list_value_temp.append(self.initial_point[index_attribute[c]])
+            max_list_value_temp = abs(max(list_value_temp, key=abs))
+            for c in range(self.count_c):
+                if relative:
+                    data_mean = self.data[attr+"_"+str(c)+"_0"].mean()
+                    utility_temp = list_value_temp[c]*data_mean
+                    x_values[c].append(utility_temp)
+                elif stepwise:
+                    #calculate mean value
+                    data_mean = self.data[attr+"_"+str(c)+"_0"].mean()
+                    utility_temp = list_value_temp[c]*data_mean
+                    x_values_mean[c].append(utility_temp)
+                    
+                    #calculate list of utilities
+                    unique_values = self.data[attr+"_"+str(c)+"_0"].unique()
+                    if len(unique_values) <= 10:
+                        unique_values.sort()
+                    else:
+                        val_max = max(unique_values)
+                        val_min = min(unique_values)
+                        step_temp = (val_max - val_min) / 10
+                        unique_values = np.arange(
+                            val_min, val_max+step_temp, step_temp
+                            )
+                    utilities_list = []
+                    for v in unique_values:
+                        utility_temp = list_value_temp[c]*v
+                        utility_delta = utility_temp-sum(utilities_list)
+                        utilities_list.append(utility_delta)
+                    left_over = 10-len(unique_values)
+                    for l in range(left_over):
+                        utilities_list.append(0)
+                    x_values[c].append(utilities_list)
+                else:
+                    value_temp_scaled = list_value_temp[c] / max_list_value_temp
+                    x_values[c].append(value_temp_scaled)
+                t_stats_temp = self.t_stats[index_attribute[c]][0]
+                t_stats[c].append(t_stats_temp)
+                
+        palette = sns.cubehelix_palette(
+            n_colors=self.count_c, 
+            start=0, 
+            rot=-.1,
+            dark=0.3,
+            light=0.65,
+            hue=1
+            )
+        
+        if stepwise:
+            palette_stepwise = sns.color_palette(
+                palette = "YlGnBu",
+                n_colors=10, 
+                )
+        
+        #continue with plots
+        fig, ax = plt.subplots(figsize=(3.5,4)) 
+        if set_title:
+            ax.set_title(set_title, fontsize=10)
+            
+        if set_xlabel:
+            ax.set_xlabel(set_xlabel, fontsize=6)
+        
+        if stepwise:
+            palette_stepwise_cmap = sns.color_palette(
+                palette = "YlGnBu",
+                n_colors=10, 
+                as_cmap=True
+                )
+            #norm_temp = Normalize(vmin=1, vmax=10)
+            norm_temp = BoundaryNorm(np.arange(1,11), palette_stepwise_cmap.N)
+            _cbar = ScalarMappable(norm=norm_temp, cmap=palette_stepwise_cmap)
+            cbar="vertical"
+            #ax_cbar = fig.colorbar(_cbar, ax=ax.ravel().tolist(), orientation=cbar, shrink=0.8)
+            fig.colorbar(_cbar, orientation=cbar)
+
+            custom_patches = [
+                Line2D([], [], color="Black", marker="|", linestyle="None", label="Average \nhousehold")
+                ]
+            ax.legend(handles=custom_patches, 
+                      loc="upper right", 
+                      bbox_to_anchor=control_legend, 
+                      fontsize=6,
+                      borderpad=0.3,
+                      handlelength=0.5
+                      )
+            
+            ax.text(control_colorbar_label[0], control_colorbar_label[1],"Attribute level", fontsize=6, rotation=-90)
+            
+        else:
+            custom_patches = [
+                mpatches.Patch(color=palette[c], label=names_choice_options[c]) for c in range(self.count_c)
+                ]
+            ax.legend(handles=custom_patches, 
+                      loc="upper right", 
+                      bbox_to_anchor=control_legend, 
+                      fontsize=6
+                      )
+                    
+        width = 0.8/self.count_c
+
+        #change order of attributes according to keyword map_y_values_temp
+        self.check_y_values = y_values
+        self.check_x_values = x_values
+        
+        #create mapping of y-values
+        if map_y_values:
+            mapping = [y_values.index(a) for a in list(map_y_values.keys())]
+            mapping.reverse()
+        else:
+            mapping = [a for a in range(len(y_values))]
+        
+
+        #iterate over choice alternatives
+        for c in range(self.count_c):
+            if stepwise:
+                values_to_plot = np.zeros(len(y_values))
+                for v in range(10):
+                    #assign values from iteration v-1 to "left_temp"
+                    if v == 0:
+                        left_temp = values_to_plot.copy()
+                    else:
+                        left_temp += values_to_plot.copy()
+                    for a in range(len(y_values)):
+                        a_mapped = mapping[a]
+                        value_temp = x_values[c][a_mapped][v]
+                        values_to_plot[a] = value_temp
+                    ax.barh(
+                        np.arange(len(y_values))+width*c,
+                        values_to_plot,
+                        width,
+                        left=left_temp,
+                        color=palette_stepwise[v],
+                        )
+            else:   
+                ax.barh(
+                    np.arange(len(y_values))+width*c,
+                    x_values[c],
+                    width,
+                    color=palette[c],
+                    )
+                
+        if map_y_values and stepwise:
+            y_values_mapped = list(map_y_values.values())
+            y_values_mapped.reverse()
+            ax.set(yticks=np.arange(
+                len(y_values))+0.4, 
+                yticklabels=y_values_mapped,
+                )
+        else:
+            ax.set(yticks=np.arange(
+                len(y_values))+0.4, 
+                yticklabels=y_values,
+                )
+            print(y_values)
+        
+        plt.rc('xtick',labelsize=6)
+        plt.rc('ytick',labelsize=6)
+        
+        if ext_x_limits:
+            plt.xlim(ext_x_limits)
+              
+        self.check_x_values = x_values
+            
+        for a, attr in enumerate(y_values):
+            a_mapped = mapping[a]
+            
+            width_temp = 0.8/self.count_c
+            y_range = np.arange(-0.4+width_temp*1.8, 0.4+width_temp*1.8, width_temp)
+            y_range = y_range+a
+
+            for c in range(self.count_c):
+                if stepwise:
+                    x_value_temp = 0
+                    ax.vlines(
+                        x=x_values_mean[c][a_mapped], 
+                        ymin=y_range[c]-width_temp/2, 
+                        ymax=y_range[c]+width_temp, 
+                        linestyles="None",
+                        linewidth=0.5,
+                        colors='black')
+                    x_value_temp = round(x_values_mean[c][a_mapped], 2)
+                else:
+                    x_value_temp = round(x_values[c][a_mapped], 2)
+                    
+                t_stats_precise_temp = abs(t_stats[c][a_mapped])
+                t_stats_temp = round(t_stats_precise_temp, 2)
+                if t_stats_precise_temp >= 2.325:
+                    value_str = "***"
+                elif t_stats_precise_temp >= 1.96:
+                    value_str = "**"
+                elif t_stats_precise_temp >= 1.645:
+                    value_str = "*"
+                else:
+                    value_str = ""
+                if c < 3:
+                    c_str = str(c)
+                else:
+                    c_str = "3+"
+                text_temp = c_str + ": " + str(t_stats_temp) + value_str
+                if x_value_temp<0:
+                    ax.text(control_right_annotation, y_range[c], text_temp, fontsize=3)
+                else:
+                    ax.text(control_left_annotation, y_range[c], text_temp, fontsize=3)
+                 
+                           
+        #arrow and text for no routine model
+        ax.text(-4.8,0.7, "-11.9", fontsize=3)
+        ax.arrow(-4.4,1,-0.5,0, length_includes_head=True)
+        
+        if save_fig_path:
+            if relative:
+                plt.savefig(save_fig_path + 'overview_attributes_relative_' + model_name + '.pdf', bbox_inches='tight')
+            elif stepwise:
+                plt.savefig(save_fig_path + 'overview_attributes_stepwise_' + model_name + '.pdf', bbox_inches='tight')
+            else:
+                plt.savefig(save_fig_path + 'overview_attributes_' + model_name + '.pdf', bbox_inches='tight', format="eps")
+            
     def assign_to_cluster(self, **kwargs):
         """
         This method calculates the probabilities, that a data point in the 

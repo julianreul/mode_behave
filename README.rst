@@ -249,9 +249,10 @@ The model incorporates a class **Simulation**, which contains customized
 methods to simulate previously estimated choice models.
 In order to simulate choice probabilities, the model must be instantiated as follows::
 
-   model = ov.Core(model_type = 'simulation', dc_type = 'MNL')
+   model = ov.Core(model_type = 'simulation', initial_point_name = 'initial_point_mode')
    
-The keyword-argument *dc_type* specifies the type of choice model. 
+The keyword-argument *initial_point_name* specifies the filename of
+pre-estimated MNL-parameters.
 Currently only MNL-simulations are implemented.
 
 The following MNL-simulations are currently available:
@@ -270,6 +271,7 @@ cost-assumptions for the year 2020. Also, the regiontype for the calculation
 of average speeds is assumed to be identical with the specified regiontype
 of the home location of the agent),
 as well as the availability of each mode in numpy-array format.
+Filename of pre-estimated model parameters: 'initial_point_mode'
 
 **MNL-model for the probability of the number of cars per households.**::
 
@@ -289,3 +291,4 @@ ratio of the average car price divided by household income (relative_cost_per_ca
 Average market prices can be derived from Kraus' vehicle cost model.
 Last input parameter is the average age of the adults, living in the household,
 scaled by *0.1!
+Filename of pre-estimated model parameters: 'initial_point_car_ownership'
