@@ -39,6 +39,9 @@ class Core(Estimation, Simulation, PostAnalysis):
              
         Parameters
         ----------
+        kwargs model_type : string
+            Indicates, whether to initiate a simulation- or estimation-model.
+                    
         kwargs param : dict
             Holds the names of all attributes in utility function.
             list(param) = ['constant', 'variable'] --> Disctinction between variables
@@ -99,15 +102,34 @@ class Core(Estimation, Simulation, PostAnalysis):
         
         self.model_type = kwargs.get('model_type', 'estimation')
         
+        #define path to input data
+        PATH_MODULE = os.path.dirname(__file__)
+        sep = os.path.sep
+
+        self.PATH_InputData = PATH_MODULE + sep + 'InputData' + sep
+        self.PATH_ModelParam = PATH_MODULE + sep + 'ModelParam' + sep
+        self.PATH_Visualize = PATH_MODULE + sep + 'Visualizations' + sep
+        
         if self.model_type == 'simulation':
                 
             self.asc_offset_hh_cars = config.asc_offset_hh_cars
             
             #load previously estimated model parameters, 
             #if model-type is simulation.
-            self.initial_point_cars = config.initial_point_cars
-            self.initial_point_mode = config.initial_point_mode
-                
+            self.initial_point_name = kwargs.get('initial_point_name', [])
+            if self.initial_point_name:
+                with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
+                    self.initial_point = pickle.load(handle)  
+            else:
+                raise AttributeError(
+                    """
+                    No pre-estimated parameters for an MNL-model are provided.
+                    If data is available, please indicate the -initial_point_name- argument
+                    to find the data in the package-folder ./InputData
+                    If no data is available, please estimate MNL-data first.
+                    """
+                    )
+    
             self.log_param = config.log_param
             dict_specific_travel_cost_ext = kwargs.get('dict_specific_travel_cost', {})
             cc_cost_ext = kwargs.get('cc_cost', False)
@@ -129,14 +151,9 @@ class Core(Estimation, Simulation, PostAnalysis):
                 
         else:
             #define path to input data
-            PATH_MODULE = os.path.dirname(__file__)
-            sep = os.path.sep
             self.data_name = kwargs.get("data_name", None)
             self.data_in = kwargs.get("data_in", None)
             self.initial_point_name = kwargs.get("initial_point_name", False)
-            self.PATH_InputData = PATH_MODULE + sep + 'InputData' + sep
-            self.PATH_ModelParam = PATH_MODULE + sep + 'ModelParam' + sep
-            self.PATH_Visualize = PATH_MODULE + sep + 'Visualizations' + sep
             
             #random or fixed within parameter space of Mixed Logit
             self.param = kwargs.get('param', False)

@@ -5,3 +5,5 @@
 # file types to ignore
 *.egg-info
 
+#exclude InpuData
+./mode_behave_public/InputData/*

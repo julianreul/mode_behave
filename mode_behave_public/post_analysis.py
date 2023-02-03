@@ -772,7 +772,7 @@ class PostAnalysis:
         
         if method == 'kmeans':                
             #create instance of KMeans-algorithm
-            kmeans = KMeans(n_clusters=k, tol=tol_temp)
+            kmeans = KMeans(n_clusters=k, tol=tol_temp, random_state=42)
             #Compute cluster centers
             labels = kmeans.fit_predict(points, sample_weight=shares)
             #get inertia and silhouhette score for elbow method
