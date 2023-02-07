@@ -117,18 +117,22 @@ class Core(Estimation, Simulation, PostAnalysis):
             #load previously estimated model parameters, 
             #if model-type is simulation.
             self.initial_point_name = kwargs.get('initial_point_name', [])
-            if self.initial_point_name:
-                with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
-                    self.initial_point = pickle.load(handle)  
-            else:
-                raise AttributeError(
-                    """
-                    No pre-estimated parameters for an MNL-model are provided.
-                    If data is available, please indicate the -initial_point_name- argument
-                    to find the data in the package-folder ./InputData
-                    If no data is available, please estimate MNL-data first.
-                    """
-                    )
+            self.initial_point_in = kwargs.get("initial_point_in", None)
+            try:
+                self.initial_point = self.initial_point_in.copy()
+            except:
+                if self.initial_point_name:
+                    with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
+                        self.initial_point = pickle.load(handle)  
+                else:
+                    raise AttributeError(
+                        """
+                        No pre-estimated parameters for an MNL-model are provided.
+                        If data is available, please indicate the -initial_point_name- argument
+                        to find the data in the package-folder ./InputData
+                        If no data is available, please estimate MNL-data first.
+                        """
+                        )
     
             self.log_param = config.log_param
             dict_specific_travel_cost_ext = kwargs.get('dict_specific_travel_cost', {})
@@ -154,6 +158,7 @@ class Core(Estimation, Simulation, PostAnalysis):
             self.data_name = kwargs.get("data_name", None)
             self.data_in = kwargs.get("data_in", None)
             self.initial_point_name = kwargs.get("initial_point_name", False)
+            self.initial_point_in = kwargs.get("initial_point_in", None)
             
             #random or fixed within parameter space of Mixed Logit
             self.param = kwargs.get('param', False)
@@ -177,9 +182,14 @@ class Core(Estimation, Simulation, PostAnalysis):
 
             self.include_weights = kwargs.get("include_weights", True)
             
-            if self.initial_point_name:
-                with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
-                    self.initial_point = pickle.load(handle)  
+            try:
+                self.initial_point = self.initial_point_in.copy()
+            except:
+                if self.initial_point_name:
+                    with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
+                        self.initial_point = pickle.load(handle)
+                else:
+                    print("No initial point exogenously defined.")
                                 
             print('Data wrangling.')
             
