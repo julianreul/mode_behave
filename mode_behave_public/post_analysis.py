@@ -14,6 +14,8 @@ from math import exp
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import matplotlib.patches as mpatches
+from matplotlib.colors import BoundaryNorm
+from matplotlib.cm import ScalarMappable
 from sklearn.cluster import KMeans, AgglomerativeClustering, MeanShift, DBSCAN
 from numba import guvectorize, prange, njit
 import seaborn as sns
