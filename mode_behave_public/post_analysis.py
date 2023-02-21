@@ -2086,3 +2086,119 @@ class PostAnalysis:
             return fig
         else:
             pass
+        
+    def export_estimates(self, **kwargs):
+        """
+        This method returns the estimates of the logit or the mixed logit model
+        in .csv-format.
+        
+        kwargs model_type : str
+        
+        kwargs path_save : str
+        
+        Returns
+        -------
+        None.
+
+        """
+        
+        model_type = kwargs.get("model_type", "MNL")
+        PATH_SAVE = kwargs.get("path_save", False)
+                
+        t_stats_list = [self.t_stats[i][0] for i in range(len(self.t_stats))]
+        t_stats_list_abs = [abs(self.t_stats[i][0]) for i in range(len(self.t_stats))]
+
+        param_name_list = []
+        param_name_short_list = []
+        choice_alternative_list = []
+        param_index_list = []
+
+        for c in range(self.count_c):
+            if c == 0:
+                continue
+            else:
+                param_name_list.append("ASC_" + str(c))
+                param_name_short_list.append("ASC")
+                choice_alternative_list.append(c)
+                param_index_list.append(0)
+        
+        len_con_fix = len(self.param["constant"]["fixed"])
+        len_con_ran = len(self.param["constant"]["random"])
+        len_var_fix = len(self.param["variable"]["fixed"])
+        len_var_ran = len(self.param["variable"]["random"])
+        
+        for c in range(self.count_c):
+            for a, attr in enumerate(self.param["constant"]["fixed"]):
+                param_name_list.append(attr + "_" + str(c))
+                param_name_short_list.append(attr)
+                choice_alternative_list.append(c)
+                param_index_list.append(1+a)
+                
+            for a, attr in enumerate(self.param["constant"]["random"]):
+                param_name_list.append(attr + "_" + str(c))
+                param_name_short_list.append(attr)
+                choice_alternative_list.append(c)
+                param_index_list.append(1+a+len_con_fix)
+            
+            for a, attr in enumerate(self.param["variable"]["fixed"]):
+                param_name_list.append(attr + "_" + str(c))
+                param_name_short_list.append(attr)
+                choice_alternative_list.append(c)
+                param_index_list.append(1+a+len_con_fix+len_con_ran)
+                
+            for a, attr in enumerate(self.param["variable"]["random"]):
+                param_name_list.append(attr + "_" + str(c))
+                param_name_short_list.append(attr)
+                choice_alternative_list.append(c)
+                param_index_list.append(1+a+len_con_fix+len_con_ran+len_var_fix)
+                
+        t_stats_pandas = pd.DataFrame(
+            index=range(len(self.initial_point)), 
+            columns=["Param_Name", "Param_Value", "Param_Index", 
+                     "Choice_Alternative", "t_stats", "t_stats_abs"]
+            )
+
+        t_stats_pandas["Param_Name"] = param_name_list
+        t_stats_pandas["Param_Name_Short"] = param_name_short_list
+        t_stats_pandas["Param_Value"] = self.initial_point
+        t_stats_pandas["t_stats"] = t_stats_list
+        t_stats_pandas["t_stats_abs"] = t_stats_list_abs
+        t_stats_pandas["Param_Index"] = param_index_list
+        t_stats_pandas["Choice_Alternative"] = choice_alternative_list
+                        
+        if PATH_SAVE:
+            t_stats_pandas.to_csv(PATH_SAVE + "MNL_estimates.csv")
+        else:
+            if model_type == "MNL":
+                return t_stats_pandas.to_csv()
+            else:
+                pass
+    
+        if model_type == "MXL":            
+            param_name_list.insert(0, "share")
+                                           
+            shares_pandas = pd.DataFrame(
+                index=range(len(self.shares)), 
+                columns=param_name_list
+                )
+                        
+            #add shares to dataframe
+            shares_pandas["share"] = self.shares.values.copy()
+            
+            #add initial point to each row
+            shares_pandas.iloc[:, 1:] = self.initial_point.copy()
+            
+            #subtitute initial point values by values from points.
+            for a, attr in enumerate(self.param["constant"]["random"]):
+                for c in range(self.count_c):
+                    #same random value for each choice alternative (-constant- parameter)
+                    shares_pandas[attr + "_" + str(c)] = self.points.T[a].copy()
+            for a, attr in enumerate(self.param["variable"]["random"]):
+                for c in range(self.count_c):
+                    shares_pandas[attr + "_" + str(c)] = self.points.T[len_con_ran + len_var_ran*c + a].copy()
+                                
+            if PATH_SAVE:
+                t_stats_pandas.to_csv(PATH_SAVE + "MNL_estimates.csv")
+                shares_pandas.to_csv(PATH_SAVE + "MXL_estimates.csv")
+            else:
+                return t_stats_pandas.to_csv(), shares_pandas.to_csv()
