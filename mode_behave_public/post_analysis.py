@@ -2183,19 +2183,21 @@ class PostAnalysis:
                 )
                         
             #add shares to dataframe
-            shares_pandas["share"] = self.shares.values.copy()
+            shares_pandas["share"] = self.shares.copy()
             
             #add initial point to each row
             shares_pandas.iloc[:, 1:] = self.initial_point.copy()
+            
+            points_array = np.array(self.points)
             
             #subtitute initial point values by values from points.
             for a, attr in enumerate(self.param["constant"]["random"]):
                 for c in range(self.count_c):
                     #same random value for each choice alternative (-constant- parameter)
-                    shares_pandas[attr + "_" + str(c)] = self.points.T[a].copy()
+                    shares_pandas[attr + "_" + str(c)] = points_array.T[a].copy()
             for a, attr in enumerate(self.param["variable"]["random"]):
                 for c in range(self.count_c):
-                    shares_pandas[attr + "_" + str(c)] = self.points.T[len_con_ran + len_var_ran*c + a].copy()
+                    shares_pandas[attr + "_" + str(c)] = points_array.T[len_con_ran + len_var_ran*c + a].copy()
                                 
             if PATH_SAVE:
                 t_stats_pandas.to_csv(PATH_SAVE + "MNL_estimates.csv")
