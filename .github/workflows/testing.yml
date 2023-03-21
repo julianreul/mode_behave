@@ -16,6 +16,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Test with unittest
         run: |
+          cd test
           python -m unittest test_estimation.py
           python -m unittest test_estimation.py
           
