@@ -16,7 +16,6 @@ Two different types of discrete choice models are differentiated:
 
 import numpy as np
 import pandas as pd
-import pickle
 import os
 
 from .estimation import Estimation
@@ -116,49 +115,53 @@ class Core(Estimation, Simulation, PostAnalysis):
             
             #load previously estimated model parameters, 
             #if model-type is simulation.
-            self.initial_point_name = kwargs.get('initial_point_name', [])
+            self.simulation_type = kwargs.get('simulation_type', [])
             self.initial_point_in = kwargs.get("initial_point_in", None)
-            try:
+            if self.initial_point_in is not None:
+                print("Prepare self-configured simulation")
                 self.initial_point = self.initial_point_in.copy()
-            except:
-                if self.initial_point_name:
-                    with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
-                        self.initial_point = pickle.load(handle)  
+                self.param = kwargs.get('param', {})
+                if self.param:
+                    self.no_constant_fixed = len(self.param['constant']['fixed'])
+                    self.no_constant_random = len(self.param['constant']['random'])
+                    self.no_variable_fixed = len(self.param['variable']['fixed'])
+                    self.no_variable_random = len(self.param['variable']['random'])
+                
+            else:
+                if self.simulation_type == "car_ownership":
+                    print("Prepare car ownership simulation")
+                    self.initial_point = config.initial_point_car_ownership
+                    
+                elif self.simulation_type == "mode_choice":
+                    print("Prepare mode choice simulation")
+
+                    self.initial_point = config.initial_point_mode
+                    self.log_param = config.log_param
+                    dict_specific_travel_cost_ext = kwargs.get('dict_specific_travel_cost', {})
+                    cc_cost_ext = kwargs.get('cc_cost', False)
+                    if len(dict_specific_travel_cost_ext) > 0:
+                        self.dict_specific_travel_cost = dict_specific_travel_cost_ext
+                    else:
+                        self.dict_specific_travel_cost = config.dict_specific_travel_cost
+                    if cc_cost_ext:
+                        self.cc_cost = cc_cost_ext
+                    else:
+                        self.cc_cost = config.cc_cost_2020
+
                 else:
                     raise AttributeError(
                         """
                         No pre-estimated parameters for an MNL-model are provided.
-                        If data is available, please indicate the -initial_point_name- argument
+                        If data is available, please indicate the -simulation_type- argument
                         to find the data in the package-folder ./InputData
                         If no data is available, please estimate MNL-data first.
                         """
                         )
-    
-            self.log_param = config.log_param
-            dict_specific_travel_cost_ext = kwargs.get('dict_specific_travel_cost', {})
-            cc_cost_ext = kwargs.get('cc_cost', False)
-            if len(dict_specific_travel_cost_ext) > 0:
-                self.dict_specific_travel_cost = dict_specific_travel_cost_ext
-            else:
-                self.dict_specific_travel_cost = config.dict_specific_travel_cost
-            if cc_cost_ext:
-                self.cc_cost = cc_cost_ext
-            else:
-                self.cc_cost = config.cc_cost_2020
-            
-            self.param = kwargs.get('param', {})
-            if self.param:
-                self.no_constant_fixed = len(self.param['constant']['fixed'])
-                self.no_constant_random = len(self.param['constant']['random'])
-                self.no_variable_fixed = len(self.param['variable']['fixed'])
-                self.no_variable_random = len(self.param['variable']['random'])
                 
         else:
             #define path to input data
             self.data_name = kwargs.get("data_name", None)
             self.data_in = kwargs.get("data_in", None)
-            self.initial_point_name = kwargs.get("initial_point_name", False)
-            self.initial_point_in = kwargs.get("initial_point_in", None)
             
             #random or fixed within parameter space of Mixed Logit
             self.param = kwargs.get('param', False)
@@ -182,15 +185,6 @@ class Core(Estimation, Simulation, PostAnalysis):
 
             self.include_weights = kwargs.get("include_weights", True)
             
-            try:
-                self.initial_point = self.initial_point_in.copy()
-            except:
-                if self.initial_point_name:
-                    with open(self.PATH_ModelParam + self.initial_point_name + ".pickle", 'rb') as handle:
-                        self.initial_point = pickle.load(handle)
-                else:
-                    print("No initial point exogenously defined.")
-                                
             print('Data wrangling.')
             
             try:
@@ -201,11 +195,7 @@ class Core(Estimation, Simulation, PostAnalysis):
                     if len(list(self.data)) == 1:
                         raise ValueError('Check the separator of the imported .csv-files. Should be ","-separated.')
                 except:
-                    try:
-                        with open(self.PATH_InputData + self.data_name + ".pickle", 'rb') as handle:
-                            self.data = pickle.load(handle)
-                    except:
-                        raise AttributeError("No input data specified. Define -data_in- or -data_name-.")
+                    raise AttributeError("No input data specified. Define -data_in- or -data_name-.")
                     
             self.data = self.data.reset_index(drop=True)
                         

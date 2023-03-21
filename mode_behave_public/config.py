@@ -9,25 +9,20 @@ conduct simulations.
 """
 
 import os
-import pickle
+import numpy as np
+import pandas as pd
 
 PATH_MODULE = os.path.dirname(__file__)
 sep = os.path.sep
 PATH_ModelParam = PATH_MODULE + sep + 'ModelParam' + sep
 
-# Load parameter-files from the estimation
-with open(PATH_ModelParam + "initial_point_" + "car_ownership.pickle", "rb") as handle:
-    initial_point_cars = pickle.load(handle)
-
-with open(PATH_ModelParam + "initial_point_mode.pickle", "rb") as handle:
-    initial_point_mode = pickle.load(handle)
-    
-with open(PATH_ModelParam + "asc_offset_hh_cars.pickle", 'rb') as handle:
-    asc_offset_hh_cars = pickle.load(handle)  
+# Load pre-estimated parameter-files for simulation
+initial_point_car_ownership = np.genfromtxt(PATH_ModelParam + "initial_point_car_ownership.csv", delimiter=",")
+initial_point_mode = np.genfromtxt(PATH_ModelParam + "initial_point_mode.csv", delimiter=",")
+asc_offset_hh_cars = pd.read_csv(PATH_ModelParam + "asc_offset_hh_cars.csv", index_col="Unnamed: 0").to_dict()
     
 # load auxiliary data to sample distances of activities and to derive the average speed
-with open(PATH_ModelParam + "speed_parameters.pickle", "rb") as handle:
-    log_param = pickle.load(handle)
+log_param = pd.read_csv(PATH_ModelParam + "speed_parameters.csv")
     
 dict_specific_travel_cost = {1: 0,
     2: 0,

@@ -30,7 +30,7 @@ class TestCarOwnership(unittest.TestCase):
         regiontype = 1
         
         #simulate
-        model = mb.Core(model_type = 'simulation')        
+        model = mb.Core(model_type = 'simulation', simulation_type = 'car_ownership')        
         result = model.simulate_hh_cars(urban_region, rural_region, hh_size,
                              adults_working, children, htype, quali_opnv, sharing,
                              relative_cost_per_car, age_adults, regiontype)
@@ -46,13 +46,13 @@ class TestCarOwnership(unittest.TestCase):
             atol=0.01)
             )      
         
-    def test_simulate_mode_choice(self): 
+    def test_simulate_mode_choice(self):
         """
         Integration test of the method -test_simulate_mode_choice()-.
 
         """
         #simulate
-        model = mb.Core(model_type = 'simulation')        
+        model = mb.Core(model_type = 'simulation', simulation_type = 'mode_choice')        
         result = model.simulate_mode_choice(
             agegroup=2,
             occupation=1,

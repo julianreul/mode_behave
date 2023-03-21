@@ -85,8 +85,6 @@ during instantiation and within the estimation-method itself.
 | boolean include_weights: If this is set to True, the model will search for a
 |     column in the input-data, called "weight", which indicates the weight
 |     for each observation. Defaults to True.
-| str initial_point_name: Specify name of pickle-file within subfolder *ModelParam*,
-|     if MNL-model was previously estimated (saves CPU-time).
 |
 | **Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))**:
 | int min_inter: Min. iterations for EM-algorithm.
@@ -253,15 +251,15 @@ The model incorporates a class **Simulation**, which contains customized
 methods to simulate previously estimated choice models.
 In order to simulate choice probabilities, the model must be instantiated as follows::
 
-   model = ov.Core(model_type = 'simulation', initial_point_name = 'initial_point_mode')
+   model = ov.Core(model_type = 'simulation', simulation_type = 'mode_choice')
    
-The keyword-argument *initial_point_name* specifies the filename of
-pre-estimated MNL-parameters.
+The keyword-argument *simulation_type* specifies which kind of simulation
+shall be conducted.
 Currently only MNL-simulations are implemented.
 
 The following MNL-simulations are currently available:
 
-**MNL-Model for Mode-Choice**::
+**MNL-Model for Mode-Choice (simulation_type = 'mode_choice')**::
 
     model.simulate_mode_choice(agegroup, occupation, regiontype, distance, av)
     
@@ -277,7 +275,7 @@ of the home location of the agent),
 as well as the availability of each mode in numpy-array format.
 Filename of pre-estimated model parameters: 'initial_point_mode'
 
-**MNL-model for the probability of the number of cars per households.**::
+**MNL-model for the probability of the number of cars per households (simulation_type = 'car_ownership')**::
 
    model.simulate_hh_cars(urban_region, rural_region, hh_size,
                          adults_working, children, htype, quali_opnv, sharing,
@@ -295,4 +293,3 @@ ratio of the average car price divided by household income (relative_cost_per_ca
 Average market prices can be derived from Kraus' vehicle cost model.
 Last input parameter is the average age of the adults, living in the household,
 scaled by *0.1!
-Filename of pre-estimated model parameters: 'initial_point_car_ownership'
