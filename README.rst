@@ -50,13 +50,17 @@ Workflow
 1. Import model with::
 
       import mode_behave_public as mb
+      
+2. Load data with (exemplary import requires pandas-module)::
+    
+      example_data = pd.read_csv(PATH_TO_DATA + "example_data.csv")
 
 2. Initialize a model with::
     
       model = mb.Core(
           param = param_temp, 
-          data_name="artificial_data", 
-          alt=3,
+          data_in=example_data, 
+          alt=4,
           equal_alt=1,
           include_weights=False
           )

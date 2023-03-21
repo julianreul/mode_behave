@@ -1,10 +1,12 @@
 # directories
 *.eggs/
 *.egg-info/
-*.dist/
 
 # file types to ignore
 *.egg-info
+
+#exclude source distributions in dist-folder
+dist/
 
 #exclude InpuData
 mode_behave_public/InputData/data*
