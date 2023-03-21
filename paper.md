@@ -126,7 +126,7 @@ costs of electric vehicles. The simulation results indicate increased
 choice probabilities for the electrified drivetrain technologies of BEVs and FCEVs in 
 the case of reduced purchasing costs for electric vehicles.
 
-![Simulated choice probabilities for a conventional multinomial logit model in comparison to a scenario variation with decreased purchasing costs for electric vehicles and the survey (base) data.](imgs/forecast_sensitivity.png)
+![Simulated choice probabilities for a conventional multinomial logit model in comparison to a scenario variation with decreased purchasing costs for electric vehicles and the survey (base) data.](mode_behave_public/Visualizations/forecast_sensitivity.png)
 
 Figure 2 shows the simulated multinomial logit choice probabilities for two identified consumer 
 groups (C1 and C2) in petrol green (the two left bars for each choice alternative)
@@ -138,11 +138,11 @@ In turn, the choice preferences of the consumer groups C1 and C2 are derived
 from a preceding cluster analysis of a preference distribution, 
 found by a mixed logit model with nonparametric design. 
 According to the visually-depicted simulation results, 
-consumer group C1 indicates slightly higher choice probabilities for the 
+consumer group C1 indicates significantly higher choice probabilities for the 
 electric drivetrain technologies of BEVs and FCEVs compared to consumer group C2, 
 the latent class model and the base data.
 
-![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data. The latent class model indicates the average choice probabilities of the identified consumer groups, weighted by their size](imgs/forecast_clustering.png)
+![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data. The latent class model indicates the average choice probabilities of the identified consumer groups, weighted by their size](mode_behave_public/Visualizations/forecast_clustering.png)
 
 # Acknowledgements
 
