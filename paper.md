@@ -37,8 +37,10 @@ utilizing advanced discrete choice methods.
 Therefore, MO|DE.behave incorporates estimation routines for conventional 
 multinomial logit models, as well as for mixed logit models with nonparametric 
 distributions [@Train2009; @McFadden2000]. As the estimation of this type of 
-mixed logit model can be computationally-expensive, the software facilitates the 
-use of GPU hardware during the estimation process in order to decrease computation time. 
+mixed logit model can be computationally-expensive, the software makes use
+of latin hypercube sampling to increase the efficiency of the expectation 
+maximization algorithm during the estimation process in order to decrease 
+computation time. 
 Furthermore, MO|DE.behave contains a set of post-processing tools for visualizing 
 estimation and simulated results. Additionally, pre-estimated 
 discrete choice simulation methods for transportation research are included to 
@@ -61,6 +63,10 @@ the heterogeneity of choice preferences within a base population, i.e.,
 the divergent choice behavior of different individuals or consumer groups can 
 only be studied to a limited degree. Mixed logit models overcome this deficiency and 
 allow for the analysis of preference distributions across base populations.
+Nonparametric mixed logit models bear the specific advantage - in contrast
+to parametric mixed logit models - that the form of the studied preference 
+distribution, e.g. a normal distribution, is not exogenously defined by the
+researcher, but endogenously derived from the data.
 
 MO|DE.behave complements already available Python 
 [@Arteaga2022; @Bierlaire2020; @Brathwaite2020] and R 

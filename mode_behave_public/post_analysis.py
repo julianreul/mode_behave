@@ -1811,7 +1811,7 @@ class PostAnalysis:
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)]))
         y_lim = kwargs.get("y_lim", ())
         return_data = kwargs.get("return_data", False)
-        return_figure = kwargs.get("return_figure", False)
+        return_cluster_center = kwargs.get("return_cluster_center", False)
         
         #Dictionary to store simulation results
         res_simu = {}
@@ -2078,12 +2078,12 @@ class PostAnalysis:
             fig = ax.get_figure()
             fig.savefig(save_fig_path + 'forecast.png', dpi=300, bbox_inches='tight')
                     
-        if return_data and return_figure:
-            return res_simu_pd_long, fig
+        if return_data and return_cluster_center:
+            return res_simu_pd_long, cluster_center
         elif return_data:
             return res_simu_pd_long
-        elif return_figure:
-            return fig
+        elif return_cluster_center:
+            return cluster_center
         else:
             pass
         

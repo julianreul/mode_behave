@@ -16,6 +16,7 @@ mode_behave_public/ModelParam/data*
 mode_behave_public/ModelParam/ensu*
 mode_behave_public/ModelParam/ess*
 mode_behave_public/ModelParam/japan*
+mode_behave_public/ModelParam/SDEWES*
 mode_behave_public/ModelParam/initial_point_EV_REACH*
 mode_behave_public/ModelParam/initial_point_relative_cost*
 mode_behave_public/ModelParam/initial_point_trstplt_all*
@@ -26,3 +27,4 @@ mode_behave_public/Deployments/DCE*
 mode_behave_public/Deployments/ensu*
 mode_behave_public/Deployments/ess*
 mode_behave_public/Deployments/pub*
+mode_behave_public/Deployments/SDEWES*
