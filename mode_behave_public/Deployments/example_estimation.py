@@ -7,15 +7,21 @@ Created on Thu Jul 21 09:55:20 2022
 
 #import necessary modules
 import time
+from pathlib import Path
 import numpy as np
+import pandas as pd
 
 import mode_behave_public as mb
+
+#%% LOAD DATA
+PATH_InputData = Path(__file__).parents[1] / 'InputData' / 'example_data.csv'
+example_data = pd.read_csv(PATH_InputData, sep=";")
 
 #%% SIMPLE MODEL - 3 ATTRIBUTES
 
 #define model parameters
 param_fixed = []
-param_random = ['RELATIVER_KAUFPREIS', 'REICHWEITE_DURCH100', 'LADE_TANK_ZEIT']
+param_random = ['PURCHASE_PRICE', 'RANGE', 'CHARGING_FUELING_TIME']
 
 param_temp = {'constant': 
                   {
@@ -35,7 +41,7 @@ param_temp['variable']['random'] = param_random
 #Initialize model
 model = mb.Core(
     param=param_temp, 
-    data_name='example_data', 
+    data_in=example_data, 
     alt=4, 
     equal_alt=1
     )
