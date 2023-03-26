@@ -17,9 +17,15 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-      - name: Test with unittest
+      - name: Test simulation
         run: |
           pip install -e .
           cd test
           python -m unittest test_simulation.py
+      - name: Test estimation
+        run: |
+          pip install -e .
+          cd test
+          python -m unittest test_estimation.py
+
           
