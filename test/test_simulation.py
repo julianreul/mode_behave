@@ -11,6 +11,7 @@ import numpy as np
 import mode_behave_public as mb
 
 class TestCarOwnership(unittest.TestCase):
+    
     def test_simulate_hh_cars(self):
         """
         Integration test of the method -simulate_hh_cars()-

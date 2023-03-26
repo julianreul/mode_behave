@@ -6,7 +6,6 @@ Created on Sat May  7 11:46:35 2022
 """
 
 import unittest
-import pickle
 import numpy as np
 import pandas as pd
 from scipy import stats

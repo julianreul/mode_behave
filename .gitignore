@@ -31,3 +31,8 @@ mode_behave_public/Deployments/ensu*
 mode_behave_public/Deployments/ess*
 mode_behave_public/Deployments/pub*
 mode_behave_public/Deployments/SDEWES*
+
+#exclude Visualizations, except paper-visualizations
+mode_behave_public/Visualizations/*
+!mode_behave_public/Visualizations/forecast_clustering.png
+!mode_behave_public/Visualizations/forecast_sensitivity.png
