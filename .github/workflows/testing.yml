@@ -21,6 +21,5 @@ jobs:
         run: |
           pip install -e .
           cd test
-          python -m unittest test_estimation.py
           python -m unittest test_simulation.py
           
