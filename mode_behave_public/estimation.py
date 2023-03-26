@@ -92,6 +92,8 @@ class Estimation:
         space_method = kwargs.get('space_method', 'mirror')
         t_stats_out = kwargs.get('t_stats_out', True)
         self.bits_64 = kwargs.get('bits_64', False)
+        quiet = kwargs.get('quiet', True)
+
                     
         #treshold for dropping a point: percentage of initial value in 'SHARES'
         max_shares = kwargs.get('max_shares', 1000)
@@ -459,10 +461,11 @@ class Estimation:
                         
             self.shares_after_update = drawn_shares.copy()
                 
-            print("____ITER INNER:", iter_inner)
             diff = abs(expect-expect_before)
-            print("________DIFF:", diff)
-            print("________EXPECT:", expect)
+            if quiet == False:
+                print("____ITER INNER:", iter_inner)
+                print("________DIFF:", diff)
+                print("________EXPECT:", expect)
             expect_before = expect
             iter_inner += 1
             if diff < tol and iter_inner > min_iter:
