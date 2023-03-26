@@ -18,13 +18,14 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -e .
-          cd test
 
       - name: Test simulation
         run: |
+          cd test
           python -m unittest test_simulation.py
       - name: Test estimation
         run: |
+          cd test
           python -m unittest test_estimation.py
 
           
