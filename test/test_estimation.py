@@ -135,7 +135,52 @@ class TestEstimation(unittest.TestCase):
             dataset = dataset.rename(columns={col : col + "_0"})
             
         return dataset
+           
+    def test_estimate_logit(self):
+        """
+        Integration test of the method -estimate_logit()-
+
+        """
+        
+        param_fixed = []
+        param_random = [
+            "attr_x",
+            "attr_y",
+            "attr_z"
+            ]
+        
+        param_temp = {'constant': 
+                          {
+                           'fixed':[],
+                           'random':[]
+                           },
+                      'variable':
+                          {
+                           'fixed': [],
+                           'random':[]
+                           }
+                      }
+        
+        param_temp['variable']['fixed'] = param_fixed
+        param_temp['variable']['random'] = param_random         
             
+        artificial_data = self.get_artificial_data()
+        
+        #Initialize model
+        model = mb.Core(
+            param=param_temp, 
+            data_in=artificial_data, 
+            alt=3,
+            equal_alt=1,
+            include_weights=False,
+            )
+                 
+        model.initial_point = model.estimate_logit(stats=False)
+        
+        initial_point_compare = np.genfromtxt(model.PATH_ModelParam + "initial_point_artificial_data.csv", delimiter=",")
+                
+        #test estimation of initial_point (via the method estimate_logit())
+        self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))
     
     def test_estimate_mixed_logit(self):
         """
@@ -201,53 +246,5 @@ class TestEstimation(unittest.TestCase):
         #test definition of parameter space (points)
         self.assertTrue(np.allclose(np.array(model.points), points_compare, atol=0.1))
 
-        
-    def test_estimate_logit(self):
-        """
-        Integration test of the method -estimate_logit()-
-
-        """
-        
-        param_fixed = []
-        param_random = [
-            "attr_x",
-            "attr_y",
-            "attr_z"
-            ]
-        
-        param_temp = {'constant': 
-                          {
-                           'fixed':[],
-                           'random':[]
-                           },
-                      'variable':
-                          {
-                           'fixed': [],
-                           'random':[]
-                           }
-                      }
-        
-        param_temp['variable']['fixed'] = param_fixed
-        param_temp['variable']['random'] = param_random         
-            
-        artificial_data = self.get_artificial_data()
-        
-        #Initialize model
-        model = mb.Core(
-            param=param_temp, 
-            data_in=artificial_data, 
-            alt=3,
-            equal_alt=1,
-            include_weights=False,
-            )
-                 
-        model.initial_point = model.estimate_logit(stats=False)
-        
-        initial_point_compare = np.genfromtxt(model.PATH_ModelParam + "initial_point_artificial_data.csv", delimiter=",")
-                
-        #test estimation of initial_point (via the method estimate_logit())
-        self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))
-               
-                         
 if __name__ == '__main__':
     unittest.main()
