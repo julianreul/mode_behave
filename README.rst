@@ -22,6 +22,8 @@ the divergent choice behavior of different individuals or consumer groups can
 only be studied to a limited degree. Mixed logit models overcome this deficiency and 
 allow for the analysis of preference distributions across base populations.
 
+Use MO|DE.behave via web app: https://julianreul-streamlit-mode-behave-home-nmwcdr.streamlit.app/
+
 Installation
 ============
 1. Download or clone the repository to a local folder.
