@@ -707,7 +707,7 @@ class Estimation:
             loglike, 
             x0, 
             method="L-BFGS-B", 
-            tol=1e-9, 
+            tol=1e-10, 
             jac='cs'
             )
         end_logit = time.time()
@@ -742,7 +742,7 @@ class Estimation:
                     loglike, 
                     x0, 
                     method="L-BFGS-B", 
-                    tol=1e-9, 
+                    tol=1e-10, 
                     jac='cs')
                 #iterate over estimated coefficients
                 for j, param in enumerate(res.x):
