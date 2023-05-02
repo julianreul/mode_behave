@@ -6,14 +6,13 @@ Created on Sat May  7 11:46:35 2022
 """
 
 import unittest
-import pickle
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 import mode_behave_public as mb
 
-class TestEstimation(unittest.TestCase):    
+class TestEstimation(unittest.TestCase):       
         
     def get_artificial_data(self):
         """
@@ -52,7 +51,7 @@ class TestEstimation(unittest.TestCase):
             )
         dist_c = stats.multivariate_normal(mean=mu_c, cov=cov_c)
         #____obtain random sample from copula distribution
-        sample_c = dist_c.rvs(size=size_dataset)
+        sample_c = dist_c.rvs(size=size_dataset, random_state=42)
         #____obtain marginals from copula distribution
         choice = sample_c[:,0]
         attr_x = sample_c[:,1]
@@ -66,6 +65,7 @@ class TestEstimation(unittest.TestCase):
         u_attr_z = stats.norm.cdf(attr_z)
         
         #DEFINE MARGINAL DISTRIBUTIONS
+        
         dist_choice = stats.uniform()
         if dist_attr == "uniform":
             dist_attr_x = stats.uniform()
@@ -135,7 +135,52 @@ class TestEstimation(unittest.TestCase):
             dataset = dataset.rename(columns={col : col + "_0"})
             
         return dataset
+           
+    def test_estimate_logit(self):
+        """
+        Integration test of the method -estimate_logit()-
+
+        """
+        
+        param_fixed = []
+        param_random = [
+            "attr_x",
+            "attr_y",
+            "attr_z"
+            ]
+        
+        param_temp = {'constant': 
+                          {
+                           'fixed':[],
+                           'random':[]
+                           },
+                      'variable':
+                          {
+                           'fixed': [],
+                           'random':[]
+                           }
+                      }
+        
+        param_temp['variable']['fixed'] = param_fixed
+        param_temp['variable']['random'] = param_random         
             
+        artificial_data = self.get_artificial_data()
+        
+        #Initialize model
+        model = mb.Core(
+            param=param_temp, 
+            data_in=artificial_data, 
+            alt=3,
+            equal_alt=1,
+            include_weights=False,
+            )
+                 
+        model.initial_point = model.estimate_logit(stats=False)
+        
+        initial_point_compare = np.genfromtxt(model.PATH_ModelParam + "initial_point_artificial_data.csv", delimiter=",")
+                
+        #test estimation of initial_point (via the method estimate_logit())
+        self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))
     
     def test_estimate_mixed_logit(self):
         """
@@ -165,10 +210,12 @@ class TestEstimation(unittest.TestCase):
         param_temp['variable']['fixed'] = param_fixed
         param_temp['variable']['random'] = param_random   
             
+        artificial_data = self.get_artificial_data()
+        
         #Initialize model
         model = mb.Core(
             param=param_temp, 
-            data_name="artificial_data", 
+            data_in=artificial_data, 
             alt=3,
             equal_alt=1,
             include_weights=False,
@@ -186,15 +233,10 @@ class TestEstimation(unittest.TestCase):
             t_stats_out=False
             )
         
-        with open(model.PATH_ModelParam + "initial_point_artificial_data.pickle", 'rb') as handle:
-            initial_point_compare = pickle.load(handle)  
-                
-        with open(model.PATH_ModelParam + "shares_artificial_data.pickle", 'rb') as handle:
-            shares_compare = pickle.load(handle)  
-            
-        with open(model.PATH_ModelParam + "points_artificial_data.pickle", 'rb') as handle:
-            points_compare = pickle.load(handle)  
-        
+        initial_point_compare = np.genfromtxt(model.PATH_ModelParam + "initial_point_artificial_data.csv", delimiter=",")
+        shares_compare = np.genfromtxt(model.PATH_ModelParam + "shares_artificial_data.csv", delimiter=",")
+        points_compare = np.genfromtxt(model.PATH_ModelParam + "points_artificial_data.csv", delimiter=",")
+
         #test estimation of initial_point (via the method estimate_logit())
         self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))
         
@@ -202,54 +244,7 @@ class TestEstimation(unittest.TestCase):
         self.assertTrue(np.allclose(model.shares, shares_compare, atol=0.1))
         
         #test definition of parameter space (points)
-        self.assertTrue(np.allclose(model.points, points_compare, atol=0.1))
+        self.assertTrue(np.allclose(np.array(model.points), points_compare, atol=0.1))
 
-        
-    def test_estimate_logit(self):
-        """
-        Integration test of the method -estimate_logit()-
-
-        """
-        
-        param_fixed = []
-        param_random = [
-            "attr_x",
-            "attr_y",
-            "attr_z"
-            ]
-        
-        param_temp = {'constant': 
-                          {
-                           'fixed':[],
-                           'random':[]
-                           },
-                      'variable':
-                          {
-                           'fixed': [],
-                           'random':[]
-                           }
-                      }
-        
-        param_temp['variable']['fixed'] = param_fixed
-        param_temp['variable']['random'] = param_random         
-            
-        #Initialize model
-        model = mb.Core(
-            param=param_temp, 
-            data_name="artificial_data", 
-            alt=3,
-            equal_alt=1,
-            include_weights=False,
-            )
-                 
-        model.initial_point = model.estimate_logit(stats=False)
-        
-        with open(model.PATH_ModelParam + "initial_point_artificial_data.pickle", 'rb') as handle:
-            initial_point_compare = pickle.load(handle)  
-                
-        #test estimation of initial_point (via the method estimate_logit())
-        self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))               
-          
-               
 if __name__ == '__main__':
     unittest.main()

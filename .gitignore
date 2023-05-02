@@ -5,17 +5,24 @@
 # file types to ignore
 *.egg-info
 
+#exclude source distributions in dist-folder
+dist/
+
 #exclude InpuData
 mode_behave_public/InputData/*
-!mode_behave_public/InputData/artificial_data.pickle
-!mode_behave_public/InputData/example_data.pickle
+!mode_behave_public/InputData/artificial_data.csv
 !mode_behave_public/InputData/example_data.csv
 
 #exclude ModelParam
 mode_behave_public/ModelParam/*
-!mode_behave_public/ModelParam/shares_artificial_data.pickle
-!mode_behave_public/ModelParam/points_artificial_data.pickle
-!mode_behave_public/ModelParam/initial_point_artificial_data.pickle
+!mode_behave_public/ModelParam/asc_offset_hh_cars.csv
+!mode_behave_public/ModelParam/initial_point_artificial_data.csv
+!mode_behave_public/ModelParam/initial_point_car_ownership.csv
+!mode_behave_public/ModelParam/initial_point_mode.csv
+!mode_behave_public/ModelParam/points_artificial_data.csv
+!mode_behave_public/ModelParam/shares_artificial_data.csv
+!mode_behave_public/ModelParam/speed_parameters.csv
+
 
 #exclude Deployments
 mode_behave_public/Deployments/*

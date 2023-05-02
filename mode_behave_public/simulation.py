@@ -68,31 +68,17 @@ class Simulation:
         #define model properties below.
         count_c = 4 #number of alternatives: 0-3
         all_alternatives = np.array((0,1,2,3))
-        
-        if self.param:
-            no_constant_fixed = self.no_constant_fixed
-            no_constant_random = self.no_constant_random
-            no_variable_fixed = self.no_variable_fixed
-            no_variable_random = self.no_variable_random
-            #specify maximum number of alternatives
-            dim_aggr_alt_max = max(
-                len(self.param['constant']['fixed']),
-                len(self.param['constant']['random']),
-                len(self.param['variable']['fixed']),
-                len(self.param['variable']['random']),
-                )
-        else:
-            no_constant_fixed = 0
-            no_constant_random = 0
-            no_variable_fixed = 10
-            no_variable_random = 1
-            #specify maximum number of alternatives
-            dim_aggr_alt_max = max(
-                no_constant_fixed,
-                no_constant_random,
-                no_variable_fixed,
-                no_variable_random,
-                )
+        no_constant_fixed = 0
+        no_constant_random = 0
+        no_variable_fixed = 10
+        no_variable_random = 1
+        #specify maximum number of alternatives
+        dim_aggr_alt_max = max(
+            no_constant_fixed,
+            no_constant_random,
+            no_variable_fixed,
+            no_variable_random,
+            )
         
         #Define hh_data.
         # IMPORTANT: The order of parameters (see hh_data) must be equal to the order during 
@@ -535,30 +521,17 @@ class Simulation:
         count_c = 4 #number of alternatives: 0-3
         all_alternatives = np.array((0,1,2,3))
         
-        if self.param:
-            no_constant_fixed = self.no_constant_fixed
-            no_constant_random = self.no_constant_random
-            no_variable_fixed = self.no_variable_fixed
-            no_variable_random = self.no_variable_random
-            #specify maximum number of alternatives
-            dim_aggr_alt_max = max(
-                len(self.param['constant']['fixed']),
-                len(self.param['constant']['random']),
-                len(self.param['variable']['fixed']),
-                len(self.param['variable']['random']),
-                )
-        else:
-            no_constant_fixed = 0
-            no_constant_random = 0
-            no_variable_fixed = 21
-            no_variable_random = 1
-            #specify maximum number of alternatives
-            dim_aggr_alt_max = max(
-                no_constant_fixed,
-                no_constant_random,
-                no_variable_fixed,
-                no_variable_random,
-                )
+        no_constant_fixed = 0
+        no_constant_random = 0
+        no_variable_fixed = 21
+        no_variable_random = 1
+        #specify maximum number of alternatives
+        dim_aggr_alt_max = max(
+            no_constant_fixed,
+            no_constant_random,
+            no_variable_fixed,
+            no_variable_random,
+            )
         
         #Define hh_data.
         # IMPORTANT: The order of parameters (see hh_data) must be equal to the order during 
@@ -687,30 +660,17 @@ class Simulation:
         count_c = 4 #number of alternatives: 0-3
         all_alternatives = np.array((0,1,2,3))
         
-        if self.param:
-            no_constant_fixed = self.no_constant_fixed
-            no_constant_random = self.no_constant_random
-            no_variable_fixed = self.no_variable_fixed
-            no_variable_random = self.no_variable_random
-            #specify maximum number of alternatives
-            dim_aggr_alt_max = max(
-                len(self.param['constant']['fixed']),
-                len(self.param['constant']['random']),
-                len(self.param['variable']['fixed']),
-                len(self.param['variable']['random']),
-                )
-        else:
-            no_constant_fixed = 0
-            no_constant_random = 0
-            no_variable_fixed = 18
-            no_variable_random = 1
-            #specify maximum number of alternatives
-            dim_aggr_alt_max = max(
-                no_constant_fixed,
-                no_constant_random,
-                no_variable_fixed,
-                no_variable_random,
-                )
+        no_constant_fixed = 0
+        no_constant_random = 0
+        no_variable_fixed = 18
+        no_variable_random = 1
+        #specify maximum number of alternatives
+        dim_aggr_alt_max = max(
+            no_constant_fixed,
+            no_constant_random,
+            no_variable_fixed,
+            no_variable_random,
+            )
         
         #Define hh_data.
         # IMPORTANT: The order of parameters (see hh_data) must be equal to the order during 

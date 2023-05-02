@@ -37,8 +37,10 @@ utilizing advanced discrete choice methods.
 Therefore, MO|DE.behave incorporates estimation routines for conventional 
 multinomial logit models, as well as for mixed logit models with nonparametric 
 distributions [@Train2009; @McFadden2000]. As the estimation of this type of 
-mixed logit model can be computationally-expensive, the software facilitates the 
-use of GPU hardware during the estimation process in order to decrease computation time. 
+mixed logit model can be computationally-expensive, the software makes use
+of latin hypercube sampling to increase the efficiency of the expectation 
+maximization algorithm during the estimation process in order to decrease 
+computation time. 
 Furthermore, MO|DE.behave contains a set of post-processing tools for visualizing 
 estimation and simulated results. Additionally, pre-estimated 
 discrete choice simulation methods for transportation research are included to 
@@ -61,6 +63,10 @@ the heterogeneity of choice preferences within a base population, i.e.,
 the divergent choice behavior of different individuals or consumer groups can 
 only be studied to a limited degree. Mixed logit models overcome this deficiency and 
 allow for the analysis of preference distributions across base populations.
+Nonparametric mixed logit models bear the specific advantage - in contrast
+to parametric mixed logit models - that the form of the studied preference 
+distribution, e.g. a normal distribution, is not exogenously defined by the
+researcher, but endogenously derived from the data.
 
 MO|DE.behave complements already available Python 
 [@Arteaga2022; @Bierlaire2020; @Brathwaite2020] and R 
@@ -120,7 +126,7 @@ costs of electric vehicles. The simulation results indicate increased
 choice probabilities for the electrified drivetrain technologies of BEVs and FCEVs in 
 the case of reduced purchasing costs for electric vehicles.
 
-![Simulated choice probabilities for a conventional multinomial logit model in comparison to a scenario variation with decreased purchasing costs for electric vehicles and the survey (base) data.](imgs/forecast_sensitivity.png)
+![Simulated choice probabilities for a conventional multinomial logit model in comparison to a scenario variation with decreased purchasing costs for electric vehicles and the survey (base) data.](mode_behave_public/Visualizations/forecast_sensitivity.png)
 
 Figure 2 shows the simulated multinomial logit choice probabilities for two identified consumer 
 groups (C1 and C2) in petrol green (the two left bars for each choice alternative)
@@ -132,11 +138,11 @@ In turn, the choice preferences of the consumer groups C1 and C2 are derived
 from a preceding cluster analysis of a preference distribution, 
 found by a mixed logit model with nonparametric design. 
 According to the visually-depicted simulation results, 
-consumer group C1 indicates slightly higher choice probabilities for the 
+consumer group C1 indicates significantly higher choice probabilities for the 
 electric drivetrain technologies of BEVs and FCEVs compared to consumer group C2, 
 the latent class model and the base data.
 
-![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data. The latent class model indicates the average choice probabilities of the identified consumer groups, weighted by their size](imgs/forecast_clustering.png)
+![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data. The latent class model indicates the average choice probabilities of the identified consumer groups, weighted by their size](mode_behave_public/Visualizations/forecast_clustering.png)
 
 # Acknowledgements
 
