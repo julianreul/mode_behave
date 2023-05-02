@@ -2044,9 +2044,7 @@ class PostAnalysis:
         res_simu_pd_long = res_simu_pd_long.rename(
             columns={"value":"Choice probability", "variable":"Scenario"}
             )
-        
-        sns.set_theme(style="whitegrid")
-        
+               
         n_colors_temp = (len(res_simu)-1)*2
         custom_palette = sns.cubehelix_palette(n_colors=n_colors_temp, start=.5, rot=-.5)
         custom_palette[len(res_simu)-1] = (0.6, 0.6, 0.6) #add grey for the last bar
@@ -2059,17 +2057,18 @@ class PostAnalysis:
                 "Choice Option"
                 ] = name_temp
         
+        sns.set(font_scale=1.7, style="whitegrid")
+        
         ax = sns.barplot(
             x="Choice Option", y="Choice probability", 
             hue="Scenario", data=res_simu_pd_long, 
-            palette=custom_palette
+            palette=custom_palette,
             )
         
         if y_lim:
             ax.set(ylim=y_lim)
-        
-        plt.legend(loc='upper right', bbox_to_anchor=(1.35, 1))
-        
+                
+        plt.legend(loc='upper right', bbox_to_anchor=(1.45, 1))
                 
         if name_scenario:
             fig = ax.get_figure()

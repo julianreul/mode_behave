@@ -13,7 +13,7 @@ from scipy import stats
 
 import mode_behave_public as mb
 
-class TestEstimation(unittest.TestCase):       
+class TestEstimation(unittest.TestCase):    
         
     def get_artificial_data(self):
         """
@@ -66,7 +66,6 @@ class TestEstimation(unittest.TestCase):
         u_attr_z = stats.norm.cdf(attr_z)
         
         #DEFINE MARGINAL DISTRIBUTIONS
-        
         dist_choice = stats.uniform()
         if dist_attr == "uniform":
             dist_attr_x = stats.uniform()
@@ -249,8 +248,8 @@ class TestEstimation(unittest.TestCase):
             initial_point_compare = pickle.load(handle)  
                 
         #test estimation of initial_point (via the method estimate_logit())
-        self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))
+        self.assertTrue(np.allclose(model.initial_point, initial_point_compare, atol=0.1))               
+          
                
-                         
 if __name__ == '__main__':
     unittest.main()

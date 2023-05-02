@@ -6,23 +6,22 @@
 *.egg-info
 
 #exclude InpuData
-mode_behave_public/InputData/data*
-mode_behave_public/InputData/ensu*
-mode_behave_public/InputData/ess*
-mode_behave_public/InputData/fleet*
+mode_behave_public/InputData/*
+!mode_behave_public/InputData/artificial_data.pickle
+!mode_behave_public/InputData/example_data.pickle
+!mode_behave_public/InputData/example_data.csv
 
 #exclude ModelParam
-mode_behave_public/ModelParam/data*
-mode_behave_public/ModelParam/ensu*
-mode_behave_public/ModelParam/ess*
-mode_behave_public/ModelParam/japan*
-mode_behave_public/ModelParam/initial_point_EV_REACH*
-mode_behave_public/ModelParam/initial_point_relative_cost*
-mode_behave_public/ModelParam/initial_point_trstplt_all*
+mode_behave_public/ModelParam/*
+!mode_behave_public/ModelParam/shares_artificial_data.pickle
+!mode_behave_public/ModelParam/points_artificial_data.pickle
+!mode_behave_public/ModelParam/initial_point_artificial_data.pickle
 
 #exclude Deployments
-mode_behave_public/Deployments/data*
-mode_behave_public/Deployments/DCE*
-mode_behave_public/Deployments/ensu*
-mode_behave_public/Deployments/ess*
-mode_behave_public/Deployments/pub*
+mode_behave_public/Deployments/*
+!mode_behave_public/Deployments/example_estimation.py
+
+#exclude Visualizations
+mode_behave_public/Visualizations/*
+!mode_behave_public/Visualizations/forecast_clustering.png
+!mode_behave_public/Visualizations/forecast_sensitivity.png

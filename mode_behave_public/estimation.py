@@ -86,8 +86,8 @@ class Estimation:
 
         #get estimation parameters.
         tol = kwargs.get("tol", 0.01)
-        max_iter = kwargs.get("max_iter", 2)
-        min_iter = kwargs.get("min_iter", 0)
+        max_iter = kwargs.get("max_iter", 1000)
+        min_iter = kwargs.get("min_iter", 10)
         scale_space = kwargs.get('scale_space', 2)
         space_method = kwargs.get('space_method', 'mirror')
         t_stats_out = kwargs.get('t_stats_out', True)
