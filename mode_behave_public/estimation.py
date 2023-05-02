@@ -92,7 +92,8 @@ class Estimation:
         space_method = kwargs.get('space_method', 'mirror')
         t_stats_out = kwargs.get('t_stats_out', True)
         self.bits_64 = kwargs.get('bits_64', False)
-                    
+        quiet = kwargs.get('quiet', True)
+        
         #treshold for dropping a point: percentage of initial value in 'SHARES'
         max_shares = kwargs.get('max_shares', 1000)
            
@@ -458,11 +459,12 @@ class Estimation:
             expect, drawn_shares = get_expectation(drawn_shares, drawn_logit_probs)
                         
             self.shares_after_update = drawn_shares.copy()
-                
-            print("____ITER INNER:", iter_inner)
+            
             diff = abs(expect-expect_before)
-            print("________DIFF:", diff)
-            print("________EXPECT:", expect)
+            if quiet == False:
+                print("____ITER INNER:", iter_inner)
+                print("________DIFF:", diff)
+                print("________EXPECT:", expect)
             expect_before = expect
             iter_inner += 1
             if diff < tol and iter_inner > min_iter:
@@ -705,7 +707,7 @@ class Estimation:
             loglike, 
             x0, 
             method="L-BFGS-B", 
-            tol=1e-6, 
+            tol=1e-9, 
             jac='cs'
             )
         end_logit = time.time()
@@ -740,7 +742,7 @@ class Estimation:
                     loglike, 
                     x0, 
                     method="L-BFGS-B", 
-                    tol=1e-6, 
+                    tol=1e-9, 
                     jac='cs')
                 #iterate over estimated coefficients
                 for j, param in enumerate(res.x):
