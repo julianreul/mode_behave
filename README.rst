@@ -79,7 +79,7 @@ during instantiation and within the estimation-method itself.
 **Arguments for instantiation (ov.Core(...))**::
 
     dict param:
-        Indicated the names of the model attributes. 
+        Indicates the names of the model attributes. 
         The attribute-names shall be derived from the column names of the input data.
     str data_name: 
         Indicates the name of the input data-file. 
@@ -170,50 +170,63 @@ Structure of Parameters and Input Data
 
    The input dataset contains the observations with which the model is 
    calibrated. The input data is called with the specified string of the
-   keyword-argument *data_name*. The input data shall be placed in .csv- or 
-   .pickle-format within the subfolder *InputData* of the package *mode_behave*.
-   The data shall follow the structure below:
+   keyword-argument *data_in*. The input data must be loaded from .csv- or 
+   .pickle-format before model initialization.
+   The data shall follow the structure below::
    
-   * Rows: Observations.
-   * Columns:
-         - One column per parameter of the utility function AND per alternative AND per equal alternative.
-           Specified as: 'Attribute_name_' + str(no_alternative) + str(no_equal_alternative)
-         - One column for the choice-indication of EACH alternative AND per equal alternative.
-           Specified as: 'choice_' + str(no_alternative) + str(no_equal_alternative)
-         - One column per alternative AND per equal alternative, indicating the availability.
-           Specified as: 'av_' + str(no_alternative) + str(no_equal_alternative)
-         - If a parameter is constant across alternatives or equal alternatives, then let the columns be equal.
-         - Furthermore, the observations can be given a weight. Therefore, an additional column needs to be provided, named 'weight'. - Without any further suffix.
-   * Index: The index shall start from '0'.
+       Rows: 
+           Observations.
+       
+       Columns:
+           One column per parameter of the utility function AND per alternative AND per equal alternative.
+           Specified as: **'Attribute_name_' + str(no_alternative) + str(no_equal_alternative)**
+           
+           One column for the choice-indication of EACH alternative AND per equal alternative.
+           Specified as: **choice_' + str(no_alternative) + str(no_equal_alternative)**
+           
+           One column per alternative AND per equal alternative, indicating the availability.
+           Specified as: **'av_' + str(no_alternative) + str(no_equal_alternative)**
+           
+           If a parameter is constant across alternatives or equal alternatives, then let the columns be equal.
+           
+           Furthermore, the observations can be given a weight. Therefore, an additional column needs to be provided, named 'weight'. - Without any further suffix.
+       
+       Index: The index shall start from '0'.
           
 2. Initialization argument 'param':
     
    'param' is specified as a dictionary containing the attribute names of the 
-   utility function, sorted by type.
+   utility function, sorted by type::
    
-   * param['constant']['fixed']: Attributes, which are constant over choice 
-     options and fixed within the parameter space. 
-   * param['constant']['random']: Attributes, which are constant over choice 
-     options and randomly distributed over the parameter space. 
-   * param['variable']['fixed']: Attributes, which vary over choice 
-     options and are fixed within the parameter space. 
-   * param['variable']['random']: Attributes, which vary over choice 
-     options and are randomly distributed over the parameter space. 
+   param['constant']['fixed']: 
+       Attributes, which are constant over choice 
+       options and fixed within the parameter space. 
+   param['constant']['random']: 
+       Attributes, which are constant over choice 
+       options and randomly distributed over the parameter space. 
+   param['variable']['fixed']: 
+       Attributes, which vary over choice 
+       options and are fixed within the parameter space. 
+   param['variable']['random']: 
+       Attributes, which vary over choice 
+       options and are randomly distributed over the parameter space. 
      
 3. The vector x, containing the initial estimates for the logit coefficients.
 
    The coefficients in vector x (solution vector of maximum likelihood optimization)
-   follow a certain structure (alternatives=alt):
+   follow a certain structure (alternatives=alt)::
    
-   * x[:(alt-1)]: ASC-constants for the alternatives 1-#of alternatives. ASC for choice option 0 defaults to 0.
-   * x[(alt-1):(alt-1)+no_constant_fixed]: Coefficients of constant and fixed attributes.
-   * x[(alt-1)+no_constant_fixed:(alt-1)+(no_constant_fixed+no_constant_random)]: 
-     Coefficients of constant and fixed attributes.   
-   * x[(alt-1)+(no_constant_fixed+no_constant_random):(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt]: 
-     Coefficients of variable (thus multiplication with alternatives) 
-     and fixed attributes.
-   * x[(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt:(alt-1)+(no_constant_fixed+no_constant_random)+(no_variable_fixed+no_variable_random)*alt]: 
-     Coefficients of variable and random attributes.
+   x[:(alt-1)]: 
+       ASC-constants for the alternatives 1-#of alternatives. ASC for choice option 0 defaults to 0.
+   x[(alt-1):(alt-1)+no_constant_fixed]: 
+       Coefficients of constant and fixed attributes.
+   x[(alt-1)+no_constant_fixed:(alt-1)+(no_constant_fixed+no_constant_random)]: 
+       Coefficients of constant and fixed attributes.   
+   x[(alt-1)+(no_constant_fixed+no_constant_random):(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt]: 
+       Coefficients of variable (thus multiplication with alternatives) 
+       and fixed attributes.
+   x[(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt:(alt-1)+(no_constant_fixed+no_constant_random)+(no_variable_fixed+no_variable_random)*alt]: 
+       Coefficients of variable and random attributes.
       
 Theoretical Background
 ======================
@@ -246,22 +259,25 @@ Further reading:
 Post-Analysis
 =============
 
-1. Access of estimated coefficients and summary statistics
-
-   * **model.shares**: Estimated shares of discrete classes within parameter space.
-   * **model.points**: Parameter space of random coefficients.
-   * **model.initial_point**: Coefficients of initially estimated logit model.
+1. Access of estimated coefficients and summary statistics::
+        
+    **model.shares**: 
+        Estimated shares of discrete classes within parameter space.
+    **model.points**: 
+        Parameter space of random coefficients.
+    **model.initial_point**: 
+        Coefficients of initially estimated logit model.
      
 2. Visualization of parameter space::
 
-      model.visualize_space(**kwargs)
+    model.visualize_space(**kwargs)
       
-      Most important keyword-argument is "k". - "k" incidates the number of cluster
-      centers, to which the estimated random parameters of the mixed logit model
-      shall be attributed. The cluster centers indicate different potential
-      choice or consumer groups. This method clusters the estimated random preferences
-      and shows the position of the cluster centers as well as the overall distribution
-      of estimated random parameters across the whole parameter space.
+    Most important keyword-argument is "k". - "k" incidates the number of cluster
+    centers, to which the estimated random parameters of the mixed logit model
+    shall be attributed. The cluster centers indicate different potential
+    choice or consumer groups. This method clusters the estimated random preferences
+    and shows the position of the cluster centers as well as the overall distribution
+    of estimated random parameters across the whole parameter space.
       
 3. Forecast with cluster centers::
 
