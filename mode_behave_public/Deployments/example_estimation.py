@@ -98,7 +98,7 @@ model.forecast(method='LC',
 # adjusted: ICEV +10%, PHEV +10%, BEV -50%, FCEV -50%
 model.forecast(method='MNL', 
             sense_scenarios={"Cheap_EV": {
-                "RELATIVER_KAUFPREIS": [[1.1], [1.1], [0.5], [0.5]]}
+                "PURCHASE_PRICE": [[1.1], [1.1], [0.5], [0.5]]}
                 },
             names_choice_options={0: "ICEV", 1: "PHEV", 2: "BEV", 3: "FCEV"},
             name_scenario='sensitivity'

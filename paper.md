@@ -113,8 +113,8 @@ The available choice alternatives are internal combustion engines (ICEVs),
 plug-in hybrid-electric vehicles (PHEVs), battery-electric vehicles (BEVs) and 
 fuel cell-electric vehicles (FCEVs).
 
-Figures 1 and 2 were created using post-processing methods, which are 
-included in the software package.
+Figures 1 and 2 were created using a post-processing method (.forecast()), 
+which is included in the software package.
 
 Figure 1 visualizes the simulated choice probabilities for each drivetrain technology, 
 as well as the choice probabilities according to the survey (base) data itself. 

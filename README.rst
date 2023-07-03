@@ -272,36 +272,45 @@ Post-Analysis
 
     model.visualize_space(**kwargs)
       
-    Most important keyword-argument is "k". - "k" incidates the number of cluster
-    centers, to which the estimated random parameters of the mixed logit model
-    shall be attributed. The cluster centers indicate different potential
-    choice or consumer groups. This method clusters the estimated random preferences
-    and shows the position of the cluster centers as well as the overall distribution
+    int k:
+        k incidates the number of cluster centers, 
+        to which the estimated random parameters 
+        of the mixed logit model shall be attributed. 
+        
+    The cluster centers indicate different potential choice or consumer groups. 
+    This method clusters the estimated random preferences and shows 
+    the position of the cluster centers as well as the overall distribution
     of estimated random parameters across the whole parameter space.
       
 3. Forecast with cluster centers::
 
     model.forecast(method, **kwargs)
                 
-    "method" indicates the type of the discrete choice model ("MNL", "MXL", or "LC" for latent class).
-    In **kwargs, also "k" can be given to indicate the number of cluster
-    centers which shall be analyzed. This method forecasts the mean choice, based
-    on the estimated parameters of each cluster center and the attribute values
-    of the base data. It is a good reference point to study the diverging choice
-    behavior of each cluster center. Furthermore, the keyword-argument
-    "sense_scenarios" can be given to study model sensitivities by 
-    indicating a relative change in the value of certain model attributes.
+    str method:
+        "method" indicates the type of the discrete choice model ("MNL", "MXL", or "LC" for latent class).
+    int k:
+        Also "k" can be given to indicate the number of cluster centers which shall be analyzed.
+    dict sense_scenarios:
+        Indicates the relative change in the value of selected model attributes.
+        This keyword is useful for conducting sensitivity analyses.
+        
+    This method forecasts the mean choice, based on the estimated parameters 
+    of each cluster center and the attribute values of the base data. 
+    It is a good reference point to study the diverging choice
+    behavior of each cluster center.
 
 4. Cluster the drawn points from the parameter space to similar preference groups (e.g. consumer groups)::
 
     model.cluster_space(method, k, **kwargs)
     
-    "method" indicates the clustering algorithm, e.g. kmeans. 
-    "k" indicates the number of cluster centers.
+    str method:
+        Indicates the clustering algorithm, e.g. kmeans. 
+    int k:
+        Indicates the number of cluster centers.
+    
     The output of this method is the classification of the drawn points
     from the parameter space into clusters. The second output are
-    the calculated cluster centers. 
-    The clusters can be interpreted as consumer groups.
+    the calculated cluster centers. The clusters can be interpreted as consumer groups.
 
 5. Assignment of observations to cluster centers::
     
@@ -322,9 +331,9 @@ In order to simulate choice probabilities, the model must be instantiated as fol
 
    model = ov.Core(model_type = 'simulation', simulation_type = 'mode_choice')
    
-The keyword-argument *simulation_type* specifies which kind of simulation
-shall be conducted.
-Currently only MNL-simulations are implemented.
+   str simulation_type:
+       Specifies which kind of simulation shall be conducted.
+       Currently only MNL-simulations are implemented.
 
 The following MNL-simulations are currently available:
 
