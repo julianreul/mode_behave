@@ -71,12 +71,12 @@ Workflow
 
 3. Estimate the model with::
 
-      model.estimate_mixed_logit(**kwargs)  
+    model.estimate_mixed_logit(**kwargs)  
       
     The estimation of the mixed logit model can be modified by definition of keyword-arguments
     during instantiation and within the estimation-method itself.
     
-    **Arguments for instantiation (ov.Core(...))**::
+    Arguments for instantiation (ov.Core(...))::
     
         dict param:
             Indicates the names of the model attributes. 
@@ -88,14 +88,14 @@ Workflow
         int equal_alt: 
             Indicates the maximum number of equal choice alternatives per choice set.
     
-    **Keyword-arguments for instantiation (ov.Core(...))**::
+    Keyword-arguments for instantiation (ov.Core(...))::
     
         boolean include_weights: 
             If this is set to True, the model will search for a
             column in the input-data, called "weight", which indicates the weight
             for each observation. Defaults to True.
     
-    **Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))**::
+    Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))::
     
         int min_inter: 
             Min. iterations for EM-algorithm.
@@ -261,11 +261,11 @@ Post-Analysis
 
 1. Access of estimated coefficients and summary statistics::
         
-    **model.shares**: 
+    model.shares: 
         Estimated shares of discrete classes within parameter space.
-    **model.points**: 
+    model.points: 
         Parameter space of random coefficients.
-    **model.initial_point**: 
+    model.initial_point: 
         Coefficients of initially estimated logit model.
      
 2. Visualization of parameter space::
