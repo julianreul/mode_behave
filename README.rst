@@ -73,54 +73,54 @@ Workflow
 
       model.estimate_mixed_logit(**kwargs)  
       
-The estimation of the mixed logit model can be modified by definition of keyword-arguments
-during instantiation and within the estimation-method itself.
-
-**Arguments for instantiation (ov.Core(...))**::
-
-    dict param:
-        Indicates the names of the model attributes. 
-        The attribute-names shall be derived from the column names of the input data.
-    str data_name: 
-        Indicates the name of the input data-file. 
-    int alt: 
-        Indicates the number of considered choice alternatives.
-    int equal_alt: 
-        Indicates the maximum number of equal choice alternatives per choice set.
-
-**Keyword-arguments for instantiation (ov.Core(...))**::
-
-    boolean include_weights: 
-        If this is set to True, the model will search for a
-        column in the input-data, called "weight", which indicates the weight
-        for each observation. Defaults to True.
-
-**Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))**::
-
-    int min_inter: 
-        Min. iterations for EM-algorithm.
-    int max_iter: 
-        Max. iterations for EM-algorithm.
-    float tol: 
-        Numerical tolerance of EM-algorithm.
-    bool bit_64: 
-        Defaults to False. If set to True, all numbers are calculated
-        in 64-bit format, which increases precision, but also runtime.
-    str space_method: 
-        Defines the chosen method to span the parameter space for the mixed logit estimation.
-    int scale_space: 
-        Defines the size of the space, relative to the chosen space_method.
-    int max_shares: 
-        Defines the maximum number of points to be observed in the parameter space.
+    The estimation of the mixed logit model can be modified by definition of keyword-arguments
+    during instantiation and within the estimation-method itself.
+    
+    **Arguments for instantiation (ov.Core(...))**::
+    
+        dict param:
+            Indicates the names of the model attributes. 
+            The attribute-names shall be derived from the column names of the input data.
+        str data_name: 
+            Indicates the name of the input data-file. 
+        int alt: 
+            Indicates the number of considered choice alternatives.
+        int equal_alt: 
+            Indicates the maximum number of equal choice alternatives per choice set.
+    
+    **Keyword-arguments for instantiation (ov.Core(...))**::
+    
+        boolean include_weights: 
+            If this is set to True, the model will search for a
+            column in the input-data, called "weight", which indicates the weight
+            for each observation. Defaults to True.
+    
+    **Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))**::
+    
+        int min_inter: 
+            Min. iterations for EM-algorithm.
+        int max_iter: 
+            Max. iterations for EM-algorithm.
+        float tol: 
+            Numerical tolerance of EM-algorithm.
+        bool bit_64: 
+            Defaults to False. If set to True, all numbers are calculated
+            in 64-bit format, which increases precision, but also runtime.
+        str space_method: 
+            Defines the chosen method to span the parameter space for the mixed logit estimation.
+        int scale_space: 
+            Defines the size of the space, relative to the chosen space_method.
+        int max_shares: 
+            Defines the maximum number of points to be observed in the parameter space.
 
       
 4. The package can also be used to estimate multinomial logit models::
 
-      model.estimate_logit(**kwargs)  
+       model.estimate_logit(**kwargs)  
       
-| **Keyword-arguments for estimation-method (model.estimate_logit(...))**:
-| bool stats: If set to True, t-statistics from the estimation process are evaluated.
-|
+       bool stats: 
+           If set to True, t-statistics from the estimation process are evaluated.
+
 
 5. An exemplary model workflow is provided with the package and can be accessed via the following path::
 
