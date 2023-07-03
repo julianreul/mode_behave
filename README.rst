@@ -198,35 +198,35 @@ Structure of Parameters and Input Data
    'param' is specified as a dictionary containing the attribute names of the 
    utility function, sorted by type::
    
-   param['constant']['fixed']: 
-       Attributes, which are constant over choice 
-       options and fixed within the parameter space. 
-   param['constant']['random']: 
-       Attributes, which are constant over choice 
-       options and randomly distributed over the parameter space. 
-   param['variable']['fixed']: 
-       Attributes, which vary over choice 
-       options and are fixed within the parameter space. 
-   param['variable']['random']: 
-       Attributes, which vary over choice 
-       options and are randomly distributed over the parameter space. 
+       param['constant']['fixed']: 
+           Attributes, which are constant over choice 
+           options and fixed within the parameter space. 
+       param['constant']['random']: 
+           Attributes, which are constant over choice 
+           options and randomly distributed over the parameter space. 
+       param['variable']['fixed']: 
+           Attributes, which vary over choice 
+           options and are fixed within the parameter space. 
+       param['variable']['random']: 
+           Attributes, which vary over choice 
+           options and are randomly distributed over the parameter space. 
      
 3. The vector x, containing the initial estimates for the logit coefficients.
 
    The coefficients in vector x (solution vector of maximum likelihood optimization)
    follow a certain structure (alternatives=alt)::
    
-   x[:(alt-1)]: 
-       ASC-constants for the alternatives 1-#of alternatives. ASC for choice option 0 defaults to 0.
-   x[(alt-1):(alt-1)+no_constant_fixed]: 
-       Coefficients of constant and fixed attributes.
-   x[(alt-1)+no_constant_fixed:(alt-1)+(no_constant_fixed+no_constant_random)]: 
-       Coefficients of constant and fixed attributes.   
-   x[(alt-1)+(no_constant_fixed+no_constant_random):(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt]: 
-       Coefficients of variable (thus multiplication with alternatives) 
-       and fixed attributes.
-   x[(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt:(alt-1)+(no_constant_fixed+no_constant_random)+(no_variable_fixed+no_variable_random)*alt]: 
-       Coefficients of variable and random attributes.
+       x[:(alt-1)]: 
+           ASC-constants for the alternatives 1-#of alternatives. ASC for choice option 0 defaults to 0.
+       x[(alt-1):(alt-1)+no_constant_fixed]: 
+           Coefficients of constant and fixed attributes.
+       x[(alt-1)+no_constant_fixed:(alt-1)+(no_constant_fixed+no_constant_random)]: 
+           Coefficients of constant and fixed attributes.   
+       x[(alt-1)+(no_constant_fixed+no_constant_random):(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt]: 
+           Coefficients of variable (thus multiplication with alternatives) 
+           and fixed attributes.
+       x[(alt-1)+(no_constant_fixed+no_constant_random)+no_variable_fixed*alt:(alt-1)+(no_constant_fixed+no_constant_random)+(no_variable_fixed+no_variable_random)*alt]: 
+           Coefficients of variable and random attributes.
       
 Theoretical Background
 ======================
