@@ -84,6 +84,8 @@ model.visualize_space(
 # Comment on forecasting: The forecasting is performed on training data 
 # for simplicity. Please adjust the data (self.data) for further/own 
 # forecasting practices by reloading a diverging subset of the base data.
+# This method generates Figure 2 within paper.md and is stored in the 
+# following path: .\mode_behave_public\Visualizations\forecast_clustering.png
 
 # Forecast of cluster centers on the base data
 model.forecast(method='LC', 
@@ -96,6 +98,9 @@ model.forecast(method='LC',
 # Forecast of MNL model with parameter variation.
 # In this example, the relative purchase price of vehicle technologies is 
 # adjusted: ICEV +10%, PHEV +10%, BEV -50%, FCEV -50%
+# This method generates Figure 1 within paper.md and is stored in the 
+# following path: .\mode_behave_public\Visualizations\forecast_sensitivity.png
+
 model.forecast(method='MNL', 
             sense_scenarios={"Cheap_EV": {
                 "PURCHASE_PRICE": [[1.1], [1.1], [0.5], [0.5]]}
