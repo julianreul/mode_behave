@@ -76,30 +76,42 @@ Workflow
 The estimation of the mixed logit model can be modified by definition of keyword-arguments
 during instantiation and within the estimation-method itself.
 
-**Arguments for instantiation** (ov.Core(...))::
+**Arguments for instantiation (ov.Core(...))**::
 
-    dict param: Indicated the names of the model attributes. The attribute-names 
-      shall be derived from the column names of the input data.
-    str data_name: Indicates the name of the input data-file. 
-    int alt: Indicates the number of considered choice alternatives.
-    int equal_alt: Indicates the maximum number of equal choice alternatives per choice set.
+    dict param:
+        Indicated the names of the model attributes. 
+        The attribute-names shall be derived from the column names of the input data.
+    str data_name: 
+        Indicates the name of the input data-file. 
+    int alt: 
+        Indicates the number of considered choice alternatives.
+    int equal_alt: 
+        Indicates the maximum number of equal choice alternatives per choice set.
 
-**Keyword-arguments for instantiation** (ov.Core(...))::
+**Keyword-arguments for instantiation (ov.Core(...))**::
 
-    boolean include_weights: If this is set to True, the model will search for a
+    boolean include_weights: 
+        If this is set to True, the model will search for a
         column in the input-data, called "weight", which indicates the weight
         for each observation. Defaults to True.
 
 **Keyword-arguments for estimation-method (model.estimate_mixed_logit(...))**::
 
-    int min_inter: Min. iterations for EM-algorithm.
-    int max_iter: Max. iterations for EM-algorithm.
-    float tol: Numerical tolerance of EM-algorithm.
-    bool bit_64: Defaults to False. If set to True, all numbers are calculated
+    int min_inter: 
+        Min. iterations for EM-algorithm.
+    int max_iter: 
+        Max. iterations for EM-algorithm.
+    float tol: 
+        Numerical tolerance of EM-algorithm.
+    bool bit_64: 
+        Defaults to False. If set to True, all numbers are calculated
         in 64-bit format, which increases precision, but also runtime.
-    str space_method: Defines the chosen method to span the parameter space for the mixed logit estimation.
-    int scale_space: Defines the size of the space, relative to the chosen space_method.
-    int max_shares: Defines the maximum number of points to be observed in the parameter space.
+    str space_method: 
+        Defines the chosen method to span the parameter space for the mixed logit estimation.
+    int scale_space: 
+        Defines the size of the space, relative to the chosen space_method.
+    int max_shares: 
+        Defines the maximum number of points to be observed in the parameter space.
 
       
 4. The package can also be used to estimate multinomial logit models::
@@ -117,12 +129,12 @@ during instantiation and within the estimation-method itself.
 Testing
 =======
 
-The software includes testing routines, written with the package -unittest-, 
+The software includes testing routines, written with the package *unittest*, 
 to ensure its functionality throughout the development process. 
 The first test-routine checks the functionality
-of the estimation routines (PATH: ./test/test_estimation.py), while the second
+of the estimation routines (PATH: *./test/test_estimation.py*), while the second
 test routine checks the functionality of simulation routines 
-(PATH: ./test/test_simulation.py)
+(PATH: *./test/test_simulation.py*)
 
 These testing routines can be activated in two ways:
 
@@ -142,7 +154,7 @@ These testing routines can be activated in two ways:
         python -m unittest test_simulation.py
         
     These commands execute the two test routines for estimation and simulation.
-    Substitute "PATH_TO_MODULE" with the path to the repository's home
+    Substitute *PATH_TO_MODULE* with the path to the repository's home
     directory on your local machine.
         
 
