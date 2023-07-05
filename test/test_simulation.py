@@ -18,8 +18,7 @@ class TestCarOwnership(unittest.TestCase):
 
         """
         #Define the input data
-        urban_region = 1
-        rural_region = 0
+        regiontype = 1
         hh_size = 2
         adults_working = 1 
         children = 0
@@ -28,13 +27,12 @@ class TestCarOwnership(unittest.TestCase):
         sharing = 1
         relative_cost_per_car = 2 
         age_adults = 3.5
-        regiontype = 1
         
         #simulate
         model = mb.Core(model_type = 'simulation', simulation_type = 'car_ownership')        
-        result = model.simulate_hh_cars(urban_region, rural_region, hh_size,
+        result = model.simulate_hh_cars(regiontype, hh_size,
                              adults_working, children, htype, quali_opnv, sharing,
-                             relative_cost_per_car, age_adults, regiontype)
+                             relative_cost_per_car, age_adults)
                  
         #test
         self.assertTrue(

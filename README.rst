@@ -329,7 +329,7 @@ The model incorporates a class **Simulation**, which contains customized
 methods to simulate previously estimated choice models.
 In order to simulate choice probabilities, the model must be instantiated as follows::
 
-   model = ov.Core(model_type = 'simulation', simulation_type = 'mode_choice')
+   model = mb.Core(model_type = 'simulation', simulation_type = 'mode_choice')
    
    str simulation_type:
        Specifies which kind of simulation shall be conducted.
@@ -355,19 +355,19 @@ Filename of pre-estimated model parameters: 'initial_point_mode'
 
 **MNL-model for the probability of the number of cars per households (simulation_type = 'car_ownership')**::
 
-   model.simulate_hh_cars(urban_region, rural_region, hh_size,
-                         adults_working, children, htype, quali_opnv, sharing,
-                         relative_cost_per_car, age_adults_scaled)
+   model.simulate_hh_cars(regiontype, hh_size,
+                        adults_working, children, htype, quali_opnv, sharing,
+                        relative_cost_per_car, age_adults)
                          
 The method simulates the probability, that a household owns 0-3+ cars (4 discrete alternatives).
-Input paramters are the regiontype of residence in I/O-format according to 
-RegioStaR2 BMVI classification (e.g.: urban_region = 1, rural_region = 0),
+Input parameters are the regiontype of residence in I/O-format according to 
+RegioStaR7 BMVI classification (e.g.: regiontype = 1 for "Metropolis"),
 the household size (hh_size), the number of working adults (adults_working),
 the number of children in the household (children), the housing type (htype)
 in I/O-format (e.g.: 1, if individual house, 0, if multi-apartment house),
 the quality of public transport in the residence area (1: Very Bad, 2: Bad, 3: Good, 4: Very Good),
 whether the household holds a carsharing-membership (sharing), the
-ratio of the average car price divided by household income (relative_cost_per_car).
+ratio of the average car price divided by net monthly household income (relative_cost_per_car).
 Average market prices can be derived from Kraus' vehicle cost model.
 Last input parameter is the average age of the adults, living in the household,
 scaled by *0.1!

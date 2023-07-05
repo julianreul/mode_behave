@@ -21,23 +21,23 @@ class Simulation:
     mixed logit and multinomial logit models.
     """
     
-    def simulate_hh_cars(self, urban_region, rural_region, hh_size,
+    def simulate_hh_cars(self, regiontype, hh_size,
                          adults_working, children, htype, quali_opnv, sharing,
-                         relative_cost_per_car, age_adults, regiontype, **kwargs):
+                         relative_cost_per_car, age_adults, **kwargs):
         """
         This method calculates the probability of a single household
         to own 0,1,2,3 or more cars.
         Parameters
         ----------
+        #   regiontype: RegioStaR7-classification of regions
         #   hh_size: Household-size
         #   adults_working: Number of working adults (replace by daily distance to work)
         #   children: Number of children in household
-        #   urban_region: RegioStaR2 - Urban 
-        #   rural_region: RegioStaR2 - Rural
         #   htype: Haustyp
-        #   relative_cost_per_car: Average Price of considered cars / income
-        #   sharing: Carsharing-Membership
         #   quali_opnv: Quality of public transport 
+        #   sharing: Carsharing-Membership
+        #   relative_cost_per_car: Average Price of considered cars / income
+        #   age_adults: Mean age of adults in the household scaled by 0.1!
         
         param = {'constant': 
                           {
@@ -79,6 +79,16 @@ class Simulation:
             no_variable_fixed,
             no_variable_random,
             )
+        
+        #Derive urban / rural regiontype according to RegioStaR2-scale from regiontype
+        if regiontype in [1,2,3,4]:
+            urban_region = 1
+            rural_region = 0
+        elif regiontype in [5,6,7]:
+            urban_region = 0
+            rural_region = 1
+        else:
+            raise ValueError("Regiontype must be a value between 1-7.")
         
         #Define hh_data.
         # IMPORTANT: The order of parameters (see hh_data) must be equal to the order during 
