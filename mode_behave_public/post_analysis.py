@@ -1341,6 +1341,13 @@ class PostAnalysis:
             for each choice option.
         kwargs asc_offset : list
             offset values for alternative specific constants
+        kwargs av_external : numpy array
+            This array is used to exogenously define the availabilities
+            for each choice option during a simulation.
+            The array must have as much entries as choice options are 
+            being observed: len(av_external) = self.count_c
+            Define the availability to 1 (always available), 0 (never available)
+            or np.nan (availability according to base data).
             
         Returns
         -------
@@ -1357,6 +1364,25 @@ class PostAnalysis:
             "asc_offset", 
             np.array([0 for c in range(self.count_c)], dtype="float64")
             )
+        av_external = kwargs.get("av_external", False)
+        
+        #exogeneous definiton of choice availabilities
+        if av_external:
+            #check for the correct number of exogenously defined availabilities.
+            if len(av_external) == self.count_c:
+                #interate over availabilities
+                for av_ext_count, av_ext in enumerate(av_external):
+                    if np.isnan(av_ext):
+                        continue
+                    else:
+                        if av_ext in [0,1]:
+                            self.av[av_ext_count] = av_ext
+                        else:
+                            raise ValueError("External availability must be 0 or 1.")
+            else:
+                raise AttributeError("Number of defined availabilities does not match number of choice options.")
+        else:
+            self.av = self.av_backup.copy()
 
         no_constant_fixed = len(self.param['constant']['fixed'])
         no_constant_random = len(self.param['constant']['random'])
@@ -1459,6 +1485,25 @@ class PostAnalysis:
         observations within a given base-sample.
         Requires prior call of estimate_mixed_logit().
 
+        Parameters
+        ----------
+        latent_points : 2D numpy array.
+            The random points within each class.
+        latent_shares : 1D numpy array.
+            The share of each class.
+        kwargs sense : dictionary
+            The dictionary "sense" holds the attribute names for which sensitivities
+            shall be simulated as keys. The values are the arrays or lists
+            which indicate the relative change of the attribute value
+            for each choice option.
+        kwargs av_external : numpy array
+            This array is used to exogenously define the availabilities
+            for each choice option during a simulation.
+            The array must have as much entries as choice options are 
+            being observed: len(av_external) = self.count_c
+            Define the availability to 1 (always available), 0 (never available)
+            or np.nan (availability according to base data).
+
         Returns
         -------
         PandasSeries
@@ -1471,7 +1516,26 @@ class PostAnalysis:
         sense = kwargs.get("sense", {})
         vector_output_no_weights = kwargs.get("vector_output_no_weights", False)
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))
+        av_external = kwargs.get("av_external", False)
         
+        #exogeneous definiton of choice availabilities
+        if av_external:
+            #check for the correct number of exogenously defined availabilities.
+            if len(av_external) == self.count_c:
+                #interate over availabilities
+                for av_ext_count, av_ext in enumerate(av_external):
+                    if np.isnan(av_ext):
+                        continue
+                    else:
+                        if av_ext in [0,1]:
+                            self.av[av_ext_count] = av_ext
+                        else:
+                            raise ValueError("External availability must be 0 or 1.")
+            else:
+                raise AttributeError("Number of defined availabilities does not match number of choice options.")
+        else:
+            self.av = self.av_backup.copy()
+            
         if mixing_distribution == "discrete":       
             initial_point = self.initial_point
             no_constant_fixed = self.no_constant_fixed
@@ -1619,6 +1683,13 @@ class PostAnalysis:
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
+        kwargs av_external : numpy array
+            This array is used to exogenously define the availabilities
+            for each choice option during a simulation.
+            The array must have as much entries as choice options are 
+            being observed: len(av_external) = self.count_c
+            Define the availability to 1 (always available), 0 (never available)
+            or np.nan (availability according to base data).
 
         Returns
         -------
@@ -1631,7 +1702,26 @@ class PostAnalysis:
         count_e = self.count_e
         sense = kwargs.get("sense", {})
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64"))      
-
+        av_external = kwargs.get("av_external", False)
+        
+        #exogeneous definiton of choice availabilities
+        if av_external:
+            #check for the correct number of exogenously defined availabilities.
+            if len(av_external) == self.count_c:
+                #interate over availabilities
+                for av_ext_count, av_ext in enumerate(av_external):
+                    if np.isnan(av_ext):
+                        continue
+                    else:
+                        if av_ext in [0,1]:
+                            self.av[av_ext_count] = av_ext
+                        else:
+                            raise ValueError("External availability must be 0 or 1.")
+            else:
+                raise AttributeError("Number of defined availabilities does not match number of choice options.")
+        else:
+            self.av = self.av_backup.copy()
+            
         no_constant_fixed = len(self.param['constant']['fixed'])
         no_constant_random = len(self.param['constant']['random'])
         no_variable_fixed = len(self.param['variable']['fixed'])
@@ -1758,6 +1848,13 @@ class PostAnalysis:
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
+        kwargs av_external : numpy array
+            This array is used to exogenously define the availabilities
+            for each choice option during a simulation.
+            The array must have as much entries as choice options are 
+            being observed: len(av_external) = self.count_c
+            Define the availability to 1 (always available), 0 (never available)
+            or np.nan (availability according to base data).
         kwargs external_points : numpy array
             This array is two-dimensional and holds one or more alternative
             specifications of "initial_point" for the simulation of 
@@ -1809,6 +1906,8 @@ class PostAnalysis:
         sense_scenarios = kwargs.get("sense_scenarios", False)
         names_choice_options = kwargs.get("names_choice_options", {})
         asc_offset = kwargs.get("asc_offset", np.array([0 for c in range(self.count_c)]))
+        av_external = kwargs.get("av_external", False)
+                
         y_lim = kwargs.get("y_lim", ())
         return_data = kwargs.get("return_data", False)
         return_figure = kwargs.get("return_figure", False)
@@ -1817,13 +1916,17 @@ class PostAnalysis:
         res_simu = {}
         
         if method == "MNL":
-            res_simu['MNL'] = self.simulate_logit(asc_offset=asc_offset)
+            res_simu['MNL'] = self.simulate_logit(
+                asc_offset=asc_offset, 
+                av_external=av_external
+                )
             
             if sense_scenarios:
                 for sense_name in sense_scenarios.keys():
                     res_simu[sense_name] = self.simulate_logit(
                         asc_offset=asc_offset,
-                        sense=sense_scenarios[sense_name]
+                        sense=sense_scenarios[sense_name],
+                        av_external=av_external
                         )
                     
             if external_points.size:
@@ -1831,7 +1934,8 @@ class PostAnalysis:
                 for ep in range(external_points.shape[0]):
                     res_simu['External ' + str(ep)] = self.simulate_logit(
                         asc_offset=asc_offset,
-                        external_point = external_points[ep]
+                        external_point = external_points[ep],
+                        av_external=av_external
                         )
                 
                     if sense_scenarios:
@@ -1839,7 +1943,8 @@ class PostAnalysis:
                             res_simu['External ' + str(ep) + ' - ' + sense_name] = self.simulate_logit(
                                 asc_offset=asc_offset,
                                 external_point = external_points[ep],
-                                sense=sense_scenarios[sense_name]
+                                sense=sense_scenarios[sense_name],
+                                av_external=av_external
                                 )
         
         elif method == "LC":
@@ -1940,7 +2045,8 @@ class PostAnalysis:
                 res_simu['C' + str(k+1) + ' (' + str(cluster_sizes_rel_percent[k]) + "%)"] = self.simulate_latent_class(
                         np.array([cluster_center[k]]), 
                         np.array([1]), 
-                        asc_offset=asc_offset
+                        asc_offset=asc_offset,
+                        av_external=av_external
                         )
                 if sense_scenarios:
                     for sense_name in sense_scenarios.keys():
@@ -1948,7 +2054,8 @@ class PostAnalysis:
                                 np.array([cluster_center[k]]), 
                                 np.array([1]), 
                                 asc_offset=asc_offset,
-                                sense=sense_scenarios[sense_name]
+                                sense=sense_scenarios[sense_name],
+                                av_external=av_external
                                 )
                                     
             #Simulation of externally given points.
@@ -1958,7 +2065,8 @@ class PostAnalysis:
                     res_simu['External ' + str(g)] = self.simulate_latent_class(
                             np.array([external_points_random[g]]), 
                             np.array([1]), 
-                            asc_offset=asc_offset
+                            asc_offset=asc_offset,
+                            av_external=av_external
                             )
                         
                     if sense_scenarios:
@@ -1967,7 +2075,8 @@ class PostAnalysis:
                                     np.array([external_points_random[g]]), 
                                     np.array([1]), 
                                     asc_offset=asc_offset,
-                                    sense=sense_scenarios[sense_name]
+                                    sense=sense_scenarios[sense_name],
+                                    av_external=av_external
                                     )
                                               
             else:
@@ -1977,7 +2086,8 @@ class PostAnalysis:
             res_simu['Latent Class'] = self.simulate_latent_class(
                 cluster_center, 
                 cluster_sizes_rel,
-                asc_offset=asc_offset
+                asc_offset=asc_offset,
+                av_external=av_external
                 )
             
             if sense_scenarios:
@@ -1986,7 +2096,8 @@ class PostAnalysis:
                         cluster_center, 
                         cluster_sizes_rel,
                         sense=sense_scenarios[sense_name],
-                        asc_offset=asc_offset
+                        asc_offset=asc_offset,
+                        av_external=av_external
                         )
                                    
             cluster_sizes_str = ''
@@ -1994,13 +2105,17 @@ class PostAnalysis:
                 cluster_sizes_str += 'C' + str(i+1) + ' - ' + str(cluster_sizes_rel_percent[i]) + '%\n'
             
         elif method == "MXL":
-            res_simu['MXL'] = self.simulate_mixed_logit(asc_offset=asc_offset)
+            res_simu['MXL'] = self.simulate_mixed_logit(
+                asc_offset=asc_offset, 
+                av_external=av_external
+                )
             
             if sense_scenarios:
                 for sense_name in sense_scenarios.keys():
                     res_simu[sense_name] = self.simulate_mixed_logit(
                         asc_offset=asc_offset,
-                        sense=sense_scenarios[sense_name]
+                        sense=sense_scenarios[sense_name],
+                        av_external=av_external
                         )
                     
             if external_points.size:
@@ -2008,7 +2123,8 @@ class PostAnalysis:
                 for ep in range(external_points.shape[0]):
                     res_simu['External ' + str(ep)] = self.simulate_logit(
                         asc_offset=asc_offset,
-                        external_point = external_points[ep]
+                        external_point = external_points[ep],
+                        av_external=av_external
                         )
                 
                     if sense_scenarios:
@@ -2016,7 +2132,8 @@ class PostAnalysis:
                             res_simu['External ' + str(ep) + ' - ' + sense_name] = self.simulate_logit(
                                 asc_offset=asc_offset,
                                 external_point = external_points[ep],
-                                sense=sense_scenarios[sense_name]
+                                sense=sense_scenarios[sense_name],
+                                av_external=av_external
                                 )
             
         else:

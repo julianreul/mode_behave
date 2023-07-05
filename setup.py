@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mode_behave',
-      version='1.0.10',
+      version='1.0.11',
       description='Estimation and simulation of discrete choice models',
       author='Julian Reul',
       author_email='j.reul@fz-juelich.de',
@@ -17,7 +17,7 @@ setup(name='mode_behave',
           'pickleshare>=0.7.5',
           'scikit-learn>=1.0.2',
           'scikit-optimize>=0.9.0',
-          'scipy>=1.7.3',
+          'scipy==1.7.3',
           'seaborn>=0.11.2'
           ],    
       include_package_data=True,

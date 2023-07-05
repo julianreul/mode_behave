@@ -217,3 +217,4 @@ class Core(Estimation, Simulation, PostAnalysis):
                 for e in range(self.count_e):
                     self.choice[c][e] = self.data["choice_" + str(c) + "_" + str(e)].values
                     self.av[c][e] = self.data["av_" + str(c) + "_" + str(e)].values
+            self.av_backup = self.av.copy()

@@ -108,3 +108,16 @@ model.forecast(method='MNL',
             names_choice_options={0: "ICEV", 1: "PHEV", 2: "BEV", 3: "FCEV"},
             name_scenario='sensitivity'
             )
+
+#%%
+# Forecast of MNL model with exogeneous definition of the availability
+# of certain choice options.
+# In this example, the availability for choice options 0 (ICEV) and 1 (PHEV)
+# are set to 0 (never available) and the availability for choice options
+# 3 (BEV) and 4 (FCEV) are set to 1 (always available).
+
+model.forecast(method='MNL', 
+            av_external = [0, 0, 1, 1],
+            names_choice_options={0: "ICEV", 1: "PHEV", 2: "BEV", 3: "FCEV"},
+            name_scenario='external_availability',
+            )

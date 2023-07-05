@@ -293,6 +293,9 @@ Post-Analysis
     dict sense_scenarios:
         Indicates the relative change in the value of selected model attributes.
         This keyword is useful for conducting sensitivity analyses.
+    list av_external:
+        This parameter is used to externally define the availabilities of certain
+        choice options. E.g., if a choice option shall be excluded from the simulation.
         
     This method forecasts the mean choice, based on the estimated parameters 
     of each cluster center and the attribute values of the base data. 
