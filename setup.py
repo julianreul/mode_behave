@@ -16,7 +16,7 @@ setup(name='mode_behave',
           'pandas>=1.4.2',
           'pickleshare>=0.7.5',
           'scikit-learn>=1.0.2',
-          'scikit-optimize>=0.9.0',
+          'scikit-optimize==0.9.0',
           'scipy==1.7.3',
           'seaborn>=0.11.2'
           ],    
