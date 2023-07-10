@@ -22,13 +22,19 @@ the divergent choice behavior of different individuals or consumer groups can
 only be studied to a limited degree. Mixed logit models overcome this deficiency and 
 allow for the analysis of preference distributions across base populations.
 
-Use MO|DE.behave via web app: https://julianreul-streamlit-mode-behave-home-nmwcdr.streamlit.app/
+Communication and contribution:
+We encourage active participation in the software development process to adapt 
+it to user needs. If you would like to contribute to the project or report any bugs, 
+please refer to the contribution-file or simply create an issue in the repository.
+For any other interests (e.g. potential research collaborations), please 
+directly contact the project maintainers via email, as indicated and 
+updated on GitHub.
 
 Installation
 ============
 1. Download or clone the repository to a local folder.
 #. Open (Anaconda) Prompt.
-#. Create a new environment from reference_environment.yml file::
+#. Create a new environment from reference_environment.yml file (recommended)::
 
       conda env create -f reference_environment.yml
       
@@ -49,18 +55,52 @@ Installation
 
 Workflow
 ========
-1. Import model with::
 
+This section explains an exemplary workflow from model setup to estimation 
+and post-processing for a sub-sample of survey data on household decisions
+on the type of propulsion technology when purchasing a new car.
+The propulsion types are differentiated into "ICEV: Internal combustion engine vehicle",
+"PHEV: Plug-in Hybrid Electric Vehicle", "BEV: Battery Electric Vehicle", 
+and "FCEV: Fuel Cell Electric Vehicle".
+The data was collected in the year 2021 among German households and 
+the respective sub-sample is provided with the model (./mode_behave_public/InputData/example_data.csv).
+The complete script accessible as well (./mode_behave_public/Deployments/example_estimation.py)
+
+1. Import model and required modules with::
+
+      import numpy as np
+      import pandas as pd
+      
       import mode_behave_public as mb
       
-2. Load data with (exemplary import requires pandas-module)::
-    
+2. Load data with (PATH_TO_DATA requires individual definition. See below for further documentation on required data formats.)::
+      
       example_data = pd.read_csv(PATH_TO_DATA + "example_data.csv")
+      
+3. Definition of model parameters "PURCHASE_PRICE", "RANGE", and "CHARGING_FUELING_TIME". See section "Structure of Parameters and Input Data" for further information::
+      
+      param_fixed = []
+      param_random = ['PURCHASE_PRICE', 'RANGE', 'CHARGING_FUELING_TIME']
 
-2. Initialize a model with::
+      param_temp = {'constant': 
+                        {
+                         'fixed':[],
+                         'random':[]
+                         },
+                    'variable':
+                        {
+                         'fixed': [],
+                         'random':[]
+                         }
+                    }
+
+      param_temp['variable']['fixed'] = param_fixed
+      param_temp['variable']['random'] = param_random  
+
+4. Initialize a model with::
     
       model = mb.Core(
-          param = param_temp, 
+          param=param_temp, 
           data_in=example_data, 
           alt=4,
           equal_alt=1,
@@ -69,9 +109,18 @@ Workflow
       
    The structure of the input data and the parameter-input are given below.
 
-3. Estimate the model with::
+5. Estimate the model with::
 
-    model.estimate_mixed_logit(**kwargs)  
+    model.estimate_mixed_logit(
+        min_iter=10, 
+        max_iter=1000,
+        tol=0.01,
+        space_method = 'std_value',
+        scale_space = 2,
+        max_shares = 1000,
+        bits_64=True,
+        t_stats_out=False
+        )
       
     The estimation of the mixed logit model can be modified by definition of keyword-arguments
     during instantiation and within the estimation-method itself.
@@ -114,17 +163,64 @@ Workflow
             Defines the maximum number of points to be observed in the parameter space.
 
       
-4. The package can also be used to estimate multinomial logit models::
+6. Visualize the estimated preferences::
 
-       model.estimate_logit(**kwargs)  
-      
-       bool stats: 
-           If set to True, t-statistics from the estimation process are evaluated.
+    model.visualize_space(
+        k=2, 
+        scale_individual=True, 
+        cluster_method='kmeans', 
+        external_points=np.array([model.initial_point]),
+        bw_adjust=0.03,
+        names_choice_options={0: "ICEV", 1: "PHEV", 2: "BEV", 3: "FCEV"}
+        )
 
+    Keyword-arguments::
+           
+        int k:
+            Number of preference clusters to be analyzed.
+        boolean scale_individual:
+            Scales the visualized preferences to fit the bounds (-1, 1),
+            to ease the comparability of preferences between different model attributes.
+        str cluster_method:
+            Defines the clustering algorithm for the identification of
+            diverging preference groups.
+        array external_points:
+            An array of preferences to be visualized in the figure as 
+            a reference point. In this case, the mean preferences of the 
+            base population are visualized with "model.initial_point"
+        float bw_adjust:
+            Smoothing parameter for the displayed preference distribution.
+        dict names_choice_options:
+            This dictionary can be used to define the names of the choice options.
+            
+7. Simulate the choice probabilities for each choice options in diverging scenarios (more exemplary use cases of this method can be found in the script example_estimation.py)::
+    
+    model.forecast(method='MNL', 
+                sense_scenarios={"Cheap_EV": {
+                    "PURCHASE_PRICE": [[1.1], [1.1], [0.5], [0.5]]}
+                    },
+                names_choice_options={0: "ICEV", 1: "PHEV", 2: "BEV", 3: "FCEV"},
+                name_scenario='sensitivity'
+                )
 
-5. An exemplary model workflow is provided with the package and can be accessed via the following path::
-
-    PATH_TO_PACKAGE/mode_behave_public/Deployments/example_estimation.py
+    Keyword-arguments::
+           
+        str method:
+            Defines the type of choice model to be used among 
+            "MNL" (Multinomial logit), "LC" (Latent class), and "MXL" (Mixed logit) 
+        dict sense_scenarios:
+            Can be used to define diverging scenarios from the base scenario,
+            which is defined by the mean values in the base data. The values
+            indicate scaling factors by which the attributes are changed.
+            E.g., a value of 1.1 for the attribute "PURCHASE_PRICE" indicates
+            a 10% increase in the purchase price for the respective choice option.
+        dict names_choice_options:
+            This dictionary can be used to define the names of the choice options.
+        str name_scenario:
+            This string can be defined to declare the scenario name. It is 
+            used to store the generated visualization under this name 
+            in the output folder "./mode_behave_public/Visualizations/"
+               
 
 Testing
 =======

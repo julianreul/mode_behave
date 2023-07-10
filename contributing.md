@@ -14,9 +14,9 @@ contribution and to check for coherency with the project's targets (next item).
 your contribution. If you contacted the project maintainer via issue, 
 please reference the issue when submitting your pull request.
 * If you add new functionality to the project, please make sure to cover
-your contribution with appropriate tests. Furthermore, please ensure,
-that the existing tests remain successful.
-* Changes in the functionality of the model should be stated/adapted
+your contribution with appropriate tests and documentation according to 
+PEP 8 standards. Furthermore, please ensure, that the existing tests remain successful.
+* Changes in the functionality of the model should also be stated/adapted
 in the readme-file.
 
 ## Project Targets

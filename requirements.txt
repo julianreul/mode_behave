@@ -1,76 +1,10 @@
-bleach==6.0.0
-brotlipy @ file:///D:/bld/brotlipy_1666764911856/work
-certifi==2022.12.7
-cffi @ file:///D:/bld/cffi_1671179504620/work
-charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1678108872112/work
-contourpy @ file:///D:/bld/contourpy_1673633798610/work
-cryptography @ file:///D:/bld/cryptography-split_1681508861704/work
-cycler @ file:///home/conda/feedstock_root/build_artifacts/cycler_1635519461629/work
-docopt==0.6.2
-docutils==0.19
-fonttools @ file:///D:/bld/fonttools_1680021340983/work
-idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
-importlib-metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1682176699712/work
-importlib-resources @ file:///home/conda/feedstock_root/build_artifacts/importlib_resources_1676919000169/work
-jaraco.classes==3.2.3
-joblib @ file:///home/conda/feedstock_root/build_artifacts/joblib_1663332044897/work
-keyring==23.13.1
-kiwisolver @ file:///D:/bld/kiwisolver_1666805810106/work
-linecache2==1.0.0
-llvmlite==0.39.1
-markdown-it-py==2.2.0
-matplotlib @ file:///D:/bld/matplotlib-suite_1678135709170/work
-mdurl==0.1.2
-more-itertools==9.1.0
-munkres==1.1.4
-numba @ file:///D:/bld/numba_1680825463834/work
-numpy @ file:///D:/bld/numpy_1668919236258/work
-packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1681337016113/work
-pandas @ file:///D:/bld/pandas_1682331614447/work
-patsy @ file:///home/conda/feedstock_root/build_artifacts/patsy_1665356157073/work
-pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602536217715/work
-Pillow @ file:///D:/bld/pillow_1680694414132/work
-pipreqs==0.4.13
-pkginfo==1.9.6
-platformdirs @ file:///home/conda/feedstock_root/build_artifacts/platformdirs_1682644429438/work
-ply==3.11
-pooch @ file:///home/conda/feedstock_root/build_artifacts/pooch_1679580333621/work
-pyaml @ file:///home/conda/feedstock_root/build_artifacts/pyaml_1645030574202/work
-pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
-Pygments==2.15.1
-pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1680037383858/work
-pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1652235407899/work
-PyQt5==5.15.7
-PyQt5-sip @ file:///D:/bld/pyqt-split_1674666773953/work/pyqt_sip
-PySocks @ file:///D:/bld/pysocks_1648857453381/work
-python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1626286286081/work
-pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1680088766131/work
-pywin32-ctypes==0.2.0
-PyYAML @ file:///D:/bld/pyyaml_1666772539683/work
-readme-renderer==37.3
-requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1682535435083/work
-requests-toolbelt==1.0.0
-rfc3986==2.0.0
-rich==13.3.5
-scikit-learn @ file:///D:/bld/scikit-learn_1679676022436/work
-scikit-optimize @ file:///home/conda/feedstock_root/build_artifacts/scikit-optimize_1639544373814/work
+Pillow==9.5.0
+matplotlib==3.7.1
+numba==0.56.4
+numpy==1.23.5
+pandas==2.0.1
+pickleshare==0.7.5
+scikit-learn==1.2.2
+scikit-optimize==0.9.0
 scipy==1.10.1
-seaborn @ file:///home/conda/feedstock_root/build_artifacts/seaborn-split_1672497695270/work
-sip @ file:///D:/bld/sip_1681995199960/work
-six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
-statsmodels @ file:///D:/bld/statsmodels_1667586208815/work
-threadpoolctl @ file:///home/conda/feedstock_root/build_artifacts/threadpoolctl_1643647933166/work
-toml @ file:///home/conda/feedstock_root/build_artifacts/toml_1604308577558/work
-tomli @ file:///home/conda/feedstock_root/build_artifacts/tomli_1644342247877/work
-tornado @ file:///D:/bld/tornado_1681817617945/work
-traceback2==1.4.0
-twine==4.0.2
-typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1678559861143/work
-tzdata @ file:///home/conda/feedstock_root/build_artifacts/python-tzdata_1680081134351/work
-unicodedata2 @ file:///D:/bld/unicodedata2_1667240053339/work
-unittest2==1.1.0
-urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1678635778344/work
-webencodings==0.5.1
-win-inet-pton @ file:///D:/bld/win_inet_pton_1666754991505/work
-yarg==0.1.9
-zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1677313463193/work
+seaborn==0.12.2

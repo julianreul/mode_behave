@@ -69,7 +69,7 @@ distribution, e.g. a normal distribution, is not exogenously defined by the
 researcher, but endogenously derived from the data.
 
 MO|DE.behave complements already available Python 
-[@Arteaga2022; @Bierlaire2020; @Brathwaite2020] and R 
+[@Arteaga2022; @Bierlaire2020; @Bierlaire2003; @Brathwaite2020] and R 
 [@Croissant2020; @Hess2021; @Molloy2021] software packages for the estimation 
 of discrete choice models. However, it is the first to provide functionality 
 for the estimation of mixed logit models with nonparametric distributions. 
@@ -82,7 +82,7 @@ simulation methods for the specific field of transportation research.
 Until now, MO|DE.behave has only been used internally at the Institute for 
 Techno-economic Systems Analysis (IEK-3) at the Forschungszentrum Jülich GmbH 
 (Juelich Research Center). Primary applications have been in the 
-field of transportation research [@Reul2022]. 
+field of transportation research [@Reul2022, @Reul2023]. 
 However, the software’s use is not limited to this research field. 
 MO|DE.behave is a generally applicable framework for the rapid quantitative 
 analysis of choice behavior, based on discrete choice theory. 
@@ -108,8 +108,10 @@ The presented software package contains an application script
 (mode_behave_public/Deployments/example_estimation.py), 
 which exemplifies the workflow for the estimation of a multinomial and 
 mixed logit model based on a subsample of survey data, describing the car 
-purchasing behavior of households with respect to different drive technologies. 
-The available choice alternatives are internal combustion engines (ICEVs), 
+purchasing behavior of households with respect to different drive technologies.
+The original data was collected in autumn 2021 in a nationally representative
+survey among 451 German households that indicated a willingness to buy a new vehicle.
+The available choice alternatives are internal combustion engines vehicles (ICEVs), 
 plug-in hybrid-electric vehicles (PHEVs), battery-electric vehicles (BEVs) and 
 fuel cell-electric vehicles (FCEVs).
 
@@ -143,6 +145,10 @@ electric drivetrain technologies of BEVs and FCEVs compared to consumer group C2
 the latent class model and the base data.
 
 ![Simulated choice probabilities for two identified consumer groups (C1 & C2), a latent class model and the survey (base) data. The latent class model indicates the average choice probabilities of the identified consumer groups, weighted by their size](mode_behave_public/Visualizations/forecast_clustering.png)
+
+Electric vehicle adoption is a prominent example of behavioral modeling in 
+socio-technical systems, with recent research being conducted in the German
+context by Gnann et al. (2022) and Reul et al. (2023) [@Gnann2022, @Reul2023].  
 
 # Acknowledgements
 

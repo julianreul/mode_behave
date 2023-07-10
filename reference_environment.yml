@@ -2,7 +2,7 @@ name: env_mode_behave
 channels:
   - conda-forge
 dependencies:
-  - python=3.8.16
+  - python=3.8.17
   - Pillow==9.5.0
   - matplotlib==3.7.1
   - numba==0.56.4
