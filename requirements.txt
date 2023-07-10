@@ -21,8 +21,6 @@ llvmlite==0.39.1
 markdown-it-py==2.2.0
 matplotlib @ file:///D:/bld/matplotlib-suite_1678135709170/work
 mdurl==0.1.2
-# Editable install with no version control (mode-behave==1.0.9)
--e c:\users\j.reul\downloads\mode_behave-main\mode_behave-main
 more-itertools==9.1.0
 munkres==1.1.4
 numba @ file:///D:/bld/numba_1680825463834/work
