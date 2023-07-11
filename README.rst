@@ -30,6 +30,7 @@ For any other interests (e.g. potential research collaborations), please
 directly contact the project maintainers via email, as indicated and 
 updated on GitHub.
 
+Documentation on GitHub Pages: https://fzj-iek3-vsa.github.io/mode_behave/
 
 Installation
 ============
