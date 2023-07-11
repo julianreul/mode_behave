@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Jan 25 14:30:06 2021
-
-@author: j.reul
-
 This module holds the class "Estimation", which incorporates functionality
 to estimate the coefficients and class-shares of the specified mixed logit
 model with a discrete mixing distribution with fixed points as well as 
@@ -54,22 +49,22 @@ class Estimation:
 
         Parameters
         ----------
-        kwargs tol : float
+        tol : float, optional
             Tolerance of the internal EM-algorithm.
-        kwargs max_iter : int
+        max_iter : int, optional
             Maximum iterations of the EM-algorithm.
-        kwargs min_iter : int
+        min_iter : int, optional
             Minimum iterations of the EM-algorithm.
-        kwargs space_method : string
+        space_method : string, optional
             The method which shall be applied to span the parameter space
             around the initially estimated parameter points (from MNL-model).
             Options are "abs_value", "std_value" or "mirror". Defaults to "mirror".
-        kwargs scale_space : float
+        scale_space : float, optional
             Sets the size of the parameter space. Defaults to 2.
-        kwargs bits_64 : Boolean
+        bits_64 : Boolean, optional
             If True, numerical precision is increased to 64 bits, instead of 32 bits.
             Defaults to False.
-        kwargs max_shares : int
+        max_shares : int, optional
             Specifies the maximum number of points in the parameter space, for which
             a "share" shall be estimated. That does not mean, that only this number
             of points will be explored in the parameter space, but only for this
@@ -78,9 +73,9 @@ class Estimation:
 
         Returns
         -------
-        self.points : array
+        points : array
             Numpy array, which holds all points of the discrete parameter space.
-        self.shares : array
+        shares : array
             The central output of this method is the array "self.shares", which
             holds the estimated shares of points within the parameter space.
         """
@@ -298,7 +293,7 @@ class Estimation:
             point : array
                 Multi-dimensional point in the parameter space.
             l : array
-                DESCRIPTION.
+                Point in base data.
             data : array
                 Base data.
 
@@ -357,6 +352,8 @@ class Estimation:
                     Point in the parameter space.
                 av : array
                     Availability array for all choice options.
+                weight : array
+                    Weights of data points in base data.
                 data : array
                     Base data.
 
@@ -407,6 +404,8 @@ class Estimation:
                     Point in the parameter space.
                 av : array
                     Availability array for all choice options.
+                weight : array
+                    Weights of data points in base data.
                 data : array
                     Base data.
 
@@ -534,7 +533,7 @@ class Estimation:
 
         Parameters
         ----------
-        kwarg stats : Boolean
+        stats : Boolean, optional
             If True, summary statistics are returned as well. Defaults to True.
 
         Returns

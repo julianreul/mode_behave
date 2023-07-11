@@ -1,0 +1,17 @@
+site_name: MO|DE.behave Documentation
+
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          docstring_style: numpy
+
+theme: readthedocs
+
+nav:
+  - index.md
+  - Core Module : core_reference.md
+  - Estimation Module : estimation_reference.md
+  - Post-Analysis Module : post_analysis_reference.md
+  - Simulation Module : simulation_reference.md

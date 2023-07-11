@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Jan 25 14:29:51 2021
-
-@author: j.reul
-
 The module incorporates the class "Core", which inherits functionality from the 
-classes "Estimation", "Simulation", "PostAnalysis" and "Visualitation".
+classes "Estimation", "Simulation" and "PostAnalysis".
 It defines the core attributes, structure and type of the
 discrete choice models to be simulated or estimated. 
-Two different types of discrete choice models are differentiated:
-    - Multinomial logit models (MNL)
-    - Mixed logit models (MXL) with discrete points as parameters
+Two different types of discrete choice models are differentiated - 
+Multinomial logit (MNL) and nonparametrics mixed logit models (MXL).
 
 """
 
@@ -39,10 +33,9 @@ class Core(Estimation, Simulation, PostAnalysis):
 
         Parameters
         ----------
-        kwargs model_type : string
+        model_type : string, optional
             Indicates, whether to initiate a simulation- or estimation-model.
-
-        kwargs param : dict
+        param : dict, optional
             Holds the names of all attributes in utility function.
             list(param) = ['constant', 'variable'] --> Disctinction between variables
             that are constant over alternatives or vary, respectively.
@@ -50,53 +43,41 @@ class Core(Estimation, Simulation, PostAnalysis):
             between variables that are not randomly distributed within
             a group of decision-makers ('fixed') and those, that are randomly
             distributed with a discrete distribution ('random')
-
-        kwargs max_space : int
+        max_space : int, optional
             Maximum number of data points within parameter space.
-
-        kwargs alt: int
+        alt: int, optional
             Number of discrete choice alternatives.
-
-        kwargs equal_alt: int
+        equal_alt: int, optional
             Maximum number of equal alternatives (with different attributes)
             in a single observation/choice set.
             E.g. mode choice: Available are two buses and one car. This would
             lead to a maximum of two equal alternatives (two buses).
-
-        kwargs norm_alt : int
+        norm_alt : int, optional
             Defines, which alternative shall be normalized. Defaults to 0.
-
-        kwargs include_weights : boolean
+        include_weights : boolean, optional
             If True, the model searches for a column in the input data, which
             is called "weight". This column indicates the weight of each
             observation in the input data. Defaults to True.
-
-        kwargs data_name : str
+        data_name : str, optional
             Defines the filename of the file, which holds the base data
             to calibrate the MNL or MXL model on.
-
-        kwargs data_in : DataFrame
+        data_in : DataFrame, optional
             Alternative to -data_name-, if survey data is already loaded
             to the workspace as a pandas dataframe.
-
-        kwargs data_index : array
+        data_index : array, optional
             An array, which holds the index values of those datapoints
             of the base data, which shall be used for estimation.
-
-        initial_point_name : str
+        initial_point_name : str, optional
             The filename of the file, which holds the estimated MNL parameters.
-
-        kwargs dc_type : str
+        dc_type : str, optional
             Determines the model type for simulation: MNL or MXL model.
             Depends on which estimated model parameters are available.
-
-        kwargs dict_specific_travel_cost : dictionary
+        dict_specific_travel_cost : dict, optional
             External specification of transport costs. Relevant for the
             simulation of mode choice.
 
         Returns
         -------
-        None.
 
         """
 

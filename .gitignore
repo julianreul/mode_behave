@@ -8,6 +8,9 @@
 #exclude source distributions in dist-folder
 dist/
 
+#exclude read the docs site-folder
+site/
+
 #exclude InpuData
 mode_behave_public/InputData/*
 !mode_behave_public/InputData/artificial_data.csv

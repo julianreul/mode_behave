@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-Created on Fri Jan 29 16:39:30 2021
-
-@author: j.reul
-
 This module holds the class "PostAnalysis", which incorporates functionality
 to analyze the estimated mixed logit model.
 """
@@ -73,7 +68,6 @@ class PostAnalysis:
 
         Parameters
         ----------
-        A "point" with all coefficients of MLN-attributes.
 
         Returns
         -------
@@ -197,10 +191,15 @@ class PostAnalysis:
 
         For reference on log-likelihood calculation see:
             Ch. 5.5 (pp. 118) in "Discrete Choice Analysis", by Ben-Akiva (1985)
+            
+        Parameters
+        ----------
+        points_in : array, optional
+            An array of preference points, if divergent to previously estimated points.
 
         Returns
         -------
-        Float64
+        log-likelihood : float64
             Returns the log-likelihood (LL) of the estimated mixed logit model.
 
         """
@@ -324,22 +323,21 @@ class PostAnalysis:
         attribute : str
             Name of the attribute to be visualized.
 
-        kwargs save_fig_path : string
+        save_fig_path : string, optional
             Path, which indicated the place where to store the visualization
             as a .png-file.
 
-        kwargs names_choice_options : dict
+        names_choice_options : dict, optional
             If given, this shall be a dictionary, which holds the
             names of the choice options as values and the numerical
             indication of the choice option (0,1,2,...) as keys.
 
-        kwargs shift_t_stats : float
+        shift_t_stats : float, optional
             Shifts the text-fields which indicate the value of the t-statistic
             in positive or negative direction..
 
         Returns
         -------
-        None.
 
         """
         # get keyword arguments
@@ -406,46 +404,37 @@ class PostAnalysis:
 
         Parameters
         ----------
-        kwargs return_res : Boolean
+        return_res : Boolean, optional
             If True, the clustering results are returned. Defaults to False.
-
-        kwargs return_figure : Boolean
+        return_figure : Boolean, optional
             If True, the rendered figure is returned. Defaults to False.
-
-        kwargs cluster_method : string
+        cluster_method : string, optional
             Specification of the clustering method, which shall be used to cluster
             the preferences estimated by the mixed logit model.
             Defaults to "kmeans". Other options: "agglo", "meanshift", "dbscan".
-
-        kwargs scale_individual : Boolean
+        scale_individual : Boolean, optional
             If True, the x- and y-axis of the visualizations are scaled to one.
             This eases the comparison of the different attributes. The scale
             is indicates on the respective axes and is very important for
             quantitative and qualitative interpretations. Defaults to False.
-
-        kwargs external_points : array
+        external_points : array, optional
             This array holds further parameter points in the parameter space,
             which should be visualized as reference points. E.g.: The initial
             point, as being calculated by the multinomial logit model.
-
-        kwargs k : int
+        k : int, optional
             Number of cluster centers to be calculated. Defaults to 3.
-
-        kwargs save_fig_path : string
+        save_fig_path : string, optional
             Path, which indicated the place where to store the visualization
             as a .png-file.
-
-        kwargs name_scenario : string
+        name_scenario : string, optional
             The scenario name can be added additionally, to distinguish
             several scenarios.
-
-        kwargs bw_adjust : float
+        bw_adjust : float, optional
             This value adjusts the smoothing of the visualized preference
             distribution. A higher value increases the smoothing of the
             displayed curve, but may conceal certain findings in the distribution.
             Defaults to 0.03.
-
-        kwargs names_choice_options : dict
+        names_choice_options : dict, optional
             If given, this shall be a dictionary, which holds the
             names of the choice options as values and the numerical
             indication of the choice option (0,1,2,...) as keys.
@@ -861,14 +850,14 @@ class PostAnalysis:
             Clustering method.
         k : int
             Number of clusters.
-        kwargs tol : float
+        tol : float, optional
             Tolerance. Defaults to 10e-7.
-        kwargs points_affinity : boolean
+        points_affinity : boolean, optional
             If True, an affinity index is calculated and returned.
             Defaults to False.
-        kwargs points : array
+        points : array, optional
             Exogenously defined set of points to be analyzed.
-        kwargs shares : array
+        shares : array, optional
             Exogenously defined set of shares to be analyzed.
 
 
@@ -1060,22 +1049,19 @@ class PostAnalysis:
         Parameters
         ----------
 
-        kwargs save_fig_path : string
+        kwargs save_fig_path : string, optional
             Path, which indicated the place where to store the visualization
             as a .png-file.
-
-        kwargs names_choice_options : dict
+        kwargs names_choice_options : dict, optional
             If given, this shall be a dictionary, which holds the
             names of the choice options as values and the numerical
             indication of the choice option (0,1,2,...) as keys.
-
-        kwargs shift_t_stats : float
+        kwargs shift_t_stats : float, optional
             Shifts the text-fields which indicate the value of the t-statistic
             in positive or negative direction..
 
         Returns
         -------
-        None.
 
         """
         # get keyword arguments
@@ -1374,11 +1360,10 @@ class PostAnalysis:
 
         Parameters
         ----------
-        **kwargs : TYPE
-            method : string.
-                indicates the clustering method.
-            k : int
-                Indicates the number of clusters to be calculated with.
+        method : string, optional
+            Indicates the clustering method.
+        k : int, optional
+            Indicates the number of clusters to be calculated with.
 
         Returns
         -------
@@ -1540,14 +1525,14 @@ class PostAnalysis:
 
         Parameters
         ----------
-        kwargs sense : dictionary
+        kwargs sense : dictionary, optional
             The dictionary "sense" holds the attribute names for which sensitivities
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
-        kwargs asc_offset : list
+        kwargs asc_offset : list, optional
             offset values for alternative specific constants
-        kwargs av_external : numpy array
+        kwargs av_external : array, optional
             This array is used to exogenously define the availabilities
             for each choice option during a simulation.
             The array must have as much entries as choice options are
@@ -1726,16 +1711,16 @@ class PostAnalysis:
 
         Parameters
         ----------
-        latent_points : 2D numpy array.
+        latent_points : 2D numpy array, optional
             The random points within each class.
         latent_shares : 1D numpy array.
-            The share of each class.
-        kwargs sense : dictionary
+            The share of each class, optional
+        sense : dictionary, optional
             The dictionary "sense" holds the attribute names for which sensitivities
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
-        kwargs av_external : numpy array
+        av_external : numpy array, optional
             This array is used to exogenously define the availabilities
             for each choice option during a simulation.
             The array must have as much entries as choice options are
@@ -1956,16 +1941,16 @@ class PostAnalysis:
 
         Parameters
         ----------
-        latent_points : 2D numpy array.
+        latent_points : 2D numpy array, optional
             The random points within each class.
-        latent_shares : 1D numpy array.
+        latent_shares : 1D numpy array, optional
             The share of each class.
-        kwargs sense : dictionary
+        sense : dict, optional
             The dictionary "sense" holds the attribute names for which sensitivities
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
-        kwargs av_external : numpy array
+        av_external : numpy array, optional
             This array is used to exogenously define the availabilities
             for each choice option during a simulation.
             The array must have as much entries as choice options are
@@ -2167,7 +2152,7 @@ class PostAnalysis:
             Method indicates the model type, which to use for forecasting.
             Options are: "MNL" (Multinomial Logit), "MXL" (Mixed Logit),
             "LC" (Latent Class). Defaults to "MNL".
-        kwargs sense_scenarios : dictionary
+        sense_scenarios : dict, optional
             The dictionary "sense_scenarios" is two dimensional.
             The first dimension indicated the scenario name, while the
             second dimension holds the scenario parameters according
@@ -2176,35 +2161,35 @@ class PostAnalysis:
             shall be simulated as keys. The values are the arrays or lists
             which indicate the relative change of the attribute value
             for each choice option.
-        kwargs av_external : numpy array
+        av_external : numpy array, optional
             This array is used to exogenously define the availabilities
             for each choice option during a simulation.
             The array must have as much entries as choice options are
             being observed: len(av_external) = self.count_c
             Define the availability to 1 (always available), 0 (never available)
             or np.nan (availability according to base data).
-        kwargs external_points : numpy array
+        external_points : numpy array, optional
             This array is two-dimensional and holds one or more alternative
             specifications of "initial_point" for the simulation of
             multinomial logit.
-        kwargs k : int
+        k : int, optional
             Number is cluster centers to be considered, when method = "LC"
-        kwargs cluster_method : str
+        cluster_method : str, optional
             The clustering method. Defaults to "kmeans."
-        kwargs save_fig_path : str
+        save_fig_path : str, optional
             If given, the visualizations are stored in this directory.
-        kwargs names_choice_options : dict
+        names_choice_options : dict, optional
             If given, this shall be a dictionary, which holds the
             names of the choice options as values and the numerical
             indication of the choice option (0,1,2,...) as keys.
-        kwargs y_lim : tuple
+        y_lim : tuple, optional
             If given, this tuple indicates the limits for the y-axis
             within the visualization.
-        kwargs y_lim : tuple
+        y_lim : tuple, optional
             If given, forecasted probabilities are returned. Defaults to False.
-        kwargs return_data : Boolean
+        return_data : Boolean, optional
             If True, the simulated data is returned. Defaults to False.
-        kwargs return_figure : Boolean
+        return_figure : Boolean, optional
             If True, the visualized figure is returned. Defaults to False
 
         Raises
@@ -2588,13 +2573,15 @@ class PostAnalysis:
         This method returns the estimates of the logit or the mixed logit model
         in .csv-format.
 
-        kwargs model_type : str
-
-        kwargs path_save : str
+        Parameters
+        ----------
+        model_type : str, optional
+            Type of discrete choice model, "MNL", "LC", or "MXL"
+        path_save : str, optional
+            Path, where to store the exported estimates.
 
         Returns
         -------
-        None.
 
         """
 

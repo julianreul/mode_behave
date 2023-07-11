@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-Created on Fri Jan 29 16:39:30 2021
-
-@author: j.reul
-
 This module holds the class "Simulation", which incorporates functionality
 to simulate the probabilities with stored parameters from previous estimations.
 
@@ -40,33 +35,31 @@ class Simulation:
         to own 0,1,2,3 or more cars.
         Parameters
         ----------
-        #   regiontype: RegioStaR7-classification of regions
-        #   hh_size: Household-size
-        #   adults_working: Number of working adults (replace by daily distance to work)
-        #   children: Number of children in household
-        #   htype: Haustyp
-        #   quali_opnv: Quality of public transport
-        #   sharing: Carsharing-Membership
-        #   relative_cost_per_car: Average Price of considered cars / income
-        #   age_adults: Mean age of adults in the household scaled by 0.1!
-
-        param = {'constant':
-                          {
-                           'fixed':[],
-                           'random':[]
-                           },
-                      'variable':
-                          {
-                           'fixed':['urban_region', 'rural_region', 'hh_size', 'children',
-                                    'any_car', 'htype', 'sharing', 'age_adults', 'adults_working',
-                                    'quali_opnv'],
-                           'random':[relative_cost']
-                           }
-                      }
+        regiontype: int
+            RegioStaR7-classification of regions (1-7), where 1-4 are urban 
+            classifications and 5-7 rural classifications. 
+        hh_size: int
+            Household size
+        adults_working: int 
+            Number of working adults
+        children: int
+            Number of children in household
+        htype: int
+            1, if individual house, 0, if multi-apartment house
+        quali_opnv: int
+            Quality of public transport on a scale from 1-4 
+            (1: Very Bad, 2: Bad, 3: Good, 4: Very Good)
+        sharing: float
+            Carsharing membership (1: Yes, 0: no)
+        relative_cost_per_car: 
+            Average Price of considered cars / net household income
+        age_adults: float
+            Mean age of adults in the household scaled by 0.1!
 
         Returns
         -------
-        Probabilities, that a household owns 0,1,2,3 cars.
+        res_temp : array
+            Probabilities, that a household owns 0,1,2, or 3 cars.
 
         """
 
@@ -234,7 +227,8 @@ class Simulation:
         distance : int
             Travel distance.
         regiontype : int
-            Region of travel.
+            RegioStaR7-classification of regions (1-7), where 1-4 are urban 
+            classifications and 5-7 rural classifications. 
 
         Returns
         -------
@@ -271,7 +265,8 @@ class Simulation:
         distance : int
             Travel distance.
         regiontype : int
-            Region of travel.
+            RegioStaR7-classification of regions (1-7), where 1-4 are urban 
+            classifications and 5-7 rural classifications. 
 
         Returns
         -------
@@ -296,7 +291,8 @@ class Simulation:
         distance : int
             Travel distance.
         regiontype : int
-            Region of travel.
+            RegioStaR7-classification of regions (1-7), where 1-4 are urban 
+            classifications and 5-7 rural classifications. 
 
         Returns
         -------
@@ -319,26 +315,26 @@ class Simulation:
     ):
         """
         This method calculates the probability, that a transport mode is chosen.
+        
         Parameters
         ----------
-        param = {'constant':
-                          {
-                           'fixed':[],
-                           'random':[]
-                           },
-                      'variable':
-                          {
-                           'fixed':['ag_1', 'ag_2', 'ag_3',
-                                    'occ_1', 'occ_2', 'occ_3', 'occ_4',
-                                    'urban', 'rural',
-                                    'travel_cost'],
-                           'random':['travel_time']
-                           }
-                      }
-
+        agegroup : int
+            Agegroup of the agent (1: <18, 2: 18-65, 3: >65)
+        occupation : int
+            Occupation type of the agent (1: full-time work, 2: part-time, 3: education, 4: no occupation)
+        regiontype : int
+            RegioStaR7-classification of regions (1-7), where 1-4 are urban 
+            classifications and 5-7 rural classifications. 
+        distance : int
+            Distance traveled in km.
+        av : array
+            The availability of each mode in numpy array format, indicated
+            by 1 (available) or 0 (not available).
+        
         Returns
         -------
-        Probabilities, that a transport mode is chosen.
+        probs : array
+            Probabilities, that a transport mode is chosen.
 
         """
 
@@ -426,9 +422,9 @@ class Simulation:
             ----------
             c : int
                 choice option.
-            data : numpy array
+            data : array
                 Array, containing the base data.
-            initial_point : numpy array
+            initial_point : array
                 Array, containing the estimated model parameters.
 
             Returns
@@ -537,37 +533,8 @@ class Simulation:
         **kwargs
     ):
         """
-        This method calculates the probability of a car to have a certain
-        propulsion type on hh-level.
-        0: 'ICEV'
-        1: 'PHEV'
-        2: 'BEV'
-        3: 'FCEV'
-
-        Parameters
-        ----------
-        #   SEGMENT 0-3: Farhzeug-Segment nach Antrieb (Sollte gleich sein)
-        #   RELATIVE_B_KOSTEN_MAL100_0-3: Betriebskosten geteilt durch HH-Einkommen mal 100, nach Antrieb
-        #   REICHWEITE_DURCH100_0-3: Reichweite nach Antrieb, geteilt durch 100
-        #   LADE_TANK_ZEIT_0: Lade- bzw. Tankzeit nach Antrieb (N.A. für ICEV & PHEV)
-        #   DISTANZ_LADE_TANK_0: Distanz zur nächsten Ladesäule, Tankstelle nach Antrieb. (N.A. für ICEV & PHEV)
-        #   CO2_MAL10_0-3: Eingesparte CO2-Emissionen nach Antrieb.
-        #   MEAN_HH_AGE_0-3: Durchschnittsalter des Haushaltes
-        #   HH_SIZE_0-3: Anzahl der Haushaltsmitglieder
-        #   POPULATION_0-3: Einwohnerzahl des Wohnortes (Kreisebene) in 7 Kategorien:
-        #       (in Tausend) - 1: >500, 2:100-500 3:50-100, 4:20-50, 5:10-20, 6:5-10, 7:<5
-        #   CAR_PARK_EV_0-3: Ist es möglich, ein EV privat zu parken und zu laden? (I/O)
-        #   CARSHARING_0-3: Gibt es eine Carsharing-Mitgliedschaft im Haushalt? (I/O)
-        #   LONG_RANGE_AV_0-3: Gibt es ein weiteres Auto im HH mit "hoher Reichweite" (I/O)
-        #   EV_EXPERIENCE_0-3: Gibt es bereits ein EV im HH? (I/O)
-        #   OWN_POWER_0-3: Wird Strom teilweise selbst produziert, mit Wind. oder PV-Anlage? (I/O)
-        #   HH_OCC_0-3: Wie viele Voll- und Teilzeitarbeitnehmer gibt es im HH?
-        #   PT_QUALITY_0-3: Wie hoch ist die ÖPNV-Qualität auf einer Skala von 1 (niedrig) - 4 (hoch)
-        #   RELATIVER_KAUFPREIS_0-3: Kaufpreis der Fahrzeug-Alternative geteilt durch Netto-HH-Einkommen.
-
-        Returns
-        -------
-        Probabilities, that a car has a certain propulsion type.
+        Please contact the package maintainers via GitHub to receive the 
+        required choice estimates of the MNL-model and further simulation instructions.
 
         """
 
@@ -729,20 +696,8 @@ class Simulation:
     ):
 
         """
-        This method calculates the probability of a car to have a certain
-        propulsion type on hh-level.
-        0: 'HEV'
-        1: 'PHEV'
-        2: 'BEV'
-        3: 'FCEV'
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-        Probabilities, that a car has a certain propulsion type.
-
+        Please contact the package maintainers via GitHub to receive the 
+        required choice estimates of the MNL-model and further simulation instructions.
         """
 
         ASC_OFFSET = kwargs.get("ASC_OFFSET", [0, 0, 0, 0])
