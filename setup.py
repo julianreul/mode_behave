@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mode_behave',
-      version='1.0.11',
+      version='1.0.12',
       description='Estimation and simulation of discrete choice models',
       author='Julian Reul',
       author_email='j.reul@fz-juelich.de',
