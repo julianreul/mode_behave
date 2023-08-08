@@ -148,7 +148,7 @@ the latent class model and the base data.
 
 Electric vehicle adoption is a prominent example of behavioral modeling in 
 socio-technical systems, with recent research being conducted in the German
-context by [@Gnann2022] and [@Reul2023].  
+context by @Gnann2022 and @Reul2023.  
 
 # Acknowledgements
 
