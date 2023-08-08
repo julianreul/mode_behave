@@ -82,7 +82,7 @@ simulation methods for the specific field of transportation research.
 Until now, MO|DE.behave has only been used internally at the Institute for 
 Techno-economic Systems Analysis (IEK-3) at the Forschungszentrum Jülich GmbH 
 (Juelich Research Center). Primary applications have been in the 
-field of transportation research [@Reul2022, @Reul2023]. 
+field of transportation research [@Reul2022; @Reul2023]. 
 However, the software’s use is not limited to this research field. 
 MO|DE.behave is a generally applicable framework for the rapid quantitative 
 analysis of choice behavior, based on discrete choice theory. 
@@ -148,7 +148,7 @@ the latent class model and the base data.
 
 Electric vehicle adoption is a prominent example of behavioral modeling in 
 socio-technical systems, with recent research being conducted in the German
-context by Gnann et al. (2022) and Reul et al. (2023) [@Gnann2022, @Reul2023].  
+context by [@Gnann2022] and [@Reul2023].  
 
 # Acknowledgements
 
