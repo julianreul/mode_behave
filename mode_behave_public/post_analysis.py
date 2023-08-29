@@ -1555,6 +1555,8 @@ class PostAnalysis:
             "asc_offset", np.array([0 for c in range(self.count_c)], dtype="float64")
         )
         av_external = kwargs.get("av_external", False)
+        vector_output = kwargs.get("vector_output", False)
+        vector_output_no_weights = kwargs.get("vector_output_no_weights", False)
 
         # exogeneous definiton of choice availabilities
         if av_external:
@@ -1682,8 +1684,11 @@ class PostAnalysis:
             return res_temp
 
         def calculate_logit_shares(av, data, asc_offset):
-
-            logit_probs = np.zeros(shape=(count_c, count_e))
+            
+            if vector_output or vector_output_no_weights:
+                logit_probs = np.zeros(shape=(count_c, count_e, len(self.data)))
+            else:
+                logit_probs = np.zeros(shape=(count_c, count_e))
 
             # calculate bottom
             bottom = np.zeros(shape=av.shape[2])
@@ -1695,13 +1700,19 @@ class PostAnalysis:
             for c in range(count_c):
                 for e in range(count_e):
                     top = av[c][e] * np.exp(get_utility_vector(c, e, data, asc_offset))
-                    logit_probs[c][e] = np.mean((top / bottom) * self.weight_vector)
+                    if vector_output:
+                        logit_probs[c][e] = (top / bottom) * self.weight_vector
+                    elif vector_output_no_weights:
+                        logit_probs[c][e] = (top / bottom)
+                    else:
+                        logit_probs[c][e] = np.mean((top / bottom) * self.weight_vector)
 
             return logit_probs
 
         res = calculate_logit_shares(self.av, data, asc_offset)
-
+        
         return np.sum(res, axis=1)
+
 
     def simulate_mixed_logit(self, **kwargs):
         """
